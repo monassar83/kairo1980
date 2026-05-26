@@ -7,7 +7,7 @@
 <meta name="description" content="KAIRO 1980 – Moderne ägyptische Küche in Hockenheim. Frisch zubereitet, handgemacht, inspiriert von den Aromen Kairos.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=Cinzel:wght@400;500&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Cinzel:wght@400;500&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -23,16 +23,8 @@
 </nav>
 
 <section class="hero">
-  <div class="hero-photo">
-    <div class="hero-photo-bg"></div>
-    <svg class="pyramid-svg" viewBox="0 0 600 260" preserveAspectRatio="xMidYMax meet" fill="#3a2810">
-      <polygon points="300,20 460,260 140,260"/>
-      <polygon points="460,80 600,260 320,260"/>
-      <polygon points="140,80 280,260 0,260"/>
-    </svg>
-    <span class="hero-photo-label">Hockenheim · Ägyptische Küche</span>
-  </div>
-  <div class="hero-text">
+  <div class="hero-overlay"></div>
+  <div class="hero-content">
     <span class="hero-eyebrow">Seit 1980 · Hockenheim</span>
     <h1>Moderne<br><em>Ägyptische</em><br>Küche</h1>
     <p class="hero-desc">Frisch zubereitet, handgemacht — inspiriert von den Aromen und der Esskultur Kairos.</p>
@@ -49,82 +41,88 @@
   <div class="strip-item"><span class="strip-num">03</span><div class="strip-title">Leidenschaft</div><p class="strip-text">Aus echter Freude am Kochen und Teilen.</p></div>
 </div>
 
-<section id="ueber-uns" class="story">
-  <div class="story-left">
-    <span class="story-year">1980</span>
-    <span class="story-eyebrow">Über uns</span>
-    <h2>Willkommen bei<br>Kairo 1980</h2>
-  </div>
-  <div class="story-right">
-    <div class="rule"></div>
-    <p>KAIRO 1980 ist eine kleine inhabergeführte Küche, inspiriert von den Aromen, der Atmosphäre und der Esskultur Kairos. Die Idee entstand über viele Jahre – aus echter Freude am Kochen.</p>
-    <p>Bei uns wird jedes Gericht erst nach Bestellung frisch zubereitet. Keine Fertigprodukte, keine Kompromisse – nur ehrliches, handgemachtes Essen.</p>
+<section id="ueber-uns">
+  <div class="story">
+    <div class="story-left">
+      <span class="story-year">1980</span>
+      <span class="story-eyebrow">Über uns</span>
+      <h2>Willkommen bei<br>Kairo 1980</h2>
+    </div>
+    <div class="story-right">
+      <div class="rule"></div>
+      <p>KAIRO 1980 ist eine kleine inhabergeführte Küche, inspiriert von den Aromen, der Atmosphäre und der Esskultur Kairos. Die Idee entstand über viele Jahre – aus echter Freude am Kochen.</p>
+      <p>Bei uns wird jedes Gericht erst nach Bestellung frisch zubereitet. Keine Fertigprodukte, keine Kompromisse – nur ehrliches, handgemachtes Essen.</p>
+    </div>
   </div>
 </section>
 
-<section id="speisekarte" class="menu-section">
-  <span class="menu-eyebrow">Speisekarte</span>
-  <div class="menu-title">Unsere Gerichte</div>
+<section id="speisekarte">
+  <div class="menu-section">
+    <span class="menu-eyebrow">Speisekarte</span>
+    <div class="menu-title">Unsere Gerichte</div>
 
-  <div class="cat-head"><span class="cat-name">Orientalische Vorspeisen</span><div class="cat-line"></div></div>
-  <div class="mitem"><div><div class="mname">Baba Ghanough</div><p class="mdesc">Auberginenpüree mit Tahini, Knoblauch und orientalischen Gewürzen. Mit arabischem Fladenbrot.</p><div class="mtags"><span class="tag veg">Vegetarisch</span></div></div><div class="mprice">9,50 €</div></div>
-  <div class="mitem"><div><div class="mname">Hummus</div><p class="mdesc">Cremiges Kichererbsenpüree mit Limette und gerösteten Pinienkernen. Mit arabischem Fladenbrot.</p><div class="mtags"><span class="tag v">Vegan</span></div></div><div class="mprice">9,50 €</div></div>
-  <div class="mitem"><div><div class="mname">Frittierte Auberginen</div><p class="mdesc">Goldbraun frittiert mit Knoblauch, Peperoni und Petersilie. Mit einem Hauch Limette.</p><div class="mtags"><span class="tag v">Vegan</span></div></div><div class="mprice">9,50 €</div></div>
-  <div class="mitem"><div><div class="mname">Salata Baladi</div><p class="mdesc">Tomaten, Gurken, Zwiebeln — das berühmte ägyptische „Salat-Whisky".</p><div class="mtags"><span class="tag v">Vegan</span></div></div><div class="mprice">7,50 €</div></div>
-  <div class="mitem"><div><div class="mname">Etwas von allem</div><p class="mdesc">Hummus, Baba Ghanough und frittierte Auberginen auf einem Teller.</p><div class="mtags"><span class="tag veg">Vegetarisch</span></div></div><div class="mprice">24,00 €</div></div>
+    <div class="cat-head"><span class="cat-name">Orientalische Vorspeisen</span><div class="cat-line"></div></div>
+    <div class="mitem"><div><div class="mname">Baba Ghanough</div><p class="mdesc">Auberginenpüree mit Tahini, Knoblauch und orientalischen Gewürzen. Mit arabischem Fladenbrot.</p><div class="mtags"><span class="tag veg">Vegetarisch</span></div></div><div class="mprice">9,50 €</div></div>
+    <div class="mitem"><div><div class="mname">Hummus</div><p class="mdesc">Cremiges Kichererbsenpüree mit Limette und gerösteten Pinienkernen. Mit arabischem Fladenbrot.</p><div class="mtags"><span class="tag v">Vegan</span></div></div><div class="mprice">9,50 €</div></div>
+    <div class="mitem"><div><div class="mname">Frittierte Auberginen</div><p class="mdesc">Goldbraun frittiert mit Knoblauch, Peperoni und Petersilie. Mit einem Hauch Limette.</p><div class="mtags"><span class="tag v">Vegan</span></div></div><div class="mprice">9,50 €</div></div>
+    <div class="mitem"><div><div class="mname">Salata Baladi</div><p class="mdesc">Tomaten, Gurken, Zwiebeln — das berühmte ägyptische „Salat-Whisky".</p><div class="mtags"><span class="tag v">Vegan</span></div></div><div class="mprice">7,50 €</div></div>
+    <div class="mitem"><div><div class="mname">Etwas von allem</div><p class="mdesc">Hummus, Baba Ghanough und frittierte Auberginen auf einem Teller.</p><div class="mtags"><span class="tag veg">Vegetarisch</span></div></div><div class="mprice">24,00 €</div></div>
 
-  <div class="cat-head"><span class="cat-name">Das Herz Ägyptens</span><div class="cat-line"></div></div>
-  <div class="mitem"><div><div class="mname">Koshary</div><p class="mdesc">Das Nationalgericht: Linsen, Reis, Pasta, Kichererbsen mit Zwiebeln und hausgemachten Saucen.</p><div class="mtags"><span class="tag v">Vegan</span></div></div><div class="mprice">13,50 €</div></div>
-  <div class="mitem"><div><div class="mname">Foool</div><p class="mdesc">Cremige Favabohnen mit Tomaten, Knoblauch, Olivenöl und Limette. Mit ägyptischem Brot.</p><div class="mtags"><span class="tag v">Vegan</span></div></div><div class="mprice">11,50 €</div></div>
+    <div class="cat-head"><span class="cat-name">Das Herz Ägyptens</span><div class="cat-line"></div></div>
+    <div class="mitem"><div><div class="mname">Koshary</div><p class="mdesc">Das Nationalgericht: Linsen, Reis, Pasta, Kichererbsen mit Zwiebeln und hausgemachten Saucen.</p><div class="mtags"><span class="tag v">Vegan</span></div></div><div class="mprice">13,50 €</div></div>
+    <div class="mitem"><div><div class="mname">Foool</div><p class="mdesc">Cremige Favabohnen mit Tomaten, Knoblauch, Olivenöl und Limette. Mit ägyptischem Brot.</p><div class="mtags"><span class="tag v">Vegan</span></div></div><div class="mprice">11,50 €</div></div>
 
-  <div class="cat-head"><span class="cat-name">Aus unserer Küche</span><div class="cat-line"></div></div>
-  <div class="mitem"><div><div class="mname">Kebda</div><p class="mdesc">Kalbsleber mit Peperoni, Steakhouse Pommes, Rucola und Tahini-Dip.</p></div><div class="mprice">26,50 €</div></div>
-  <div class="mitem"><div><div class="mname">Hähnchenschlegel</div><p class="mdesc">Drei saftige Schlegel mit arabischen Gewürzen, langsam gegart. Mit ägyptischem Reis.</p></div><div class="mprice">24,50 €</div></div>
+    <div class="cat-head"><span class="cat-name">Aus unserer Küche</span><div class="cat-line"></div></div>
+    <div class="mitem"><div><div class="mname">Kebda</div><p class="mdesc">Kalbsleber mit Peperoni, Steakhouse Pommes, Rucola und Tahini-Dip.</p></div><div class="mprice">26,50 €</div></div>
+    <div class="mitem"><div><div class="mname">Hähnchenschlegel</div><p class="mdesc">Drei saftige Schlegel mit arabischen Gewürzen, langsam gegart. Mit ägyptischem Reis.</p></div><div class="mprice">24,50 €</div></div>
 
-  <div class="cat-head"><span class="cat-name">Ägyptische Straßenküche</span><div class="cat-line"></div></div>
-  <div class="mitem"><div><div class="mname">Hawawshy</div><p class="mdesc">Gewürztes Rindfleisch in ägyptischem Fladenbrot gebacken. Mit Gurken und Tahini-Dip.</p></div><div class="mprice">13,50 €</div></div>
-  <div class="mitem"><div><div class="mname">Kebda Eskandarany</div><p class="mdesc">Klassiker aus Alexandria: Kalbsleber mit Peperoni im ägyptischen Brot.</p></div><div class="mprice">13,50 €</div></div>
-  <div class="mitem"><div><div class="mname">Soguk Baladi</div><p class="mdesc">Soguk-Wurst mit Tomaten und Peperoni im ägyptischen Brot.</p></div><div class="mprice">12,50 €</div></div>
+    <div class="cat-head"><span class="cat-name">Ägyptische Straßenküche</span><div class="cat-line"></div></div>
+    <div class="mitem"><div><div class="mname">Hawawshy</div><p class="mdesc">Gewürztes Rindfleisch in ägyptischem Fladenbrot gebacken. Mit Gurken und Tahini-Dip.</p></div><div class="mprice">13,50 €</div></div>
+    <div class="mitem"><div><div class="mname">Kebda Eskandarany</div><p class="mdesc">Klassiker aus Alexandria: Kalbsleber mit Peperoni im ägyptischen Brot.</p></div><div class="mprice">13,50 €</div></div>
+    <div class="mitem"><div><div class="mname">Soguk Baladi</div><p class="mdesc">Soguk-Wurst mit Tomaten und Peperoni im ägyptischen Brot.</p></div><div class="mprice">12,50 €</div></div>
 
-  <div class="cat-head"><span class="cat-name">Desserts & Süßes</span><div class="cat-line"></div></div>
-  <div class="mitem"><div><div class="mname">Om Ali</div><p class="mdesc">Ägyptisches Nationaldessert: Blätterteig in Milch mit Kokosnuss, Rosinen und Nüssen.</p><div class="mtags"><span class="tag veg">Vegetarisch</span></div></div><div class="mprice">13,50 €</div></div>
-  <div class="mitem"><div><div class="mname">Sakalans</div><p class="mdesc">Halawa, Honig und Mascarpone im ägyptischen Brot mit knusprigen Walnüssen.</p><div class="mtags"><span class="tag veg">Vegetarisch</span></div></div><div class="mprice">11,50 €</div></div>
-  <div class="mitem"><div><div class="mname">Schokoladentörtchen</div><p class="mdesc">Lauwarmes Törtchen mit flüssigem Kern.</p><div class="mtags"><span class="tag veg">Vegetarisch</span></div></div><div class="mprice">8,00 €</div></div>
+    <div class="cat-head"><span class="cat-name">Desserts & Süßes</span><div class="cat-line"></div></div>
+    <div class="mitem"><div><div class="mname">Om Ali</div><p class="mdesc">Ägyptisches Nationaldessert: Blätterteig in Milch mit Kokosnuss, Rosinen und Nüssen.</p><div class="mtags"><span class="tag veg">Vegetarisch</span></div></div><div class="mprice">13,50 €</div></div>
+    <div class="mitem"><div><div class="mname">Sakalans</div><p class="mdesc">Halawa, Honig und Mascarpone im ägyptischen Brot mit knusprigen Walnüssen.</p><div class="mtags"><span class="tag veg">Vegetarisch</span></div></div><div class="mprice">11,50 €</div></div>
+    <div class="mitem"><div><div class="mname">Schokoladentörtchen</div><p class="mdesc">Lauwarmes Törtchen mit flüssigem Kern.</p><div class="mtags"><span class="tag veg">Vegetarisch</span></div></div><div class="mprice">8,00 €</div></div>
 
-  <div class="cat-head"><span class="cat-name">Extras</span><div class="cat-line"></div></div>
-  <div class="mitem"><div><div class="mname">Steakhouse Pommes</div></div><div class="mprice">4,50 €</div></div>
-  <div class="mitem"><div><div class="mname">Ägyptischer Reis</div></div><div class="mprice">5,00 €</div></div>
-  <div class="mitem"><div><div class="mname">Ägyptisches Brot (1 Stück)</div></div><div class="mprice">3,50 €</div></div>
-  <div class="mitem"><div><div class="mname">Tahini Dip</div></div><div class="mprice">2,50 €</div></div>
-  <div class="mitem"><div><div class="mname">Habanero Sauce</div></div><div class="mprice">1,50 €</div></div>
-  <div class="mitem"><div><div class="mname">Tomatensauce</div></div><div class="mprice">2,50 €</div></div>
+    <div class="cat-head"><span class="cat-name">Extras</span><div class="cat-line"></div></div>
+    <div class="mitem"><div><div class="mname">Steakhouse Pommes</div></div><div class="mprice">4,50 €</div></div>
+    <div class="mitem"><div><div class="mname">Ägyptischer Reis</div></div><div class="mprice">5,00 €</div></div>
+    <div class="mitem"><div><div class="mname">Ägyptisches Brot (1 Stück)</div></div><div class="mprice">3,50 €</div></div>
+    <div class="mitem"><div><div class="mname">Tahini Dip</div></div><div class="mprice">2,50 €</div></div>
+    <div class="mitem"><div><div class="mname">Habanero Sauce</div></div><div class="mprice">1,50 €</div></div>
+    <div class="mitem"><div><div class="mname">Tomatensauce</div></div><div class="mprice">2,50 €</div></div>
 
-  <div class="cat-head"><span class="cat-name">Kalte Getränke</span><div class="cat-line"></div></div>
-  <div class="mitem"><div><div class="mname">Mineralwasser Still (0,25 l)</div></div><div class="mprice">2,50 €</div></div>
-  <div class="mitem"><div><div class="mname">Mineralwasser Sprudel (0,25 l)</div></div><div class="mprice">2,50 €</div></div>
-  <div class="mitem"><div><div class="mname">Fritz Kola (0,33 l)</div></div><div class="mprice">3,90 €</div></div>
-  <div class="mitem"><div><div class="mname">Fritz Orange (0,33 l)</div></div><div class="mprice">3,90 €</div></div>
-  <div class="mitem"><div><div class="mname">Fritz Zero Kola (0,33 l)</div></div><div class="mprice">3,90 €</div></div>
-  <div class="mitem"><div><div class="mname">Hausgemachter Karkadeh</div></div><div class="mprice">4,50 €</div></div>
+    <div class="cat-head"><span class="cat-name">Kalte Getränke</span><div class="cat-line"></div></div>
+    <div class="mitem"><div><div class="mname">Mineralwasser Still (0,25 l)</div></div><div class="mprice">2,50 €</div></div>
+    <div class="mitem"><div><div class="mname">Mineralwasser Sprudel (0,25 l)</div></div><div class="mprice">2,50 €</div></div>
+    <div class="mitem"><div><div class="mname">Fritz Kola (0,33 l)</div></div><div class="mprice">3,90 €</div></div>
+    <div class="mitem"><div><div class="mname">Fritz Orange (0,33 l)</div></div><div class="mprice">3,90 €</div></div>
+    <div class="mitem"><div><div class="mname">Fritz Zero Kola (0,33 l)</div></div><div class="mprice">3,90 €</div></div>
+    <div class="mitem"><div><div class="mname">Hausgemachter Karkadeh</div></div><div class="mprice">4,50 €</div></div>
+  </div>
 </section>
 
 <section id="kontakt" class="contact">
-  <span class="menu-eyebrow">Besuchen Sie uns</span>
-  <div class="contact-title">Kontakt & Öffnungszeiten</div>
-  <div class="contact-grid">
-    <div>
-      <span class="info-eyebrow">Adresse</span>
-      <div class="info-val">Rostocker Straße 20a<br>68766 Hockenheim</div>
-      <span class="info-eyebrow">E-Mail</span>
-      <div class="info-val"><a href="mailto:info@kairo1980.de">info@kairo1980.de</a></div>
-      <span class="info-eyebrow">Öffnungszeiten</span>
+  <div class="contact-inner">
+    <span class="menu-eyebrow">Besuchen Sie uns</span>
+    <div class="contact-title">Kontakt & Öffnungszeiten</div>
+    <div class="contact-grid">
       <div>
-        <div class="hrow"><span class="day">Montag – Samstag</span><span>17:00 – 23:00 Uhr</span></div>
-        <div class="hrow"><span class="day">Sonntag</span><span>Geschlossen</span></div>
+        <span class="info-eyebrow">Adresse</span>
+        <div class="info-val">Rostocker Straße 20a<br>68766 Hockenheim</div>
+        <span class="info-eyebrow">E-Mail</span>
+        <div class="info-val"><a href="mailto:info@kairo1980.de">info@kairo1980.de</a></div>
+        <span class="info-eyebrow">Öffnungszeiten</span>
+        <div>
+          <div class="hrow"><span class="day">Montag – Samstag</span><span>17:00 – 23:00 Uhr</span></div>
+          <div class="hrow"><span class="day">Sonntag</span><span>Geschlossen</span></div>
+        </div>
       </div>
-    </div>
-    <div class="map-ph">
-      <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2602.5!2d8.5614!3d49.3225!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDnCsDE5JzIxLjAiTiA4wrAzMyczNi45IkU!5e0!3m2!1sde!2sde!4v1" width="100%" height="100%" style="border:0;" allowfullscreen="" loading="lazy" title="KAIRO 1980 Standort"></iframe>
+      <div class="map-ph">
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2602.5!2d8.5614!3d49.3225!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDnCsDE5JzIxLjAiTiA4wrAzMyczNi45IkU!5e0!3m2!1sde!2sde!4v1" allowfullscreen="" loading="lazy" title="KAIRO 1980 Standort"></iframe>
+      </div>
     </div>
   </div>
 </section>
