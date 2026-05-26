@@ -6,8 +6,8 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
 
 /* NAV */
 .nav { position: sticky; top: 0; z-index: 20; background: #fcf9f4; display: flex; align-items: center; justify-content: space-between; padding: 0 52px; height: 66px; border-bottom: 1px solid rgba(200,165,90,0.15); }
-.nav-brand { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 300; letter-spacing: 0.12em; color: #1c1409; text-decoration: none; }
-.nav-brand b { font-weight: 400; color: #a07838; }
+
+.nav-logo-img { height: 52px; width: auto; display: block; }
 .nav-links { display: flex; gap: 38px; list-style: none; }
 .nav-links a { font-family: 'Cinzel', serif; font-size: 9.5px; letter-spacing: 0.22em; text-transform: uppercase; color: #7a6030; text-decoration: none; transition: color 0.2s; }
 .nav-links a:hover { color: #a07838; }
