@@ -9,11 +9,11 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
   position: sticky; top: 0; z-index: 20;
   background: #fcf9f4;
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 48px; height: 80px;
+  padding: 0 48px; height: 96px;
   border-bottom: 1px solid rgba(200,165,90,0.2);
 }
 .nav-logo-img {
-  height: 64px;
+  height: 80px;
   width: auto;
   display: block;
 }
@@ -234,7 +234,7 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
 /* RESPONSIVE */
 @media (max-width: 900px) {
   .nav { padding: 0 20px; height: 70px; }
-  .nav-logo-img { height: 50px; }
+  .nav-logo-img { height: 56px; }
   .nav-reserve { display: none; }
   .nav-links { gap: 20px; }
   .nav-links a { font-size: 10px; }
