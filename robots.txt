@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://kairo1980.de/sitemap.xml
