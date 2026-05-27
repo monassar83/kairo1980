@@ -3,29 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>KAIRO 1980 – Moderne Ägyptische Küche</title>
+<title class="t" data-de="KAIRO 1980 – Moderne Ägyptische Küche" data-en="KAIRO 1980 – Modern Egyptian Cuisine">KAIRO 1980 – Moderne Ägyptische Küche</title>
 <meta name="description" content="KAIRO 1980 – Authentische ägyptische Küche in Hockenheim. Koshary, Hummus, Hawawshy & mehr. Lieferservice & Abholung. Jetzt bestellen!">
-<meta name="keywords" content="ägyptisches Restaurant Hockenheim, ägyptisches Essen Hockenheim, Koshary Hockenheim, Lieferservice Hockenheim, arabisches Essen Hockenheim, Hummus Hockenheim, orientalisches Essen Hockenheim, KAIRO 1980">
+<meta name="keywords" content="ägyptisches Restaurant Hockenheim, ägyptisches Essen Hockenheim, Koshary Hockenheim, Lieferservice Hockenheim, arabisches Essen Hockenheim, Egyptian food Hockenheim, Egyptian restaurant Germany">
 <meta name="robots" content="index, follow">
 <meta name="author" content="KAIRO 1980">
 <link rel="canonical" href="https://kairo1980.de">
-
-<!-- Open Graph (WhatsApp, Facebook, LinkedIn sharing) -->
 <meta property="og:type" content="restaurant">
 <meta property="og:title" content="KAIRO 1980 – Moderne Ägyptische Küche in Hockenheim">
 <meta property="og:description" content="Authentisches ägyptisches Comfort Food mit Seele. Koshary, Hummus, Hawawshy & mehr. Lieferservice & Abholung in Hockenheim.">
 <meta property="og:url" content="https://kairo1980.de">
 <meta property="og:image" content="https://kairo1980.de/images/hero.jpg">
 <meta property="og:locale" content="de_DE">
+<meta property="og:locale:alternate" content="en_GB">
 <meta property="og:site_name" content="KAIRO 1980">
-
-<!-- Twitter/X Card -->
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="KAIRO 1980 – Moderne Ägyptische Küche in Hockenheim">
 <meta name="twitter:description" content="Authentisches ägyptisches Comfort Food. Lieferservice & Abholung in Hockenheim.">
 <meta name="twitter:image" content="https://kairo1980.de/images/hero.jpg">
-
-<!-- Schema.org Restaurant Markup (Google reads this) -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -35,7 +30,6 @@
   "url": "https://kairo1980.de",
   "logo": "https://kairo1980.de/images/logo.jpg",
   "image": "https://kairo1980.de/images/hero.jpg",
-  "telephone": "+49-XXXXXXXX"  ,
   "email": "info@kairo1980.de",
   "address": {
     "@type": "PostalAddress",
@@ -46,8 +40,8 @@
   },
   "geo": {
     "@type": "GeoCoordinates",
-    "latitude": 49.3225,
-    "longitude": 8.5614
+    "latitude": 49.3298953,
+    "longitude": 8.5472743
   },
   "openingHoursSpecification": [
     {
@@ -57,18 +51,12 @@
       "closes": "23:00"
     }
   ],
-  "servesCuisine": ["Ägyptisch", "Orientalisch", "Arabisch"],
+  "servesCuisine": ["Ägyptisch", "Orientalisch", "Arabisch", "Egyptian", "Middle Eastern"],
   "priceRange": "€€",
   "hasMenu": "https://kairo1980.de/#speisekarte",
   "orderAction": [
-    {
-      "@type": "OrderAction",
-      "target": "https://www.lieferando.de/speisekarte/kairo-1980"
-    },
-    {
-      "@type": "OrderAction",
-      "target": "https://www.ubereats.com/de/store/kairo-1980/3a9t8nwzXfm3iAkRVtCemA"
-    }
+    {"@type": "OrderAction", "target": "https://www.lieferando.de/speisekarte/kairo-1980"},
+    {"@type": "OrderAction", "target": "https://www.ubereats.com/de/store/kairo-1980/3a9t8nwzXfm3iAkRVtCemA"}
   ]
 }
 </script>
@@ -82,81 +70,98 @@
 <nav class="nav">
   <a href="#"><img src="images/logo.jpg" alt="KAIRO 1980 – Moderne Ägyptische Küche Hockenheim" class="nav-logo-img"></a>
   <ul class="nav-links">
-    <li><a href="#ueber-uns">Über uns</a></li>
-    <li><a href="#speisekarte">Speisekarte</a></li>
-    <li><a href="#kontakt">Kontakt</a></li>
+    <li><a href="#ueber-uns" class="t" data-de="Über uns" data-en="About us">Über uns</a></li>
+    <li><a href="#speisekarte" class="t" data-de="Speisekarte" data-en="Menu">Speisekarte</a></li>
+    <li><a href="#kontakt" class="t" data-de="Kontakt" data-en="Contact">Kontakt</a></li>
   </ul>
-  <a href="#kontakt" class="nav-reserve">Jetzt bestellen</a>
+  <div class="nav-right">
+    <div class="lang-switcher">
+      <button class="lang-btn active" id="btn-de" onclick="setLang('de')">DE</button>
+      <span class="lang-sep">|</span>
+      <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
+    </div>
+    <a href="#kontakt" class="nav-reserve t" data-de="Jetzt bestellen" data-en="Order now">Jetzt bestellen</a>
+  </div>
 </nav>
 
 <section class="hero">
   <div class="hero-overlay"></div>
   <div class="hero-content">
-    <h1>Moderne<br><em>Ägyptische</em><br>Küche</h1>
-    <p class="hero-desc">Frisch zubereitet, handgemacht — inspiriert von den Aromen und der Esskultur Kairos.</p>
+    <h1><span class="t" data-de="Moderne" data-en="Modern">Moderne</span><br><em><span class="t" data-de="Ägyptische" data-en="Egyptian">Ägyptische</span></em><br><span class="t" data-de="Küche" data-en="Cuisine">Küche</span></h1>
+    <p class="hero-desc t" data-de="Frisch zubereitet, handgemacht — inspiriert von den Aromen und der Esskultur Kairos." data-en="Freshly prepared, handmade — inspired by the flavours and food culture of Cairo.">Frisch zubereitet, handgemacht — inspiriert von den Aromen und der Esskultur Kairos.</p>
     <div class="hero-actions">
-      <a href="#speisekarte" class="btn-primary">Speisekarte</a>
-      <a href="#kontakt" class="btn-ghost">Jetzt bestellen</a>
+      <a href="#speisekarte" class="btn-primary t" data-de="Speisekarte" data-en="Our Menu">Speisekarte</a>
+      <a href="#kontakt" class="btn-ghost t" data-de="Jetzt bestellen" data-en="Order now">Jetzt bestellen</a>
     </div>
   </div>
 </section>
 
 <div class="strip">
-  <div class="strip-item"><span class="strip-num">01</span><div class="strip-title">Frisch zubereitet</div><p class="strip-text">Jedes Gericht wird erst nach Bestellung zubereitet.</p></div>
-  <div class="strip-item"><span class="strip-num">02</span><div class="strip-title">Handgemacht</div><p class="strip-text">Keine Fertigprodukte. Saucen frisch, Gemüse von Hand.</p></div>
-  <div class="strip-item"><span class="strip-num">03</span><div class="strip-title">Leidenschaft</div><p class="strip-text">Aus echter Freude am Kochen und Teilen.</p></div>
+  <div class="strip-item">
+    <span class="strip-num">01</span>
+    <div class="strip-title t" data-de="Frisch zubereitet" data-en="Freshly prepared">Frisch zubereitet</div>
+    <p class="strip-text t" data-de="Jedes Gericht wird erst nach Bestellung zubereitet." data-en="Every dish is prepared fresh after you order.">Jedes Gericht wird erst nach Bestellung zubereitet.</p>
+  </div>
+  <div class="strip-item">
+    <span class="strip-num">02</span>
+    <div class="strip-title t" data-de="Handgemacht" data-en="Handmade">Handgemacht</div>
+    <p class="strip-text t" data-de="Keine Fertigprodukte. Saucen frisch, Gemüse von Hand." data-en="No ready-made products. Sauces freshly made, vegetables cut by hand.">Keine Fertigprodukte. Saucen frisch, Gemüse von Hand.</p>
+  </div>
+  <div class="strip-item">
+    <span class="strip-num">03</span>
+    <div class="strip-title t" data-de="Leidenschaft" data-en="Passion">Leidenschaft</div>
+    <p class="strip-text t" data-de="Aus echter Freude am Kochen und Teilen." data-en="Born from a genuine love of cooking and sharing.">Aus echter Freude am Kochen und Teilen.</p>
+  </div>
 </div>
 
 <section id="ueber-uns">
   <div class="story">
     <div class="story-left">
       <span class="story-year">1980</span>
-      <span class="story-eyebrow">Über uns</span>
-      <h2>Willkommen bei<br>Kairo 1980</h2>
+      <span class="story-eyebrow t" data-de="Über uns" data-en="About us">Über uns</span>
+      <h2><span class="t" data-de="Willkommen bei Kairo 1980" data-en="Welcome to Kairo 1980">Willkommen bei Kairo 1980</span></h2>
     </div>
     <div class="story-right">
       <div class="rule"></div>
-      <p>KAIRO 1980 entstand aus einem einfachen Gefühl: dem Vermissen von Zuhause.</p>
-      <p>Nicht dem perfekten Bild Ägyptens aus Reiseführern. Sondern dem echten. Der Duft von Gewürzen in den Straßen Kairos bei Nacht. Frisch gebackenes Brot, noch warm in der Hand. Reis, der dampfend auf großen Familientischen steht.</p>
-      <p>Diese Art von Essen bleibt im Gedächtnis — lange nachdem der Teller leer ist.</p>
+      <p class="t" data-de="KAIRO 1980 entstand aus einem einfachen Gefühl: dem Vermissen von Zuhause." data-en="KAIRO 1980 was born from a simple feeling: missing home.">KAIRO 1980 entstand aus einem einfachen Gefühl: dem Vermissen von Zuhause.</p>
+      <p class="t" data-de="Nicht dem perfekten Bild Ägyptens aus Reiseführern. Sondern dem echten. Der Duft von Gewürzen in den Straßen Kairos bei Nacht. Frisch gebackenes Brot, noch warm in der Hand. Reis, der dampfend auf großen Familientischen steht." data-en="Not the perfect image of Egypt from travel guides. But the real one. The smell of spices in Cairo's streets at night. Freshly baked bread, still warm in your hand. Rice steaming on large family tables.">Nicht dem perfekten Bild Ägyptens aus Reiseführern. Sondern dem echten. Der Duft von Gewürzen in den Straßen Kairos bei Nacht. Frisch gebackenes Brot, noch warm in der Hand. Reis, der dampfend auf großen Familientischen steht.</p>
+      <p class="t" data-de="Diese Art von Essen bleibt im Gedächtnis — lange nachdem der Teller leer ist." data-en="This kind of food stays with you — long after the plate is empty.">Diese Art von Essen bleibt im Gedächtnis — lange nachdem der Teller leer ist.</p>
 
       <div class="mehr-lesen-content" id="mehrLesenContent">
-        <p>Mit KAIRO 1980 wollten wir genau dieses Gefühl nach Deutschland bringen: authentisches ägyptisches Comfort Food mit Seele, Ehrlichkeit und modernem Anspruch.</p>
-        <p>Jedes Gericht erzählt ein Stück Geschichte. Inspiriert von Familienküchen, den Straßen Kairos und den Geschmäckern, mit denen viele Ägypter aufgewachsen sind.</p>
-        <p>Wir sind kein Fast Food, das nur authentisch wirken möchte. Und keine künstliche Luxusmarke, die sich zu wichtig nimmt.</p>
-        <p>KAIRO 1980 steht für warmes, ehrliches Essen — gemacht für echte Momente: für entspannte Abende zuhause, gemeinsames Essen mit Freunden, nächtliche Cravings und die kleinen Augenblicke, die man wirklich genießt.</p>
-        <p>Von rauchigem Baba Ganoush über goldene, knusprige Pommes bis hin zu aromatischen Reisgerichten, frischem ägyptischem Brot und langsam gekochten Rezepten voller Gewürze und Nostalgie — jede Bestellung soll vertraut, großzügig und unvergesslich wirken.</p>
-        <p>Denn für uns ist Essen etwas Emotionales. Es verbindet Menschen mit Erinnerungen. Mit Kultur. Mit Heimat.</p>
-        <p><strong>KAIRO 1980 ist modernes Kairo-Gefühl — direkt zu dir nach Hause.</strong></p>
+        <p class="t" data-de="Mit KAIRO 1980 wollten wir genau dieses Gefühl nach Deutschland bringen: authentisches ägyptisches Comfort Food mit Seele, Ehrlichkeit und modernem Anspruch." data-en="With KAIRO 1980 we wanted to bring exactly that feeling to Germany: authentic Egyptian comfort food with soul, honesty and a modern approach.">Mit KAIRO 1980 wollten wir genau dieses Gefühl nach Deutschland bringen: authentisches ägyptisches Comfort Food mit Seele, Ehrlichkeit und modernem Anspruch.</p>
+        <p class="t" data-de="Jedes Gericht erzählt ein Stück Geschichte. Inspiriert von Familienküchen, den Straßen Kairos und den Geschmäckern, mit denen viele Ägypter aufgewachsen sind." data-en="Every dish tells a piece of history. Inspired by family kitchens, the streets of Cairo and the flavours many Egyptians grew up with.">Jedes Gericht erzählt ein Stück Geschichte. Inspiriert von Familienküchen, den Straßen Kairos und den Geschmäckern, mit denen viele Ägypter aufgewachsen sind.</p>
+        <p class="t" data-de="Wir sind kein Fast Food, das nur authentisch wirken möchte. Und keine künstliche Luxusmarke, die sich zu wichtig nimmt." data-en="We are not fast food trying to look authentic. And not an artificial luxury brand that takes itself too seriously.">Wir sind kein Fast Food, das nur authentisch wirken möchte. Und keine künstliche Luxusmarke, die sich zu wichtig nimmt.</p>
+        <p class="t" data-de="KAIRO 1980 steht für warmes, ehrliches Essen — gemacht für echte Momente: für entspannte Abende zuhause, gemeinsames Essen mit Freunden, nächtliche Cravings und die kleinen Augenblicke, die man wirklich genießt." data-en="KAIRO 1980 stands for warm, honest food — made for real moments: relaxed evenings at home, sharing food with friends, late-night cravings and the small moments you truly enjoy.">KAIRO 1980 steht für warmes, ehrliches Essen — gemacht für echte Momente: für entspannte Abende zuhause, gemeinsames Essen mit Freunden, nächtliche Cravings und die kleinen Augenblicke, die man wirklich genießt.</p>
+        <p class="t" data-de="Von rauchigem Baba Ganoush über goldene, knusprige Pommes bis hin zu aromatischen Reisgerichten, frischem ägyptischem Brot und langsam gekochten Rezepten voller Gewürze und Nostalgie — jede Bestellung soll vertraut, großzügig und unvergesslich wirken." data-en="From smoky Baba Ganoush to golden crispy fries, aromatic rice dishes, fresh Egyptian bread and slow-cooked recipes full of spices and nostalgia — every order should feel familiar, generous and unforgettable.">Von rauchigem Baba Ganoush über goldene, knusprige Pommes bis hin zu aromatischen Reisgerichten, frischem ägyptischem Brot und langsam gekochten Rezepten voller Gewürze und Nostalgie — jede Bestellung soll vertraut, großzügig und unvergesslich wirken.</p>
+        <p class="t" data-de="Denn für uns ist Essen etwas Emotionales. Es verbindet Menschen mit Erinnerungen. Mit Kultur. Mit Heimat." data-en="Because for us, food is something emotional. It connects people with memories. With culture. With home.">Denn für uns ist Essen etwas Emotionales. Es verbindet Menschen mit Erinnerungen. Mit Kultur. Mit Heimat.</p>
+        <p><strong class="t" data-de="KAIRO 1980 ist modernes Kairo-Gefühl — direkt zu dir nach Hause." data-en="KAIRO 1980 is the modern Cairo feeling — delivered straight to your door.">KAIRO 1980 ist modernes Kairo-Gefühl — direkt zu dir nach Hause.</strong></p>
       </div>
-
-      <button class="mehr-lesen-btn" id="mehrLesenBtn" onclick="toggleMehrLesen()">Mehr lesen</button>
+      <button class="mehr-lesen-btn" id="mehrLesenBtn" onclick="toggleMehrLesen()"><span class="t" data-de="Mehr lesen" data-en="Read more">Mehr lesen</span></button>
     </div>
   </div>
 </section>
 
 <section id="speisekarte">
   <div class="menu-section">
-    <span class="menu-eyebrow">Speisekarte</span>
-    <div class="menu-title">Unsere Gerichte</div>
+    <span class="menu-eyebrow t" data-de="Speisekarte" data-en="Menu">Speisekarte</span>
+    <div class="menu-title t" data-de="Unsere Gerichte" data-en="Our Dishes">Unsere Gerichte</div>
 
-    <!-- Orientalische Vorspeisen -->
-    <div class="cat-head"><span class="cat-name">Orientalische Vorspeisen</span><div class="cat-line"></div></div>
+    <div class="cat-head"><span class="cat-name t" data-de="Orientalische Vorspeisen" data-en="Oriental Starters">Orientalische Vorspeisen</span><div class="cat-line"></div></div>
 
     <div class="mitem">
       <div>
         <div class="mname">Baba Ghanough</div>
-        <p class="mdesc">Zartes Auberginenpüree aus gegrillter Aubergine, fein abgestimmt mit orientalischen Gewürzen, cremiger Tahini und einer leichten Knoblauchnote. Serviert mit arabischem Fladenbrot.</p>
-        <div class="mtags"><span class="tag veg">Vegetarisch</span></div>
+        <p class="mdesc t" data-de="Zartes Auberginenpüree aus gegrillter Aubergine, fein abgestimmt mit orientalischen Gewürzen, cremiger Tahini und einer leichten Knoblauchnote. Serviert mit arabischem Fladenbrot." data-en="Delicate grilled aubergine purée, finely balanced with oriental spices, creamy tahini and a hint of garlic. Served with Arabic flatbread.">Zartes Auberginenpüree aus gegrillter Aubergine, fein abgestimmt mit orientalischen Gewürzen, cremiger Tahini und einer leichten Knoblauchnote. Serviert mit arabischem Fladenbrot.</p>
+        <div class="mtags"><span class="tag veg t" data-de="Vegetarisch" data-en="Vegetarian">Vegetarisch</span></div>
       </div>
       <div class="mprice">9,50 €</div>
     </div>
 
     <div class="mitem">
       <div>
-        <div class="mname">Frittierte Auberginen</div>
-        <p class="mdesc">Fein geschnittene Auberginen, goldbraun frittiert und verfeinert mit Knoblauch, grünen Peperoni und frischer Petersilie. Delikat abgeschmeckt mit einem Hauch Limette und serviert mit arabischem Fladenbrot.</p>
-        <div class="mtags"><span class="tag v">Vegan</span></div>
+        <div class="mname t" data-de="Frittierte Auberginen" data-en="Fried Aubergines">Frittierte Auberginen</div>
+        <p class="mdesc t" data-de="Fein geschnittene Auberginen, goldbraun frittiert und verfeinert mit Knoblauch, grünen Peperoni und frischer Petersilie. Delikat abgeschmeckt mit einem Hauch Limette und serviert mit arabischem Fladenbrot." data-en="Finely sliced aubergines, fried golden brown and finished with garlic, green peppers and fresh parsley. Delicately seasoned with a hint of lime and served with Arabic flatbread.">Fein geschnittene Auberginen, goldbraun frittiert und verfeinert mit Knoblauch, grünen Peperoni und frischer Petersilie. Delikat abgeschmeckt mit einem Hauch Limette und serviert mit arabischem Fladenbrot.</p>
+        <div class="mtags"><span class="tag v t" data-de="Vegan" data-en="Vegan">Vegan</span></div>
       </div>
       <div class="mprice">9,50 €</div>
     </div>
@@ -164,17 +169,17 @@
     <div class="mitem">
       <div>
         <div class="mname">Hummus</div>
-        <p class="mdesc">Der bekannte Klassiker der arabischen Küche: Fein-cremiges Kichererbsenpüree mit feiner Limettennote und einem Hauch Knoblauch, garniert mit gerösteten Pinienkernen und serviert mit arabischem Fladenbrot.</p>
-        <div class="mtags"><span class="tag v">Vegan</span></div>
+        <p class="mdesc t" data-de="Der bekannte Klassiker der arabischen Küche: Fein-cremiges Kichererbsenpüree mit feiner Limettennote und einem Hauch Knoblauch, garniert mit gerösteten Pinienkernen und serviert mit arabischem Fladenbrot." data-en="The well-known classic of Arabic cuisine: finely creamy chickpea purée with a subtle lime note and a hint of garlic, garnished with roasted pine nuts and served with Arabic flatbread.">Der bekannte Klassiker der arabischen Küche: Fein-cremiges Kichererbsenpüree mit feiner Limettennote und einem Hauch Knoblauch, garniert mit gerösteten Pinienkernen und serviert mit arabischem Fladenbrot.</p>
+        <div class="mtags"><span class="tag v t" data-de="Vegan" data-en="Vegan">Vegan</span></div>
       </div>
       <div class="mprice">9,50 €</div>
     </div>
 
     <div class="mitem">
       <div>
-        <div class="mname">Etwas von allem</div>
-        <p class="mdesc">Für alle, die unsere Vorspeisenwelt entdecken möchten: Samtiger Hummus, aromatisches Baba Ghanough und erfrischende frittierte Auberginen vereint auf einem Teller. Eine kleine Reise durch ägyptische Aromen.</p>
-        <div class="mtags"><span class="tag veg">Vegetarisch</span></div>
+        <div class="mname t" data-de="Etwas von allem" data-en="A Bit of Everything">Etwas von allem</div>
+        <p class="mdesc t" data-de="Für alle, die unsere Vorspeisenwelt entdecken möchten: Samtiger Hummus, aromatisches Baba Ghanough und erfrischende frittierte Auberginen vereint auf einem Teller. Eine kleine Reise durch ägyptische Aromen." data-en="For those who want to explore our starter world: velvety Hummus, aromatic Baba Ghanough and refreshing fried aubergines united on one plate. A small journey through Egyptian flavours.">Für alle, die unsere Vorspeisenwelt entdecken möchten: Samtiger Hummus, aromatisches Baba Ghanough und erfrischende frittierte Auberginen vereint auf einem Teller. Eine kleine Reise durch ägyptische Aromen.</p>
+        <div class="mtags"><span class="tag veg t" data-de="Vegetarisch" data-en="Vegetarian">Vegetarisch</span></div>
       </div>
       <div class="mprice">24,00 €</div>
     </div>
@@ -182,20 +187,19 @@
     <div class="mitem">
       <div>
         <div class="mname">Salata Baladi</div>
-        <p class="mdesc">Frische Tomaten, Gurken, Zwiebeln und Petersilie in einer würzig abgeschmeckten traditionellen Marinade – in Ägypten bekannt als das berühmte „Whisky-Wasser" – eine aromatische orientalische Marinade.</p>
-        <div class="mtags"><span class="tag v">Vegan</span></div>
+        <p class="mdesc t" data-de="Frische Tomaten, Gurken, Zwiebeln und Petersilie in einer würzig abgeschmeckten traditionellen Marinade – in Ägypten bekannt als das berühmte „Whisky-Wasser" – eine aromatische orientalische Marinade." data-en="Fresh tomatoes, cucumbers, onions and parsley in a traditionally seasoned marinade – known in Egypt as the famous 'Whisky Water' – an aromatic oriental marinade.">Frische Tomaten, Gurken, Zwiebeln und Petersilie in einer würzig abgeschmeckten traditionellen Marinade – in Ägypten bekannt als das berühmte „Whisky-Wasser" – eine aromatische orientalische Marinade.</p>
+        <div class="mtags"><span class="tag v t" data-de="Vegan" data-en="Vegan">Vegan</span></div>
       </div>
       <div class="mprice">7,50 €</div>
     </div>
 
-    <!-- Das Herz Ägyptens -->
-    <div class="cat-head"><span class="cat-name">Das Herz Ägyptens</span><div class="cat-line"></div></div>
+    <div class="cat-head"><span class="cat-name t" data-de="Das Herz Ägyptens" data-en="The Heart of Egypt">Das Herz Ägyptens</span><div class="cat-line"></div></div>
 
     <div class="mitem">
       <div>
         <div class="mname">Koshary</div>
-        <p class="mdesc">Das ägyptische Nationalgericht: Berglinsen, Jasminreis, Gobbetti-Pasta und Kichererbsen, vollendet mit knusprig gerösteten Zwiebeln und einer milden Tomatensauce. Dazu unsere hausgemachten Daa'a- und Habanero-Saucen.</p>
-        <div class="mtags"><span class="tag v">Vegan</span></div>
+        <p class="mdesc t" data-de="Das ägyptische Nationalgericht: Berglinsen, Jasminreis, Gobbetti-Pasta und Kichererbsen, vollendet mit knusprig gerösteten Zwiebeln und einer milden Tomatensauce. Dazu unsere hausgemachten Daa'a- und Habanero-Saucen." data-en="The Egyptian national dish: mountain lentils, jasmine rice, Gobbetti pasta and chickpeas, topped with crispy roasted onions and a mild tomato sauce. Served with our homemade Daa'a and Habanero sauces.">Das ägyptische Nationalgericht: Berglinsen, Jasminreis, Gobbetti-Pasta und Kichererbsen, vollendet mit knusprig gerösteten Zwiebeln und einer milden Tomatensauce. Dazu unsere hausgemachten Daa'a- und Habanero-Saucen.</p>
+        <div class="mtags"><span class="tag v t" data-de="Vegan" data-en="Vegan">Vegan</span></div>
       </div>
       <div class="mprice">13,50 €</div>
     </div>
@@ -203,38 +207,36 @@
     <div class="mitem">
       <div>
         <div class="mname">Foool</div>
-        <p class="mdesc">Der wohl bekannteste Frühstücksklassiker Ägyptens: Cremig gekochte Favabohnen, aromatisch verfeinert mit Tomaten, Knoblauch, Peperoni, feinem Olivenöl und einem Hauch Limette. Garniert mit frischen Zwiebeln und serviert mit unserem exklusiven ägyptischen Brot – ein echter Klassiker der ägyptischen Alltagsküche.</p>
-        <div class="mtags"><span class="tag v">Vegan</span></div>
+        <p class="mdesc t" data-de="Der wohl bekannteste Frühstücksklassiker Ägyptens: Cremig gekochte Favabohnen, aromatisch verfeinert mit Tomaten, Knoblauch, Peperoni, feinem Olivenöl und einem Hauch Limette. Garniert mit frischen Zwiebeln und serviert mit unserem exklusiven ägyptischen Brot – ein echter Klassiker der ägyptischen Alltagsküche." data-en="Arguably Egypt's most beloved breakfast classic: creamy cooked fava beans, aromatically refined with tomatoes, garlic, peppers, fine olive oil and a hint of lime. Garnished with fresh onions and served with our exclusive Egyptian bread – a true classic of everyday Egyptian cuisine.">Der wohl bekannteste Frühstücksklassiker Ägyptens: Cremig gekochte Favabohnen, aromatisch verfeinert mit Tomaten, Knoblauch, Peperoni, feinem Olivenöl und einem Hauch Limette. Garniert mit frischen Zwiebeln und serviert mit unserem exklusiven ägyptischen Brot – ein echter Klassiker der ägyptischen Alltagsküche.</p>
+        <div class="mtags"><span class="tag v t" data-de="Vegan" data-en="Vegan">Vegan</span></div>
       </div>
       <div class="mprice">11,50 €</div>
     </div>
 
-    <!-- Aus unserer Küche -->
-    <div class="cat-head"><span class="cat-name">Aus unserer Küche</span><div class="cat-line"></div></div>
+    <div class="cat-head"><span class="cat-name t" data-de="Aus unserer Küche" data-en="From Our Kitchen">Aus unserer Küche</span><div class="cat-line"></div></div>
 
     <div class="mitem">
       <div>
         <div class="mname">Kebda</div>
-        <p class="mdesc">Ein Must-try für Fleischliebhaber: Fein geschnittene Kalbsleber, aromatisch angebraten mit Peperoni und orientalischen Gewürzen. Dazu Steakhouse Pommes, Rucola, unser exklusives ägyptisches Brot und ein erfrischender Tahini-Dip.</p>
+        <p class="mdesc t" data-de="Ein Must-try für Fleischliebhaber: Fein geschnittene Kalbsleber, aromatisch angebraten mit Peperoni und orientalischen Gewürzen. Dazu Steakhouse Pommes, Rucola, unser exklusives ägyptisches Brot und ein erfrischender Tahini-Dip." data-en="A must-try for meat lovers: finely sliced veal liver, aromatically sautéed with peppers and oriental spices. Served with steakhouse fries, rocket, our exclusive Egyptian bread and a refreshing tahini dip.">Ein Must-try für Fleischliebhaber: Fein geschnittene Kalbsleber, aromatisch angebraten mit Peperoni und orientalischen Gewürzen. Dazu Steakhouse Pommes, Rucola, unser exklusives ägyptisches Brot und ein erfrischender Tahini-Dip.</p>
       </div>
       <div class="mprice">26,50 €</div>
     </div>
 
     <div class="mitem">
       <div>
-        <div class="mname">Hähnchenschlegel</div>
-        <p class="mdesc">Drei saftige Hähnchenschlegel, kräftig gewürzt mit milden arabischen Gewürzen und einem Hauch Limette. Langsam gegart für besonders zartes und aromatisches Fleisch, serviert mit reichhaltigem Reis nach ägyptischer Art – herzhaft, intensiv und voller orientalischer Wärme.</p>
+        <div class="mname t" data-de="Hähnchenschlegel" data-en="Chicken Drumsticks">Hähnchenschlegel</div>
+        <p class="mdesc t" data-de="Drei saftige Hähnchenschlegel, kräftig gewürzt mit milden arabischen Gewürzen und einem Hauch Limette. Langsam gegart für besonders zartes und aromatisches Fleisch, serviert mit reichhaltigem Reis nach ägyptischer Art – herzhaft, intensiv und voller orientalischer Wärme." data-en="Three juicy chicken drumsticks, boldly seasoned with mild Arabic spices and a hint of lime. Slow-cooked for especially tender and aromatic meat, served with rich Egyptian-style rice – hearty, intense and full of oriental warmth.">Drei saftige Hähnchenschlegel, kräftig gewürzt mit milden arabischen Gewürzen und einem Hauch Limette. Langsam gegart für besonders zartes und aromatisches Fleisch, serviert mit reichhaltigem Reis nach ägyptischer Art – herzhaft, intensiv und voller orientalischer Wärme.</p>
       </div>
       <div class="mprice">24,50 €</div>
     </div>
 
-    <!-- Ägyptische Straßenküche -->
-    <div class="cat-head"><span class="cat-name">Ägyptische Straßenküche</span><div class="cat-line"></div></div>
+    <div class="cat-head"><span class="cat-name t" data-de="Ägyptische Straßenküche" data-en="Egyptian Street Food">Ägyptische Straßenküche</span><div class="cat-line"></div></div>
 
     <div class="mitem">
       <div>
         <div class="mname">Hawawshy</div>
-        <p class="mdesc">Kräftig, saftig und voller orientalischer Aromen: Unser Hawawshy wird mit würzig gewürztem, frisch gewolftem Rindfleisch gefüllt und in unserem ägyptischen Fladenbrot gebacken. Verfeinert mit Zwiebeln, Paprika, frischen Kräutern und orientalischen Gewürzen. Serviert mit eingelegten Gurken und Tahini-Dip.</p>
+        <p class="mdesc t" data-de="Kräftig, saftig und voller orientalischer Aromen: Unser Hawawshy wird mit würzig gewürztem, frisch gewolftem Rindfleisch gefüllt und in unserem ägyptischen Fladenbrot gebacken. Verfeinert mit Zwiebeln, Paprika, frischen Kräutern und orientalischen Gewürzen. Serviert mit eingelegten Gurken und Tahini-Dip." data-en="Bold, juicy and full of oriental aromas: our Hawawshy is filled with spiced, freshly minced beef and baked in our Egyptian flatbread. Refined with onions, peppers, fresh herbs and oriental spices. Served with pickled cucumbers and tahini dip.">Kräftig, saftig und voller orientalischer Aromen: Unser Hawawshy wird mit würzig gewürztem, frisch gewolftem Rindfleisch gefüllt und in unserem ägyptischen Fladenbrot gebacken. Verfeinert mit Zwiebeln, Paprika, frischen Kräutern und orientalischen Gewürzen. Serviert mit eingelegten Gurken und Tahini-Dip.</p>
       </div>
       <div class="mprice">13,50 €</div>
     </div>
@@ -242,7 +244,7 @@
     <div class="mitem">
       <div>
         <div class="mname">Kebda Eskandarany</div>
-        <p class="mdesc">Ein Klassiker aus Alexandria: Fein geschnittene Kalbsleber, nach ägyptischer Art aromatisch angebraten mit Peperoni, Knoblauch und einer fein abgestimmten orientalischen Gewürzmischung. Serviert in unserem exklusiven ägyptischen Brot. Serviert mit eingelegten Gurken und Tahini-Dip.</p>
+        <p class="mdesc t" data-de="Ein Klassiker aus Alexandria: Fein geschnittene Kalbsleber, nach ägyptischer Art aromatisch angebraten mit Peperoni, Knoblauch und einer fein abgestimmten orientalischen Gewürzmischung. Serviert in unserem exklusiven ägyptischen Brot. Serviert mit eingelegten Gurken und Tahini-Dip." data-en="A classic from Alexandria: finely sliced veal liver, aromatically sautéed Egyptian-style with peppers, garlic and a finely balanced oriental spice blend. Served in our exclusive Egyptian bread, with pickled cucumbers and tahini dip.">Ein Klassiker aus Alexandria: Fein geschnittene Kalbsleber, nach ägyptischer Art aromatisch angebraten mit Peperoni, Knoblauch und einer fein abgestimmten orientalischen Gewürzmischung. Serviert in unserem exklusiven ägyptischen Brot. Serviert mit eingelegten Gurken und Tahini-Dip.</p>
       </div>
       <div class="mprice">13,50 €</div>
     </div>
@@ -250,19 +252,18 @@
     <div class="mitem">
       <div>
         <div class="mname">Soguk Baladi</div>
-        <p class="mdesc">Würzig, aromatisch und mit orientalischem Charakter: Fein geschnittene Soguk-Wurst, nach ägyptischer Art mit Tomaten und Peperoni herzhaft angebraten und verfeinert mit einer harmonischen Gewürzmischung. Serviert in unserem exklusiven ägyptischen Brot. Serviert mit eingelegten Gurken und Tahini-Dip.</p>
+        <p class="mdesc t" data-de="Würzig, aromatisch und mit orientalischem Charakter: Fein geschnittene Soguk-Wurst, nach ägyptischer Art mit Tomaten und Peperoni herzhaft angebraten und verfeinert mit einer harmonischen Gewürzmischung. Serviert in unserem exklusiven ägyptischen Brot. Serviert mit eingelegten Gurken und Tahini-Dip." data-en="Spicy, aromatic and with oriental character: finely sliced Soguk sausage, heartily sautéed Egyptian-style with tomatoes and peppers and refined with a harmonious spice blend. Served in our exclusive Egyptian bread, with pickled cucumbers and tahini dip.">Würzig, aromatisch und mit orientalischem Charakter: Fein geschnittene Soguk-Wurst, nach ägyptischer Art mit Tomaten und Peperoni herzhaft angebraten und verfeinert mit einer harmonischen Gewürzmischung. Serviert in unserem exklusiven ägyptischen Brot. Serviert mit eingelegten Gurken und Tahini-Dip.</p>
       </div>
       <div class="mprice">12,50 €</div>
     </div>
 
-    <!-- Desserts -->
-    <div class="cat-head"><span class="cat-name">Desserts & Süßes</span><div class="cat-line"></div></div>
+    <div class="cat-head"><span class="cat-name t" data-de="Desserts & Süßes" data-en="Desserts & Sweets">Desserts & Süßes</span><div class="cat-line"></div></div>
 
     <div class="mitem">
       <div>
-        <div class="mname">Schokoladentörtchen</div>
-        <p class="mdesc">Lauwarmes Schokoladentörtchen mit flüssigem Kern – der perfekte Abschluss zu unserem Menü.</p>
-        <div class="mtags"><span class="tag veg">Vegetarisch</span></div>
+        <div class="mname t" data-de="Schokoladentörtchen" data-en="Chocolate Fondant">Schokoladentörtchen</div>
+        <p class="mdesc t" data-de="Lauwarmes Schokoladentörtchen mit flüssigem Kern – der perfekte Abschluss zu unserem Menü." data-en="Warm chocolate fondant with a liquid centre – the perfect ending to our menu.">Lauwarmes Schokoladentörtchen mit flüssigem Kern – der perfekte Abschluss zu unserem Menü.</p>
+        <div class="mtags"><span class="tag veg t" data-de="Vegetarisch" data-en="Vegetarian">Vegetarisch</span></div>
       </div>
       <div class="mprice">8,00 €</div>
     </div>
@@ -270,8 +271,8 @@
     <div class="mitem">
       <div>
         <div class="mname">Om Ali</div>
-        <p class="mdesc">Das traditionelle ägyptische Nationaldessert: Fein buttriger Blätterteig, eingelegt in gewürzter Milch mit Kokosnussflocken und Rosinen, gekrönt von gerösteten Nüssen. Natürlich hausgemacht.</p>
-        <div class="mtags"><span class="tag veg">Vegetarisch</span></div>
+        <p class="mdesc t" data-de="Das traditionelle ägyptische Nationaldessert: Fein buttriger Blätterteig, eingelegt in gewürzter Milch mit Kokosnussflocken und Rosinen, gekrönt von gerösteten Nüssen. Natürlich hausgemacht." data-en="The traditional Egyptian national dessert: delicately buttery puff pastry soaked in spiced milk with coconut flakes and raisins, crowned with roasted nuts. Naturally homemade.">Das traditionelle ägyptische Nationaldessert: Fein buttriger Blätterteig, eingelegt in gewürzter Milch mit Kokosnussflocken und Rosinen, gekrönt von gerösteten Nüssen. Natürlich hausgemacht.</p>
+        <div class="mtags"><span class="tag veg t" data-de="Vegetarisch" data-en="Vegetarian">Vegetarisch</span></div>
       </div>
       <div class="mprice">13,50 €</div>
     </div>
@@ -279,63 +280,55 @@
     <div class="mitem">
       <div>
         <div class="mname">Sakalans</div>
-        <p class="mdesc">Ein beliebter ägyptischer Süß-Snack mit cremiger Halawa, Honig und Mascarpone in unserem exklusiven ägyptischen Brot. Ergänzt mit knusprigen Walnüssen. Süß, cremig und angenehm harmonisch.</p>
-        <div class="mtags"><span class="tag veg">Vegetarisch</span></div>
+        <p class="mdesc t" data-de="Ein beliebter ägyptischer Süß-Snack mit cremiger Halawa, Honig und Mascarpone in unserem exklusiven ägyptischen Brot. Ergänzt mit knusprigen Walnüssen. Süß, cremig und angenehm harmonisch." data-en="A popular Egyptian sweet snack with creamy Halawa, honey and mascarpone in our exclusive Egyptian bread. Complemented with crunchy walnuts. Sweet, creamy and pleasantly harmonious.">Ein beliebter ägyptischer Süß-Snack mit cremiger Halawa, Honig und Mascarpone in unserem exklusiven ägyptischen Brot. Ergänzt mit knusprigen Walnüssen. Süß, cremig und angenehm harmonisch.</p>
+        <div class="mtags"><span class="tag veg t" data-de="Vegetarisch" data-en="Vegetarian">Vegetarisch</span></div>
       </div>
       <div class="mprice">11,50 €</div>
     </div>
 
-    <!-- Extras -->
     <div class="cat-head"><span class="cat-name">Extras</span><div class="cat-line"></div></div>
-    <div class="mitem"><div><div class="mname">Steakhouse Pommes</div></div><div class="mprice">4,50 €</div></div>
-    <div class="mitem"><div><div class="mname">Ägyptischer Reis</div></div><div class="mprice">5,00 €</div></div>
-    <div class="mitem"><div><div class="mname">Ägyptisches Brot (1 Stück)</div></div><div class="mprice">3,50 €</div></div>
-    <div class="mitem"><div><div class="mname">Tahini Dip</div></div><div class="mprice">2,50 €</div></div>
-    <div class="mitem"><div><div class="mname">Habanero Sauce</div></div><div class="mprice">1,50 €</div></div>
-    <div class="mitem"><div><div class="mname">Tomatensauce</div></div><div class="mprice">2,50 €</div></div>
+    <div class="mitem"><div><div class="mname t" data-de="Steakhouse Pommes" data-en="Steakhouse Fries">Steakhouse Pommes</div></div><div class="mprice">4,50 €</div></div>
+    <div class="mitem"><div><div class="mname t" data-de="Ägyptischer Reis" data-en="Egyptian Rice">Ägyptischer Reis</div></div><div class="mprice">5,00 €</div></div>
+    <div class="mitem"><div><div class="mname t" data-de="Ägyptisches Brot (1 Stück)" data-en="Egyptian Bread (1 piece)">Ägyptisches Brot (1 Stück)</div></div><div class="mprice">3,50 €</div></div>
+    <div class="mitem"><div><div class="mname t" data-de="Tahini Dip" data-en="Tahini Dip">Tahini Dip</div></div><div class="mprice">2,50 €</div></div>
+    <div class="mitem"><div><div class="mname t" data-de="Habanero Sauce" data-en="Habanero Sauce">Habanero Sauce</div></div><div class="mprice">1,50 €</div></div>
+    <div class="mitem"><div><div class="mname t" data-de="Tomatensauce" data-en="Tomato Sauce">Tomatensauce</div></div><div class="mprice">2,50 €</div></div>
 
-    <!-- Getränke -->
-    <div class="cat-head"><span class="cat-name">Kalte Getränke</span><div class="cat-line"></div></div>
-    <div class="mitem"><div><div class="mname">Mineralwasser Still (0,25 l)</div></div><div class="mprice">2,50 €</div></div>
-    <div class="mitem"><div><div class="mname">Mineralwasser Sprudel (0,25 l)</div></div><div class="mprice">2,50 €</div></div>
-    <div class="mitem"><div><div class="mname">Fritz Kola (0,33 l)</div></div><div class="mprice">3,90 €</div></div>
-    <div class="mitem"><div><div class="mname">Fritz Orange (0,33 l)</div></div><div class="mprice">3,90 €</div></div>
-    <div class="mitem"><div><div class="mname">Fritz Zero Kola (0,33 l)</div></div><div class="mprice">3,90 €</div></div>
-    <div class="mitem"><div><div class="mname">Hausgemachter Karkadeh (0,5 l)</div></div><div class="mprice">4,50 €</div></div>
-
+    <div class="cat-head"><span class="cat-name t" data-de="Kalte Getränke" data-en="Cold Drinks">Kalte Getränke</span><div class="cat-line"></div></div>
+    <div class="mitem"><div><div class="mname t" data-de="Mineralwasser Still (0,25 l)" data-en="Still Water (0.25 l)">Mineralwasser Still (0,25 l)</div></div><div class="mprice">2,50 €</div></div>
+    <div class="mitem"><div><div class="mname t" data-de="Mineralwasser Sprudel (0,25 l)" data-en="Sparkling Water (0.25 l)">Mineralwasser Sprudel (0,25 l)</div></div><div class="mprice">2,50 €</div></div>
+    <div class="mitem"><div><div class="mname t" data-de="Fritz Kola (0,33 l)" data-en="Fritz Kola (0.33 l)">Fritz Kola (0,33 l)</div></div><div class="mprice">3,90 €</div></div>
+    <div class="mitem"><div><div class="mname t" data-de="Fritz Orange (0,33 l)" data-en="Fritz Orange (0.33 l)">Fritz Orange (0,33 l)</div></div><div class="mprice">3,90 €</div></div>
+    <div class="mitem"><div><div class="mname t" data-de="Fritz Zero Kola (0,33 l)" data-en="Fritz Zero Kola (0.33 l)">Fritz Zero Kola (0,33 l)</div></div><div class="mprice">3,90 €</div></div>
+    <div class="mitem"><div><div class="mname t" data-de="Hausgemachter Karkadeh (0,5 l)" data-en="Homemade Karkadeh (0.5 l)">Hausgemachter Karkadeh (0,5 l)</div></div><div class="mprice">4,50 €</div></div>
   </div>
 </section>
 
 <section id="kontakt" class="contact">
   <div class="contact-inner">
-    <span class="menu-eyebrow">Besuchen Sie uns</span>
-    <div class="contact-title">Kontakt & Öffnungszeiten</div>
+    <span class="menu-eyebrow t" data-de="Besuchen Sie uns" data-en="Visit us">Besuchen Sie uns</span>
+    <div class="contact-title t" data-de="Kontakt & Öffnungszeiten" data-en="Contact & Opening Hours">Kontakt & Öffnungszeiten</div>
     <div class="contact-grid">
       <div>
-        <span class="info-eyebrow">Adresse</span>
+        <span class="info-eyebrow t" data-de="Adresse" data-en="Address">Adresse</span>
         <div class="info-val">Rostocker Straße 20a<br>68766 Hockenheim</div>
         <span class="info-eyebrow">E-Mail</span>
         <div class="info-val"><a href="mailto:info@kairo1980.de">info@kairo1980.de</a></div>
-        <span class="info-eyebrow">Öffnungszeiten</span>
+        <span class="info-eyebrow t" data-de="Öffnungszeiten" data-en="Opening Hours">Öffnungszeiten</span>
         <div>
-          <div class="hrow"><span class="day">Montag – Samstag</span><span>17:00 – 23:00 Uhr</span></div>
-          <div class="hrow"><span class="day">Sonntag</span><span>Geschlossen</span></div>
+          <div class="hrow"><span class="day t" data-de="Montag – Samstag" data-en="Monday – Saturday">Montag – Samstag</span><span>17:00 – 23:00 Uhr</span></div>
+          <div class="hrow"><span class="day t" data-de="Sonntag" data-en="Sunday">Sonntag</span><span class="t" data-de="Geschlossen" data-en="Closed">Geschlossen</span></div>
         </div>
-
         <div style="margin-top: 36px;">
-          <span class="info-eyebrow">Jetzt bestellen</span>
+          <span class="info-eyebrow t" data-de="Jetzt bestellen" data-en="Order now">Jetzt bestellen</span>
           <div class="order-links">
-            <a href="https://www.lieferando.de/speisekarte/kairo-1980" target="_blank" class="order-btn lieferando">
-              Lieferando
-            </a>
-            <a href="https://www.ubereats.com/de/store/kairo-1980/3a9t8nwzXfm3iAkRVtCemA" target="_blank" class="order-btn ubereats">
-              Uber Eats
-            </a>
+            <a href="https://www.lieferando.de/speisekarte/kairo-1980" target="_blank" class="order-btn lieferando">Lieferando</a>
+            <a href="https://www.ubereats.com/de/store/kairo-1980/3a9t8nwzXfm3iAkRVtCemA" target="_blank" class="order-btn ubereats">Uber Eats</a>
           </div>
         </div>
       </div>
       <div class="map-ph">
-        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2602.5!2d8.5614!3d49.3225!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x0%3A0x0!2zNDnCsDE5JzIxLjAiTiA4wrAzMyczNi45IkU!5e0!3m2!1sde!2sde!4v1" allowfullscreen="" loading="lazy" title="KAIRO 1980 Standort"></iframe>
+        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2600.175357343614!2d8.544694011753359!3d49.32989876729051!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4797b97c5c6a0a77%3A0x1161f25fa30a31cb!2sKAIRO%201980!5e0!3m2!1sen!2sde!4v1779924687462!5m2!1sen!2sde" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="KAIRO 1980 Standort"></iframe>
       </div>
     </div>
   </div>
@@ -343,22 +336,48 @@
 
 <footer class="footer">
   <span class="footer-brand">KAIRO <b>1980</b></span>
-  <span class="footer-copy">© 2026 · Moderne Ägyptische Küche · Hockenheim</span>
+  <span class="footer-copy t" data-de="© 2026 · Moderne Ägyptische Küche · Hockenheim" data-en="© 2026 · Modern Egyptian Cuisine · Hockenheim">© 2026 · Moderne Ägyptische Küche · Hockenheim</span>
 </footer>
 
-
 <script>
+let currentLang = 'de';
+
+function setLang(lang) {
+  currentLang = lang;
+  document.documentElement.lang = lang;
+
+  // Update all translatable elements
+  document.querySelectorAll('.t').forEach(el => {
+    const text = el.getAttribute('data-' + lang);
+    if (text) el.textContent = text;
+  });
+
+  // Update title
+  document.title = lang === 'de'
+    ? 'KAIRO 1980 – Moderne Ägyptische Küche'
+    : 'KAIRO 1980 – Modern Egyptian Cuisine';
+
+  // Update active button
+  document.getElementById('btn-de').classList.toggle('active', lang === 'de');
+  document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+
+  // Update mehr lesen button text based on state
+  const btn = document.getElementById('mehrLesenBtn');
+  const isOpen = document.getElementById('mehrLesenContent').classList.contains('open');
+  btn.querySelector('.t').textContent = isOpen
+    ? (lang === 'de' ? 'Weniger lesen' : 'Read less')
+    : (lang === 'de' ? 'Mehr lesen' : 'Read more');
+}
+
 function toggleMehrLesen() {
   const content = document.getElementById('mehrLesenContent');
-  const btn = document.getElementById('mehrLesenBtn');
-  if (content.classList.contains('open')) {
-    content.classList.remove('open');
-    btn.textContent = 'Mehr lesen';
-  } else {
-    content.classList.add('open');
-    btn.textContent = 'Weniger lesen';
-  }
+  const btnText = document.getElementById('mehrLesenBtn').querySelector('.t');
+  const isOpen = content.classList.toggle('open');
+  btnText.textContent = isOpen
+    ? (currentLang === 'de' ? 'Weniger lesen' : 'Read less')
+    : (currentLang === 'de' ? 'Mehr lesen' : 'Read more');
 }
 </script>
+
 </body>
 </html>
