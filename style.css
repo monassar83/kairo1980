@@ -251,3 +251,28 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
   .contact-grid { grid-template-columns: 1fr; gap: 40px; }
   .footer { padding: 32px 24px; flex-direction: column; gap: 14px; text-align: center; }
 }
+
+/* MEHR LESEN */
+.mehr-lesen-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.6s ease;
+}
+.mehr-lesen-content.open {
+  max-height: 1000px;
+}
+.mehr-lesen-btn {
+  margin-top: 24px;
+  background: none;
+  border: none;
+  border-bottom: 1px solid #b8914a;
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #b8914a;
+  cursor: pointer;
+  padding-bottom: 3px;
+  transition: color 0.2s;
+}
+.mehr-lesen-btn:hover { color: #a07838; }
