@@ -49,8 +49,21 @@
     </div>
     <div class="story-right">
       <div class="rule"></div>
-      <p>KAIRO 1980 ist eine kleine inhabergeführte Küche, inspiriert von den Aromen, der Atmosphäre und der Esskultur Kairos. Die Idee entstand über viele Jahre – aus echter Freude am Kochen.</p>
-      <p>Bei uns wird jedes Gericht erst nach Bestellung frisch zubereitet. Keine Fertigprodukte, keine Kompromisse – nur ehrliches, handgemachtes Essen.</p>
+      <p>KAIRO 1980 entstand aus einem einfachen Gefühl: dem Vermissen von Zuhause.</p>
+      <p>Nicht dem perfekten Bild Ägyptens aus Reiseführern. Sondern dem echten. Der Duft von Gewürzen in den Straßen Kairos bei Nacht. Frisch gebackenes Brot, noch warm in der Hand. Reis, der dampfend auf großen Familientischen steht.</p>
+      <p>Diese Art von Essen bleibt im Gedächtnis — lange nachdem der Teller leer ist.</p>
+
+      <div class="mehr-lesen-content" id="mehrLesenContent">
+        <p>Mit KAIRO 1980 wollten wir genau dieses Gefühl nach Deutschland bringen: authentisches ägyptisches Comfort Food mit Seele, Ehrlichkeit und modernem Anspruch.</p>
+        <p>Jedes Gericht erzählt ein Stück Geschichte. Inspiriert von Familienküchen, den Straßen Kairos und den Geschmäckern, mit denen viele Ägypter aufgewachsen sind.</p>
+        <p>Wir sind kein Fast Food, das nur authentisch wirken möchte. Und keine künstliche Luxusmarke, die sich zu wichtig nimmt.</p>
+        <p>KAIRO 1980 steht für warmes, ehrliches Essen — gemacht für echte Momente: für entspannte Abende zuhause, gemeinsames Essen mit Freunden, nächtliche Cravings und die kleinen Augenblicke, die man wirklich genießt.</p>
+        <p>Von rauchigem Baba Ganoush über goldene, knusprige Pommes bis hin zu aromatischen Reisgerichten, frischem ägyptischem Brot und langsam gekochten Rezepten voller Gewürze und Nostalgie — jede Bestellung soll vertraut, großzügig und unvergesslich wirken.</p>
+        <p>Denn für uns ist Essen etwas Emotionales. Es verbindet Menschen mit Erinnerungen. Mit Kultur. Mit Heimat.</p>
+        <p><strong>KAIRO 1980 ist modernes Kairo-Gefühl — direkt zu dir nach Hause.</strong></p>
+      </div>
+
+      <button class="mehr-lesen-btn" id="mehrLesenBtn" onclick="toggleMehrLesen()">Mehr lesen</button>
     </div>
   </div>
 </section>
@@ -254,5 +267,19 @@
   <span class="footer-copy">© 2026 · Moderne Ägyptische Küche · Hockenheim</span>
 </footer>
 
+
+<script>
+function toggleMehrLesen() {
+  const content = document.getElementById('mehrLesenContent');
+  const btn = document.getElementById('mehrLesenBtn');
+  if (content.classList.contains('open')) {
+    content.classList.remove('open');
+    btn.textContent = 'Mehr lesen';
+  } else {
+    content.classList.add('open');
+    btn.textContent = 'Weniger lesen';
+  }
+}
+</script>
 </body>
 </html>
