@@ -276,3 +276,30 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
   transition: color 0.2s;
 }
 .mehr-lesen-btn:hover { color: #a07838; }
+
+/* ORDER BUTTONS */
+.order-links {
+  display: flex;
+  gap: 14px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+.order-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  padding: 13px 24px;
+  text-decoration: none;
+  display: inline-block;
+  transition: opacity 0.2s;
+}
+.order-btn:hover { opacity: 0.85; }
+.order-btn.lieferando {
+  background: #ff8000;
+  color: #fff;
+}
+.order-btn.ubereats {
+  background: #000;
+  color: #fff;
+}
