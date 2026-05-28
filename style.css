@@ -329,3 +329,14 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
 .lang-btn.active { color: #1c1409; font-weight: 500; }
 .lang-btn:hover { color: #a07838; }
 .lang-sep { color: rgba(160,130,70,0.3); font-size: 11px; }
+
+/* FADE IN ON SCROLL */
+.fade-in {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s ease, transform 0.7s ease;
+}
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
