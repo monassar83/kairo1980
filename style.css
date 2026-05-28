@@ -340,3 +340,16 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
   opacity: 1;
   transform: translateY(0);
 }
+
+/* REVIEW LINK */
+.review-link {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: #a07838;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(160,120,56,0.3);
+  padding-bottom: 2px;
+  transition: color 0.2s;
+}
+.review-link:hover { color: #b8914a; }
