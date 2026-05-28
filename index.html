@@ -101,7 +101,7 @@
   </div>
 </section>
 
-<div class="strip">
+<div class="strip fade-in">
   <div class="strip-item">
     <span class="strip-num">01</span>
     <div class="strip-title t" data-de="Frisch zubereitet" data-en="Freshly prepared">Frisch zubereitet</div>
@@ -119,7 +119,7 @@
   </div>
 </div>
 
-<section id="ueber-uns">
+<section id="ueber-uns" class="fade-in">
   <div class="story">
     <div class="story-left">
       <span class="story-year">1980</span>
@@ -146,7 +146,7 @@
   </div>
 </section>
 
-<section id="speisekarte">
+<section id="speisekarte" class="fade-in">
   <div class="menu-section">
     <span class="menu-eyebrow t" data-de="Speisekarte" data-en="Menu">Speisekarte</span>
     <div class="menu-title t" data-de="Unsere Gerichte" data-en="Our Dishes">Unsere Gerichte</div>
@@ -309,7 +309,7 @@
   </div>
 </section>
 
-<section id="kontakt" class="contact">
+<section id="kontakt" class="fade-in" class="contact">
   <div class="contact-inner">
     <span class="menu-eyebrow t" data-de="Besuchen Sie uns" data-en="Visit us">Besuchen Sie uns</span>
     <div class="contact-title t" data-de="Kontakt & Öffnungszeiten" data-en="Contact & Opening Hours">Kontakt & Öffnungszeiten</div>
@@ -339,7 +339,7 @@
   </div>
 </section>
 
-<footer class="footer">
+<footer class="footer fade-in">
   <span class="footer-brand">KAIRO <b>1980</b></span>
   <span class="footer-copy t" data-de="© 2026 · Moderne Ägyptische Küche · Hockenheim" data-en="© 2026 · Modern Egyptian Cuisine · Hockenheim">© 2026 · Moderne Ägyptische Küche · Hockenheim</span>
 </footer>
@@ -388,5 +388,18 @@ function toggleMehrLesen() {
 KAIRO 1980 – Ägyptisches Restaurant und Lieferservice.
 Liefergebiet: Hockenheim 68766 · Reilingen 68799 · Neulußheim 68809 · Altlußheim 68804 · Ketsch 68775 · Edingen-Neckarhausen 68535 · Ladenburg 68526 · Walldorf 69190 · St. Leon-Rot 68789 · Sandhausen 69207 · Schwetzingen 68723 · Plankstadt 68723 · Brühl 68782 · Waghäusel 68753 · Oberhausen-Rheinhausen 68794 · Eppelheim 69117 · Wiesloch 69168 · Philippsburg 76661 · Rauenberg 69231 · Heidelberg 69115 69117 69120 69123 69124 69126 · Schifferstadt 67105 · Mannheim 68167 68169 68199 68259.
 </div>
+
+<script>
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(el => {
+    if (el.isIntersecting) {
+      el.target.classList.add('visible');
+      observer.unobserve(el.target);
+    }
+  });
+}, { threshold: 0.12 });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
 </body>
 </html>
