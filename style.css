@@ -353,3 +353,13 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
   transition: color 0.2s;
 }
 .review-link:hover { color: #b8914a; }
+
+/* CONTACT FIX */
+.contact-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+.contact-info-col {
+  display: flex;
+  flex-direction: column;
+}
