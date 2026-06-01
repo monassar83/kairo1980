@@ -139,7 +139,7 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
 .info-val a { color: #8a6828; text-decoration: none; }
 .hrow { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(200,165,90,0.2); font-size: 14px; color: #4a3010; }
 .hrow .day { color: #9a8050; }
-.map-ph { background: #ecdfc4; border-radius: 2px; height: 320px; overflow: hidden; }
+.map-ph { background: #ecdfc4; border-radius: 2px; height: 320px; overflow: hidden; width: 100%; }
 .map-ph iframe { width: 100%; height: 100%; border: 0; }
 
 /* ORDER BUTTONS */
@@ -191,6 +191,8 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
   .menu-section { padding: 60px 24px; }
   .menu-title { font-size: 36px; }
   .contact { padding: 60px 24px; }
-  .contact-grid { grid-template-columns: 1fr; gap: 40px; }
+  .contact-inner { padding: 0; }
+  .contact-grid { grid-template-columns: 1fr; gap: 40px; overflow: hidden; }
+  .map-ph { height: 220px; width: 100%; }
   .footer { padding: 32px 24px; flex-direction: column; gap: 14px; text-align: center; }
 }
