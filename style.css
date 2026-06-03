@@ -196,3 +196,17 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
   .map-ph { height: 220px; width: 100%; }
   .footer { padding: 32px 24px; flex-direction: column; gap: 14px; text-align: center; }
 }
+
+/* WHATSAPP BUTTON */
+.whatsapp-btn {
+  font-family: 'Cinzel', serif;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: #25a244;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(37,162,68,0.3);
+  padding-bottom: 2px;
+  transition: color 0.2s;
+  display: inline-block;
+}
+.whatsapp-btn:hover { color: #1a7a32; }
