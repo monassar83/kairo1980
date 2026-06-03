@@ -41,7 +41,7 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
 
 /* HERO */
 .hero {
-  position: relative; min-height: 600px;
+  position: relative; min-height: 100vh;
   display: flex; align-items: center; justify-content: center;
   text-align: center;
   background: url('images/hero.jpg') center/cover no-repeat;
@@ -215,11 +215,10 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
   height: auto;
   display: block;
   margin: 0 auto 40px;
-  border-radius: 6px;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.35);
+  filter: drop-shadow(0 2px 20px rgba(0,0,0,0.7));
 }
 
 @media (max-width: 900px) {
   .hero-logo { width: 220px; margin-bottom: 28px; }
-  .hero { min-height: 420px; }
+  .hero { min-height: 500px; }
 }
