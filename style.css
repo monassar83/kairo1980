@@ -211,14 +211,15 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
 
 /* HERO LOGO */
 .hero-logo {
-  width: 280px;
+  width: 300px;
   height: auto;
   display: block;
   margin: 0 auto 40px;
-  border-radius: 4px;
+  border-radius: 6px;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.35);
 }
 
 @media (max-width: 900px) {
-  .hero-logo { width: 200px; margin-bottom: 28px; }
+  .hero-logo { width: 220px; margin-bottom: 28px; }
   .hero { min-height: 420px; }
 }
