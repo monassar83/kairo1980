@@ -41,7 +41,7 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
 
 /* HERO */
 .hero {
-  position: relative; min-height: 100vh;
+  position: relative; min-height: 100vh; align-items: flex-end; padding-bottom: 80px;
   display: flex; align-items: center; justify-content: center;
   text-align: center;
   background: url('images/hero.jpg') center/cover no-repeat;
@@ -207,18 +207,4 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
   .map-ph { height: 220px; }
 
   .footer { padding: 32px 24px; flex-direction: column; gap: 14px; text-align: center; }
-}
-
-/* HERO LOGO */
-.hero-logo {
-  width: 300px;
-  height: auto;
-  display: block;
-  margin: 0 auto 40px;
-  filter: drop-shadow(0 2px 20px rgba(0,0,0,0.7));
-}
-
-@media (max-width: 900px) {
-  .hero-logo { width: 220px; margin-bottom: 28px; }
-  .hero { min-height: 500px; }
 }
