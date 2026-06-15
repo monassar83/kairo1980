@@ -208,3 +208,16 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
 
   .footer { padding: 32px 24px; flex-direction: column; gap: 14px; text-align: center; }
 }
+
+
+/* INSTAGRAM FOOTER LINK */
+.footer-instagram {
+  font-family: 'Cinzel', serif;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #b8914a;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-instagram:hover { color: #d4a85c; }
