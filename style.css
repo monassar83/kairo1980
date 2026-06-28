@@ -221,3 +221,26 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
   transition: color 0.2s;
 }
 .footer-instagram:hover { color: #d4a85c; }
+
+/* REVIEWS SECTION */
+.reviews-section {
+  background: #fcf9f4;
+  padding: 80px 80px 40px;
+  border-top: 1px solid rgba(200,165,90,0.15);
+}
+.reviews-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.reviews-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 40px;
+  font-weight: 300;
+  color: #1c1409;
+  margin-bottom: 40px;
+}
+
+@media (max-width: 900px) {
+  .reviews-section { padding: 60px 24px 32px; }
+  .reviews-title { font-size: 30px; }
+}
