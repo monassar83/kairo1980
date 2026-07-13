@@ -365,7 +365,16 @@
   <div class="reviews-inner">
     <span class="menu-eyebrow t" data-de="Was unsere Kunden sagen" data-en="What our customers say">Was unsere Kunden sagen</span>
     <div class="reviews-title t" data-de="Kundenbewertungen" data-en="Customer Reviews">Kundenbewertungen</div>
-    <script defer async src='https://cdn.trustindex.io/loader.js?26009e47556630025d96b61fa99'></script>
+    <div class="reviews-summary" id="reviewsSummary"></div>
+    <div class="reviews-carousel">
+      <button class="reviews-nav prev" onclick="moveReviews(-1)">&#8592;</button>
+      <div class="reviews-track-wrap">
+        <div class="reviews-track" id="reviewsTrack"></div>
+      </div>
+      <button class="reviews-nav next" onclick="moveReviews(1)">&#8594;</button>
+    </div>
+    <div class="reviews-dots" id="reviewsDots"></div>
+    <a href="https://g.page/r/CcsxCqNf8mEREBM/review" target="_blank" class="reviews-cta t" data-de="Eigene Bewertung schreiben &#8594;" data-en="Write your own review &#8594;">Eigene Bewertung schreiben &#8594;</a>
   </div>
 </section>
 
@@ -431,5 +440,85 @@ const observer = new IntersectionObserver((entries) => {
 
 document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 </script>
+
+<script>
+// Reviews carousel
+let currentReview = 0;
+let reviews = [];
+
+async function loadReviews() {
+  try {
+    const res = await fetch('/reviews.json?v=' + Date.now());
+    const data = await res.json();
+    reviews = data.reviews || [];
+    const rating = data.rating || 5;
+    const total = data.totalRatings || 0;
+
+    // Summary
+    const summary = document.getElementById('reviewsSummary');
+    if (summary) {
+      const stars = '★'.repeat(Math.round(rating)) + '☆'.repeat(5 - Math.round(rating));
+      summary.innerHTML = `
+        <div class="reviews-stars">${stars}</div>
+        <div class="reviews-score">${rating.toFixed(1)} <span class="reviews-total">/ 5 · ${total} ${document.documentElement.lang === 'en' ? 'reviews on Google' : 'Bewertungen auf Google'}</span></div>
+      `;
+    }
+
+    if (reviews.length === 0) {
+      document.querySelector('.reviews-carousel').style.display = 'none';
+      document.getElementById('reviewsDots').style.display = 'none';
+      return;
+    }
+
+    renderReviews();
+  } catch(e) {
+    document.querySelector('.reviews-section').style.display = 'none';
+  }
+}
+
+function renderReviews() {
+  const track = document.getElementById('reviewsTrack');
+  const dots = document.getElementById('reviewsDots');
+  if (!track) return;
+
+  track.innerHTML = reviews.map((r, i) => `
+    <div class="review-card ${i === 0 ? 'active' : ''}">
+      <div class="review-header">
+        <div class="review-avatar">${r.author.charAt(0).toUpperCase()}</div>
+        <div>
+          <div class="review-author">${r.author}</div>
+          <div class="review-time">${r.time}</div>
+        </div>
+        <div class="review-stars">${'★'.repeat(r.rating)}</div>
+      </div>
+      <p class="review-text">${r.text}</p>
+    </div>
+  `).join('');
+
+  dots.innerHTML = reviews.map((_, i) =>
+    `<span class="dot ${i === 0 ? 'active' : ''}" onclick="goToReview(${i})"></span>`
+  ).join('');
+}
+
+function moveReviews(dir) {
+  goToReview((currentReview + dir + reviews.length) % reviews.length);
+}
+
+function goToReview(idx) {
+  currentReview = idx;
+  document.querySelectorAll('.review-card').forEach((c, i) => {
+    c.classList.toggle('active', i === idx);
+  });
+  document.querySelectorAll('.dot').forEach((d, i) => {
+    d.classList.toggle('active', i === idx);
+  });
+}
+
+// Auto-advance every 5 seconds
+setInterval(() => moveReviews(1), 5000);
+
+loadReviews();
+</script>
+
 </body>
 </html>
