@@ -1,1 +1,31 @@
+name: Fetch Google Reviews
 
+on:
+  schedule:
+    - cron: '0 8 */4 * *'  # Every 4 days at 8am
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  fetch-reviews:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Fetch reviews from Google Places
+        env:
+          GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+        run: node fetch-reviews.js
+
+      - name: Commit updated reviews
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add reviews.json request-log.json
+          git diff --staged --quiet || git commit -m "Update Google reviews"
+          git push
