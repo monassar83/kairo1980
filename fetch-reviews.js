@@ -6,7 +6,7 @@ const https = require('https');
 const fs = require('fs');
 
 const API_KEY = process.env.GOOGLE_PLACES_API_KEY;
-const PLACE_ID = 'ChIJjb-wxc25l0cRy7ET2a0f6OE'; // KAIRO 1980 Hockenheim
+const PLACE_ID = 'ChIJdwpqXHy5l0cRyzEKo1_yYRE'; // KAIRO 1980 Hockenheim
 const OUTPUT_FILE = 'reviews.json';
 const MAX_REQUESTS_PER_MONTH = 10;
 
