@@ -1,6 +1,42 @@
 {
-  "lastUpdated": "2026-07-13T00:00:00.000Z",
+  "lastUpdated": "2026-07-20T13:14:58.556Z",
   "rating": 5,
-  "totalRatings": 0,
-  "reviews": []
+  "totalRatings": 11,
+  "reviews": [
+    {
+      "author": "Yasemin",
+      "avatar": "https://lh3.googleusercontent.com/a/ACg8ocKwruVRRMZuatXCB_9yp5iwwKTSvxXORfG8_KUua29L6_y8Pw=s128-c0x00000000-cc-rp-mo",
+      "rating": 5,
+      "text": "Das Essen war wirklich lecker, frisch und sehr gut gewürzt. Besonders die gefüllten Teigstücke mit Hackfleisch waren geschmacklich richtig gut und großzügig. Man merkt, dass hier mit Mühe und Liebe gekocht wird. Auch die Portionen waren ordentlich und das Essen kam appetitlich an. Wir waren sehr zufrieden und bestellen gerne wieder. Vielen Dank für das leckere Essen!",
+      "time": "vor 3 Wochen"
+    },
+    {
+      "author": "L B",
+      "avatar": "https://lh3.googleusercontent.com/a/ACg8ocLmTge6-Kiua9guiyaYH_SKQUWE90B2Z_RHQX7EORfbIL_kLg=s128-c0x00000000-cc-rp-mo",
+      "rating": 5,
+      "text": "Endlich ein Lieferdienst, der qualitativ hochwertiges und authentisches Essen anbietet! Der Besitzer ist super nett und die Lieferungen waren jedes Mal sehr schnell. Absolute Empfehlung!",
+      "time": "in der letzten Woche"
+    },
+    {
+      "author": "Felix Liebau",
+      "avatar": "https://lh3.googleusercontent.com/a/ACg8ocLgp4Ay8JSeiiYxAbc1RRDltMW1Lf4TyfQ9A_EZAZEwSCOmdT8=s128-c0x00000000-cc-rp-mo",
+      "rating": 5,
+      "text": "Unglaublich leckeres Essen und mal eine gelungene Abwechslung zu den Pizza- und Dönerläden in Hockenheim. Nur zu empfehlen!",
+      "time": "vor einer Woche"
+    },
+    {
+      "author": "Ram",
+      "avatar": "https://lh3.googleusercontent.com/a-/ALV-UjUcoDRVRaNFzi_YfZznV50JlXPLq3O4yGytxGT3N5WkLYqtTKv2=s128-c0x00000000-cc-rp-mo",
+      "rating": 5,
+      "text": "Das Essen war fantastisch; es fühlte sich an, als wäre ich im Urlaub in Ägypten und würde köstliche traditionelle ägyptische Gerichte genießen. Vielen Dank und weiter so!",
+      "time": "vor 3 Wochen"
+    },
+    {
+      "author": "Robin",
+      "avatar": "https://lh3.googleusercontent.com/a-/ALV-UjViCzZ10qaMOSr2lyVNidS7CSLMUTGIKW7FOzg6C9vK7JkMcQM8qg=s128-c0x00000000-cc-rp-mo-ba4",
+      "rating": 5,
+      "text": "Wir haben dort bestellt und waren sehr zufrieden. Die Lieferzeit war zwar etwas länger, aber das Restaurant wirbt mit frischer Zubereitung und guter Qualität und das merkt man auch. Das Essen war lecker, frisch und die Portionen waren angemessen.\nDer Lieferant war sehr freundlich und das Preis-Leistungs-Verhältnis stimmt absolut. Ägyptische Restaurants gibt es hier leider kaum, daher ist das eine tolle Abwechslung. Wer die ägyptische Küche mag oder sie einmal ausprobieren möchte, dem kann ich das Restaurant definitiv empfehlen.",
+      "time": "vor 4 Wochen"
+    }
+  ]
 }
