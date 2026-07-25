@@ -1,7 +1,7 @@
 {
-  "lastUpdated": "2026-07-21T10:17:48.293Z",
+  "lastUpdated": "2026-07-25T09:29:43.601Z",
   "rating": 5,
-  "totalRatings": 11,
+  "totalRatings": 13,
   "reviews": [
     {
       "author": "Yasemin",
@@ -11,20 +11,6 @@
       "time": "vor 3 Wochen"
     },
     {
-      "author": "L B",
-      "avatar": "https://lh3.googleusercontent.com/a/ACg8ocLmTge6-Kiua9guiyaYH_SKQUWE90B2Z_RHQX7EORfbIL_kLg=s128-c0x00000000-cc-rp-mo",
-      "rating": 5,
-      "text": "Endlich ein Lieferdienst, der qualitativ hochwertiges und authentisches Essen anbietet! Der Besitzer ist super nett und die Lieferungen waren jedes Mal sehr schnell. Absolute Empfehlung!",
-      "time": "in der letzten Woche"
-    },
-    {
-      "author": "Felix Liebau",
-      "avatar": "https://lh3.googleusercontent.com/a/ACg8ocLgp4Ay8JSeiiYxAbc1RRDltMW1Lf4TyfQ9A_EZAZEwSCOmdT8=s128-c0x00000000-cc-rp-mo",
-      "rating": 5,
-      "text": "Unglaublich leckeres Essen und mal eine gelungene Abwechslung zu den Pizza- und Dönerläden in Hockenheim. Nur zu empfehlen!",
-      "time": "vor einer Woche"
-    },
-    {
       "author": "Ram",
       "avatar": "https://lh3.googleusercontent.com/a-/ALV-UjUcoDRVRaNFzi_YfZznV50JlXPLq3O4yGytxGT3N5WkLYqtTKv2=s128-c0x00000000-cc-rp-mo",
       "rating": 5,
@@ -32,11 +18,25 @@
       "time": "vor 3 Wochen"
     },
     {
-      "author": "Robin",
-      "avatar": "https://lh3.googleusercontent.com/a-/ALV-UjViCzZ10qaMOSr2lyVNidS7CSLMUTGIKW7FOzg6C9vK7JkMcQM8qg=s128-c0x00000000-cc-rp-mo-ba4",
+      "author": "Dominik Knapp",
+      "avatar": "https://lh3.googleusercontent.com/a/ACg8ocJdCLIMXrLSfO3yeRgbKatyErpJzIbm3kUtiqbDvCXY5lRShg=s128-c0x00000000-cc-rp-mo",
       "rating": 5,
-      "text": "Wir haben dort bestellt und waren sehr zufrieden. Die Lieferzeit war zwar etwas länger, aber das Restaurant wirbt mit frischer Zubereitung und guter Qualität und das merkt man auch. Das Essen war lecker, frisch und die Portionen waren angemessen.\nDer Lieferant war sehr freundlich und das Preis-Leistungs-Verhältnis stimmt absolut. Ägyptische Restaurants gibt es hier leider kaum, daher ist das eine tolle Abwechslung. Wer die ägyptische Küche mag oder sie einmal ausprobieren möchte, dem kann ich das Restaurant definitiv empfehlen.",
-      "time": "vor einem Monat"
+      "text": "Ich habe heute zum ersten Mal bei Kairo 1980 über Lieferando bestellt. Als dort eine Lieferzeit von ca. 2 Stunden angezeigt wurde, war ich kurz geschockt und habe direkt dort angerufen. Ich hatte den Besitzer persönlich am Telefon. Er beruhigte mich sofort und erklärte mir, dass alles frisch zubereitet wird. Meine Hähnchenschlegel mit Reis bräuchten etwa 40 Minuten plus Fahrzeit, also deutlich weniger als angezeigt.\n\nAls leidenschaftlicher Hobbykoch konnte ich das total nachvollziehen, und wir sind noch ins Plaudern übers Kochen gekommen. Ein richtig angenehmes Gespräch mit einem sympathischen Mann, der spürbar Wert auf Qualität legt. Genau 50 Minuten später stand er dann tatsächlich persönlich vor der Tür und hat mir sogar noch ein Getränk dazu geschenkt.\n\nDas Essen war einfach phänomenal, ehrlich das beste gelieferte Essen, das ich je hatte. Zartes, saftiges, wunderbar gewürztes Hähnchen, dazu perfekt zubereiteter, aromatischer Reis. Insgesamt einfach toll. Ich freue mich schon darauf, bald auch persönlich dort essen zu gehen.“",
+      "time": "in der letzten Woche"
+    },
+    {
+      "author": "Sid Machinery",
+      "avatar": "https://lh3.googleusercontent.com/a-/ALV-UjVqoScoTTSEiPLs5-ymfcuGuZXezifBC_RNNLG401vtm_HpB3U=s128-c0x00000000-cc-rp-mo",
+      "rating": 5,
+      "text": "Habe heute zum ersten mal hier bestellt und war sehr zufrieden :) Das Essen war frisch, warm und seeeehr lecker. Habe das \"Soguk Baladi\" und die Habanero Sauce probiert. Die Sauce war nicht sehr stark vom Geschmack, aber war auch absolut nicht nötig, da der Rest genug wäre und die leicht fruchtige und scharfe Note hat perfekt gepasst!",
+      "time": "in der letzten Woche"
+    },
+    {
+      "author": "L B",
+      "avatar": "https://lh3.googleusercontent.com/a/ACg8ocLmTge6-Kiua9guiyaYH_SKQUWE90B2Z_RHQX7EORfbIL_kLg=s128-c0x00000000-cc-rp-mo",
+      "rating": 5,
+      "text": "Endlich ein Lieferdienst, der qualitativ hochwertiges und authentisches Essen anbietet! Der Besitzer ist super nett und die Lieferungen waren jedes Mal sehr schnell. Absolute Empfehlung!",
+      "time": "vor einer Woche"
     }
   ]
 }
