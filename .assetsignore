@@ -1,0 +1,14 @@
+# Files in this repo that must NOT be published to kairo1980.de.
+# `assets.directory` is "." (the repo root), so without this list Cloudflare
+# uploads everything — including the .git directory — as public static assets.
+
+.git
+.github
+.gitignore
+.assetsignore
+wrangler.jsonc
+node_modules
+
+# Build-time only: runs in GitHub Actions, never in the browser.
+fetch-reviews.js
+request-log.json

@@ -445,12 +445,25 @@ document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
 // Reviews carousel
 let currentReview = 0;
 let reviews = [];
+let reviewTimer = null;
+
+const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+  '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+}[ch]));
+
+// Google returns review text with real newlines; keep the author's paragraphs.
+const formatReviewText = (text) => escapeHtml(text)
+  .split(/\n\s*\n/)
+  .map(p => p.trim().replace(/\n/g, '<br>'))
+  .filter(Boolean)
+  .join('</p><p class="review-text">');
 
 async function loadReviews() {
   try {
     const res = await fetch('/reviews.json?v=' + Date.now());
+    if (!res.ok) throw new Error('reviews.json returned ' + res.status);
     const data = await res.json();
-    reviews = data.reviews || [];
+    reviews = Array.isArray(data.reviews) ? data.reviews : [];
     const rating = data.rating || 5;
     const total = data.totalRatings || 0;
 
@@ -465,15 +478,24 @@ async function loadReviews() {
     }
 
     if (reviews.length === 0) {
-      document.querySelector('.reviews-carousel').style.display = 'none';
-      document.getElementById('reviewsDots').style.display = 'none';
+      hideCarousel();
       return;
     }
 
     renderReviews();
+    startAutoAdvance();
   } catch(e) {
-    document.querySelector('.reviews-section').style.display = 'none';
+    // Keep the heading and the "leave a review" call to action — only the
+    // carousel depends on reviews.json.
+    hideCarousel();
   }
+}
+
+function hideCarousel() {
+  const carousel = document.querySelector('.reviews-carousel');
+  const dots = document.getElementById('reviewsDots');
+  if (carousel) carousel.style.display = 'none';
+  if (dots) dots.style.display = 'none';
 }
 
 function renderReviews() {
@@ -481,19 +503,23 @@ function renderReviews() {
   const dots = document.getElementById('reviewsDots');
   if (!track) return;
 
-  track.innerHTML = reviews.map((r, i) => `
+  track.innerHTML = reviews.map((r, i) => {
+    const author = String(r.author || 'Anonym');
+    const stars = Math.max(0, Math.min(5, Math.round(r.rating || 0)));
+    return `
     <div class="review-card ${i === 0 ? 'active' : ''}">
       <div class="review-header">
-        <div class="review-avatar">${r.author.charAt(0).toUpperCase()}</div>
+        <div class="review-avatar">${escapeHtml(author.charAt(0).toUpperCase())}</div>
         <div>
-          <div class="review-author">${r.author}</div>
-          <div class="review-time">${r.time}</div>
+          <div class="review-author">${escapeHtml(author)}</div>
+          <div class="review-time">${escapeHtml(r.time)}</div>
         </div>
-        <div class="review-stars">${'★'.repeat(r.rating)}</div>
+        <div class="review-stars">${'★'.repeat(stars)}</div>
       </div>
-      <p class="review-text">${r.text}</p>
+      <p class="review-text">${formatReviewText(r.text)}</p>
     </div>
-  `).join('');
+  `;
+  }).join('');
 
   dots.innerHTML = reviews.map((_, i) =>
     `<span class="dot ${i === 0 ? 'active' : ''}" onclick="goToReview(${i})"></span>`
@@ -501,10 +527,12 @@ function renderReviews() {
 }
 
 function moveReviews(dir) {
+  if (!reviews.length) return;
   goToReview((currentReview + dir + reviews.length) % reviews.length);
 }
 
 function goToReview(idx) {
+  if (!Number.isInteger(idx) || idx < 0 || idx >= reviews.length) return;
   currentReview = idx;
   document.querySelectorAll('.review-card').forEach((c, i) => {
     c.classList.toggle('active', i === idx);
@@ -514,8 +542,13 @@ function goToReview(idx) {
   });
 }
 
-// Auto-advance every 5 seconds
-setInterval(() => moveReviews(1), 5000);
+// Auto-advance every 5 seconds — only once reviews are actually loaded.
+// Starting the timer earlier made moveReviews() divide by an empty array,
+// which set currentReview to NaN and left the carousel permanently blank.
+function startAutoAdvance() {
+  if (reviewTimer || reviews.length < 2) return;
+  reviewTimer = setInterval(() => moveReviews(1), 5000);
+}
 
 loadReviews();
 </script>

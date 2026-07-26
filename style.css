@@ -292,7 +292,8 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
 }
 .review-time { font-size: 12px; color: #9a8050; margin-top: 3px; }
 .review-stars { color: #b8914a; font-size: 16px; margin-left: auto; }
-.review-text { font-size: 14px; line-height: 1.85; color: #5a4020; }
+.review-text { font-size: 14px; line-height: 1.85; color: #5a4020; margin: 0; }
+.review-text + .review-text { margin-top: 0.9em; }
 .reviews-nav {
   background: none; border: 1px solid rgba(200,165,90,0.3);
   color: #b8914a; width: 44px; height: 44px;

@@ -1,26 +1,33 @@
 name: Fetch Google Reviews
 
 on:
+  # Mondays and Thursdays at 08:00 UTC. A day-of-month step like '*/4' restarts
+  # on the 1st, so it fires twice in two days at every month boundary.
   schedule:
-    - cron: '0 8 */4 * *'  # Every 4 days at 8am
+    - cron: '0 8 * * 1,4'
   workflow_dispatch:  # Allow manual trigger
 
 permissions:
   contents: write
+
+# Never let a scheduled run and a manual run push at the same time.
+concurrency:
+  group: fetch-reviews
+  cancel-in-progress: false
 
 jobs:
   fetch-reviews:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Fetch reviews from Google Places
         env:
@@ -32,5 +39,10 @@ jobs:
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add reviews.json request-log.json
-          git diff --staged --quiet || git commit -m "Update Google reviews"
+          if git diff --staged --quiet; then
+            echo "No review changes to publish."
+            exit 0
+          fi
+          git commit -m "Update Google reviews"
+          git pull --rebase origin main
           git push
