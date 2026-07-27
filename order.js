@@ -43,14 +43,18 @@
       name: 'Name', phone: 'Telefon', address: 'Straße & Hausnummer',
       addressPh: 'z. B. Rostocker Straße 20a',
       postcode: 'Postleitzahl', postcodePh: '68766',
-      deliveryFee: 'Lieferung', deliveryFree: 'inklusive',
+      deliveryFee: 'Lieferung',
       zoneOk: 'Wir liefern nach {city}.',
       zoneFee: 'Lieferung nach {city}: {fee}.',
-      zoneFreeAt: 'Ab {n} € liefern wir kostenfrei.',
-      zoneMin: 'Mindestbestellwert in {city}: {min} €.',
       zoneBelowMin: 'Noch {missing} bis zum Mindestbestellwert in {city} ({min} €).',
       zoneUnknown: 'Diese Postleitzahl liegt außerhalb unseres Liefergebiets. Sie können uns trotzdem eine unverbindliche Anfrage senden — das ist noch keine Bestellung. Wir prüfen, ob wir zu Ihnen liefern können, und antworten direkt im Chat.',
-      time: 'Wunschzeit', timePh: 'z. B. 19:30 oder „so schnell wie möglich"',
+      when: 'Wunschtermin', asap: 'So schnell wie möglich', scheduled: 'Für später planen',
+      dateLabel: 'Datum', timeLabel: 'Uhrzeit',
+      closedNote: 'Wir haben gerade geschlossen. Sie können trotzdem vorbestellen — wählen Sie einen Wunschtermin, wir bestätigen ihn im Chat.',
+      warnClosedAsap: 'Wir sind gerade geschlossen, „so schnell wie möglich" heißt daher: zur nächsten Öffnung ({next}).',
+      warnOutsideHours: 'Zu diesem Termin haben wir geschlossen. Senden Sie die Bestellung trotzdem — wir schlagen im Chat eine passende Zeit vor.',
+      warnLeadTime: 'Für Firmenbestellungen brauchen wir mindestens {h} Stunden Vorlauf. Wir prüfen den Termin und bestätigen ihn im Chat.',
+      warnPastTime: 'Dieser Termin liegt in der Vergangenheit.',
       notes: 'Anmerkung', notesPh: 'Allergien, Klingel, Etage …',
       company: 'Firma / Rechnungsadresse',
       isBusiness: 'Firmenbestellung',
@@ -70,7 +74,10 @@
       msgBusiness: 'FIRMENBESTELLUNG',
       mLead: 'Vorlauf', mHours: 'Std.',
       mType: 'Art', mName: 'Name', mPhone: 'Telefon', mAddress: 'Adresse',
-      mTime: 'Wunschzeit', mNotes: 'Anmerkung', mCompany: 'Firma',
+      mTime: 'Wunschtermin', mNotes: 'Anmerkung', mCompany: 'Firma',
+      mPreorder: 'VORBESTELLUNG — ausserhalb der Öffnungszeiten aufgegeben',
+      mCheckTime: 'Wunschtermin ausserhalb der Öffnungszeiten — bitte prüfen',
+      mCheckLead: 'Weniger als {h} Std. Vorlauf — bitte prüfen',
       mSubtotal: 'Zwischensumme', mDiscount: 'Rabatt', mTotal: 'Gesamt', mPaypal: 'PayPal',
       mOutsideArea: 'PLZ ausserhalb des Liefergebiets — Anfrage zur Prüfung',
       mUnderMin: 'Unter dem Mindestbestellwert ({min} €)'
@@ -89,14 +96,18 @@
       name: 'Name', phone: 'Phone', address: 'Street & number',
       addressPh: 'e.g. Rostocker Straße 20a',
       postcode: 'Postcode', postcodePh: '68766',
-      deliveryFee: 'Delivery', deliveryFree: 'included',
+      deliveryFee: 'Delivery',
       zoneOk: 'We deliver to {city}.',
       zoneFee: 'Delivery to {city}: {fee}.',
-      zoneFreeAt: 'Free delivery from €{n}.',
-      zoneMin: 'Minimum order in {city}: €{min}.',
       zoneBelowMin: '{missing} to go until the minimum order in {city} (€{min}).',
       zoneUnknown: 'This postcode is outside our delivery area. You can still send us a non-binding enquiry — this is not an order yet. We will check whether we can deliver to you and reply in the chat.',
-      time: 'Preferred time', timePh: 'e.g. 7:30 pm or "as soon as possible"',
+      when: 'Preferred time', asap: 'As soon as possible', scheduled: 'Schedule for later',
+      dateLabel: 'Date', timeLabel: 'Time',
+      closedNote: 'We are closed right now. You can still pre-order — pick a preferred time and we will confirm it in the chat.',
+      warnClosedAsap: 'We are currently closed, so "as soon as possible" means at our next opening ({next}).',
+      warnOutsideHours: 'We are closed at that time. Send the order anyway — we will suggest a suitable time in the chat.',
+      warnLeadTime: 'Corporate orders need at least {h} hours lead time. We will check the time and confirm it in the chat.',
+      warnPastTime: 'That time is in the past.',
       notes: 'Note', notesPh: 'Allergies, doorbell, floor …',
       company: 'Company / billing address',
       isBusiness: 'Corporate order',
@@ -117,6 +128,9 @@
       mLead: 'Lead time', mHours: 'hrs',
       mType: 'Type', mName: 'Name', mPhone: 'Phone', mAddress: 'Address',
       mTime: 'Preferred time', mNotes: 'Note', mCompany: 'Company',
+      mPreorder: 'PRE-ORDER — placed outside opening hours',
+      mCheckTime: 'Preferred time is outside opening hours — please check',
+      mCheckLead: 'Less than {h} hrs lead time — please check',
       mSubtotal: 'Subtotal', mDiscount: 'Discount', mTotal: 'Total', mPaypal: 'PayPal',
       mOutsideArea: 'Postcode outside the delivery area — request to be checked',
       mUnderMin: 'Below the minimum order (€{min})'
@@ -151,6 +165,7 @@
     try {
       var parts = new Intl.DateTimeFormat('en-GB', {
         timeZone: 'Europe/Berlin', weekday: 'short',
+        year: 'numeric', month: '2-digit', day: '2-digit',
         hour: '2-digit', minute: '2-digit', hour12: false
       }).formatToParts(new Date());
       var get = function (type) {
@@ -160,7 +175,11 @@
       var map = { Mon: 'mon', Tue: 'tue', Wed: 'wed', Thu: 'thu', Fri: 'fri', Sat: 'sat', Sun: 'sun' };
       var day = map[get('weekday').slice(0, 3)];
       if (!day) return null;
-      return { day: day, minutes: ((+get('hour')) % 24) * 60 + (+get('minute')) };
+      return {
+        day: day,
+        minutes: ((+get('hour')) % 24) * 60 + (+get('minute')),
+        iso: get('year') + '-' + get('month') + '-' + get('day')
+      };
     } catch (e) {
       return null;
     }
@@ -178,6 +197,58 @@
       out.push({ kind: 'evening', from: day.evening[0], to: day.evening[1] });
     }
     return out;
+  }
+
+  /* --- scheduling ---------------------------------------------------------
+     The guest may order at 02:00 for tomorrow lunch. None of these checks
+     block: they set expectations and flag the message, the same contract the
+     postcode check uses.
+  ------------------------------------------------------------------------- */
+
+  // 'YYYY-MM-DD' -> config day key, without touching the local timezone.
+  function dayKeyFromISO(iso) {
+    var p = String(iso).split('-');
+    if (p.length !== 3) return null;
+    var date = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2]));
+    if (isNaN(date.getTime())) return null;
+    return DAY_KEYS[(date.getUTCDay() + 6) % 7];
+  }
+
+  // Comparable ordinal for a wall-clock moment; both sides are Berlin time.
+  function stamp(iso, minutes) {
+    var p = String(iso).split('-');
+    return Date.UTC(+p[0], +p[1] - 1, +p[2]) / 60000 + minutes;
+  }
+
+  function openAt(iso, minutes) {
+    var key = dayKeyFromISO(iso);
+    if (!key) return false;
+    return slotsFor(key).some(function (s) {
+      return minutes >= hhmm(s.from) && minutes <= hhmm(s.to);
+    });
+  }
+
+  function isOpenNow() {
+    var now = berlinNow();
+    return !!now && openAt(now.iso, now.minutes);
+  }
+
+  // First service window at or after "now", searched a week ahead.
+  function nextOpening() {
+    var now = berlinNow();
+    if (!now) return null;
+    var L = t();
+    for (var i = 0; i < 8; i++) {
+      var key = DAY_KEYS[(DAY_KEYS.indexOf(now.day) + i) % 7];
+      var slots = slotsFor(key);
+      for (var j = 0; j < slots.length; j++) {
+        if (i > 0 || hhmm(slots[j].from) > now.minutes) {
+          return { day: key, from: slots[j].from, sameDay: i === 0,
+                   label: (i === 0 ? '' : L.days[key] + ' ') + slots[j].from };
+        }
+      }
+    }
+    return null;
   }
 
   function renderHours() {
@@ -252,14 +323,17 @@
         (next.sameDay ? '' : L.days[next.day] + ' ') + next.slot.from + '</span>' : '');
   }
 
-  // Keep schema.org in step with the table. Google renders this page, so the
+  // Keep schema.org in step with the page. Google renders this page, so the
   // rewritten JSON-LD is what gets indexed; the static block in the HTML stays
   // as a valid fallback for crawlers that do not execute scripts.
+  var schemaRating = null;
+
   function updateSchemaHours() {
     var node = document.querySelector('script[type="application/ld+json"]');
     if (!node) return;
     try {
       var data = JSON.parse(node.textContent);
+
       var spec = [];
       DAY_KEYS.forEach(function (key) {
         slotsFor(key).forEach(function (s) {
@@ -271,10 +345,87 @@
           });
         });
       });
-      if (!spec.length) return;
-      data.openingHoursSpecification = spec;
+      if (spec.length) data.openingHoursSpecification = spec;
+
+      // Every town we deliver to, as a named place rather than a bare string.
+      var zones = (CFG.delivery && CFG.delivery.zones) || [];
+      if (zones.length) {
+        var seen = {};
+        data.areaServed = zones.map(function (row) {
+          return String(row[1]).replace(/\s*\(.*\)$/, '').split(' / ')[0];
+        }).filter(function (city) {
+          if (seen[city]) return false;
+          seen[city] = true;
+          return true;
+        }).map(function (city) {
+          return { '@type': 'City', name: city };
+        });
+      }
+
+      // The menu, read from the page so it cannot drift from what guests see.
+      var menu = buildMenuSchema();
+      if (menu) data.hasMenu = menu;
+
+      // Only ever the real Google figures, and only while they are on screen.
+      if (schemaRating && schemaRating.count > 0) {
+        data.aggregateRating = {
+          '@type': 'AggregateRating',
+          ratingValue: schemaRating.value,
+          reviewCount: schemaRating.count,
+          bestRating: 5,
+          worstRating: 1
+        };
+      }
+
       node.textContent = JSON.stringify(data, null, 2);
     } catch (e) { /* malformed JSON-LD — leave the original untouched */ }
+  }
+
+  function buildMenuSchema() {
+    var heads = document.querySelectorAll('.menu-section .cat-head');
+    if (!heads.length) return null;
+
+    var sections = [];
+    [].forEach.call(heads, function (head) {
+      var name = head.querySelector('.cat-name');
+      var dishes = [];
+      var node = head.nextElementSibling;
+      while (node && !node.classList.contains('cat-head')) {
+        if (node.classList.contains('mitem')) {
+          var title = node.querySelector('.mname');
+          var price = node.getAttribute('data-price');
+          if (title) {
+            var dish = { '@type': 'MenuItem', name: title.textContent.trim() };
+            var desc = node.querySelector('.mdesc');
+            if (desc) dish.description = desc.textContent.trim();
+            if (price) {
+              dish.offers = { '@type': 'Offer', price: price, priceCurrency: 'EUR' };
+            }
+            var tag = node.querySelector('.tag');
+            if (tag) dish.suitableForDiet = /vegan/i.test(tag.textContent)
+              ? 'https://schema.org/VeganDiet'
+              : 'https://schema.org/VegetarianDiet';
+            dishes.push(dish);
+          }
+        }
+        node = node.nextElementSibling;
+      }
+      if (name && dishes.length) {
+        sections.push({
+          '@type': 'MenuSection',
+          name: name.textContent.trim(),
+          hasMenuItem: dishes
+        });
+      }
+    });
+
+    if (!sections.length) return null;
+    return {
+      '@type': 'Menu',
+      name: lang() === 'en' ? 'Menu' : 'Speisekarte',
+      url: 'https://kairo1980.de/#speisekarte',
+      hasMenuSection: sections
+    };
   }
 
   /* =========================================================================
@@ -322,19 +473,29 @@
     Object.keys(cart).forEach(function (id) {
       if (items[id]) subtotal += items[id].price * cart[id];
     });
-    var pct = CFG.order.directDiscountPercent || 0;
+    // Company + collected in person earns the better rate; everything else
+    // gets the standard direct-order discount.
+    var pct = (form.business && form.type === 'pickup' &&
+               CFG.order.businessPickupDiscountPercent != null)
+      ? CFG.order.businessPickupDiscountPercent
+      : (CFG.order.directDiscountPercent || 0);
     var discount = Math.round(subtotal * pct) / 100;
 
-    // Delivery is free from the corporate threshold upwards; below it the
-    // zone's own fee applies. An unknown zone charges nothing here — the fee
-    // is agreed in the chat instead of guessed by the page.
+    // The delivery fee sits OUTSIDE the discount: the 10 % is a discount on
+    // food, not on driving. It is waived once the food subtotal reaches the
+    // threshold — optionally only for corporate orders, see config. An unknown
+    // zone charges nothing here; that fee is agreed in the chat rather than
+    // guessed by the page.
     var zone = form.type === 'delivery' ? zoneFor(draft.fPlz) : null;
-    var threshold = (CFG.business && CFG.business.freeDeliveryFrom) || Infinity;
-    var fee = (zone && subtotal < threshold) ? zone.fee : 0;
+    var b = CFG.business || {};
+    var threshold = b.freeDeliveryFrom || Infinity;
+    var qualifies = subtotal >= threshold && (!b.freeDeliveryBusinessOnly || form.business);
+    var fee = (zone && !qualifies) ? zone.fee : 0;
 
     return {
       subtotal: subtotal,
       discount: discount,
+      discountPercent: pct,
       fee: fee,
       zone: zone,
       total: subtotal - discount + fee
@@ -428,6 +589,10 @@
     els.heading = document.getElementById('cartHeading');
     els.body = document.getElementById('cartBody');
 
+    // Populated up front: an empty heading would otherwise sit in the
+    // document outline that crawlers and screen readers walk.
+    els.heading.textContent = t().cart;
+
     els.fab.addEventListener('click', function () { openPanel(); });
     els.backdrop.addEventListener('click', closePanel);
     document.getElementById('cartClose').addEventListener('click', closePanel);
@@ -437,6 +602,9 @@
   }
 
   function openPanel() {
+    // Outside opening hours "as soon as possible" is meaningless, so the panel
+    // opens on the scheduling tab. Only ever pre-selected, never forced.
+    if (!isOpenNow() && !draft.fDate && form.when === 'asap') form.when = 'scheduled';
     els.panel.hidden = false;
     els.backdrop.hidden = false;
     document.body.classList.add('cart-open');
@@ -461,7 +629,10 @@
       '</label>';
   }
 
-  var form = { type: 'delivery', business: false };
+  // `when` starts as 'asap', but the panel switches it to 'scheduled' the
+  // first time it opens while the kitchen is closed — a 2 a.m. "as soon as
+  // possible" is never what the guest means.
+  var form = { type: 'delivery', business: false, when: 'asap' };
 
   function fill(template, values) {
     return String(template).replace(/\{(\w+)\}/g, function (whole, key) {
@@ -469,11 +640,88 @@
     });
   }
 
+  // Structured pick-a-time control. Native date/time inputs give every phone
+  // its own familiar picker for free — no library, and no free-text "asap-ish"
+  // strings that have to be deciphered in the chat.
+  function whenHtml() {
+    var L = t();
+    var now = berlinNow();
+    var scheduled = form.when === 'scheduled';
+    return '<fieldset class="cart-when">' +
+      '<legend class="cart-label">' + L.when + '</legend>' +
+      '<div class="cart-types">' +
+        '<button type="button" class="cart-type' + (scheduled ? '' : ' active') +
+          '" data-when="asap">' + L.asap + '</button>' +
+        '<button type="button" class="cart-type' + (scheduled ? ' active' : '') +
+          '" data-when="scheduled">' + L.scheduled + '</button>' +
+      '</div>' +
+      '<div class="cart-when-fields" id="fWhenFields"' + (scheduled ? '' : ' hidden') + '>' +
+        '<label class="cart-field"><span class="cart-label">' + L.dateLabel + '</span>' +
+          '<input id="fDate" type="date"' + (now ? ' min="' + now.iso + '"' : '') + '></label>' +
+        '<label class="cart-field"><span class="cart-label">' + L.timeLabel + '</span>' +
+          '<input id="fTime" type="time" step="300"></label>' +
+      '</div>' +
+      '<div class="cart-zone" id="cartWhenHint"></div>' +
+      '</fieldset>';
+  }
+
+  // Everything wrong with the chosen moment, in the guest's language. Advisory.
+  function whenWarnings() {
+    var L = t();
+    var out = [];
+    var now = berlinNow();
+    if (!now) return out;
+
+    if (form.when !== 'scheduled') {
+      if (!isOpenNow()) {
+        var next = nextOpening();
+        out.push({ kind: 'closed', text: fill(L.warnClosedAsap, { next: next ? next.label : '—' }) });
+      }
+      return out;
+    }
+
+    var iso = draft.fDate, time = draft.fTime;
+    if (!iso || !time) return out;
+
+    var minutes = hhmm(time);
+    var target = stamp(iso, minutes);
+    var current = stamp(now.iso, now.minutes);
+
+    if (target < current) {
+      out.push({ kind: 'past', text: L.warnPastTime });
+      return out;
+    }
+    if (!openAt(iso, minutes)) {
+      out.push({ kind: 'hours', text: L.warnOutsideHours });
+    }
+    var lead = (CFG.business && CFG.business.leadTimeHours) || 0;
+    if (form.business && lead && target - current < lead * 60) {
+      out.push({ kind: 'lead', text: fill(L.warnLeadTime, { h: lead }) });
+    }
+    return out;
+  }
+
+  function paintWhen() {
+    var host = document.getElementById('cartWhenHint');
+    if (!host) return;
+    var warnings = whenWarnings();
+    host.className = 'cart-zone' + (warnings.length ? ' is-below-min' : '');
+    host.textContent = warnings.map(function (w) { return w.text; }).join(' ');
+  }
+
+  // Human-readable version of the chosen moment, for the WhatsApp message.
+  function whenText() {
+    var L = t();
+    if (form.when !== 'scheduled' || !draft.fDate || !draft.fTime) return L.asap;
+    var p = String(draft.fDate).split('-');
+    return p[2] + '.' + p[1] + '.' + p[0] + ', ' + draft.fTime;
+  }
+
   function sumsHtml(sums) {
     var L = t();
     return '<div class="cart-sum"><span>' + L.subtotal + '</span><span>' + money(sums.subtotal) + '</span></div>' +
       (sums.discount > 0
-        ? '<div class="cart-sum is-discount"><span>' + L.discount + ' −' + CFG.order.directDiscountPercent +
+        ? '<div class="cart-sum is-discount"><span>' + L.discount + ' −' + sums.discountPercent +
           ' %</span><span>−' + money(sums.discount) + '</span></div>'
         : '') +
       (form.type === 'delivery' && sums.zone
@@ -518,14 +766,13 @@
       return;
     }
 
+    // Deliberately says nothing about free delivery: that benefit is a
+    // business-catering term and is advertised only in the Firmen section.
     var parts = [];
     parts.push(sums.fee > 0
       ? fill(L.zoneFee, { city: zone.city, fee: money(sums.fee) })
       : fill(L.zoneOk, { city: zone.city }));
 
-    if (zone.fee > 0 && sums.subtotal < (CFG.business.freeDeliveryFrom || Infinity)) {
-      parts.push(fill(L.zoneFreeAt, { n: CFG.business.freeDeliveryFrom }));
-    }
     if (sums.subtotal < zone.minOrder) {
       parts.push(fill(L.zoneBelowMin, {
         missing: money(zone.minOrder - sums.subtotal), city: zone.city, min: zone.minOrder
@@ -574,6 +821,7 @@
       : '';
 
     els.body.innerHTML =
+      (isOpenNow() ? '' : '<p class="cart-note is-closed">' + L.closedNote + '</p>') +
       '<ul class="cart-lines">' + lines + '</ul>' +
       '<div class="cart-sums" id="cartSums">' + sumsHtml(sums) + '</div>' +
       '<div class="cart-types" role="group" aria-label="' + L.type + '">' +
@@ -590,7 +838,7 @@
           field('fPlz', L.postcode, 'text', L.postcodePh, true) +
           '<div class="cart-zone" id="cartZoneHint"></div>' +
         '</div>' +
-        field('fTime', L.time, 'text', L.timePh, false) +
+        whenHtml() +
         (CFG.business && CFG.business.enabled
           ? '<label class="cart-check"><input type="checkbox" id="fBusiness"' +
             (form.business ? ' checked' : '') + '><span>' + L.isBusiness + '</span></label>' +
@@ -610,7 +858,7 @@
   // Repainting the panel (language switch, quantity change) rebuilds its DOM,
   // so anything the guest already typed has to be carried across.
   var draft = {};
-  var DRAFT_FIELDS = ['fName', 'fPhone', 'fAddress', 'fPlz', 'fTime', 'fCompany', 'fNotes'];
+  var DRAFT_FIELDS = ['fName', 'fPhone', 'fAddress', 'fPlz', 'fDate', 'fTime', 'fCompany', 'fNotes'];
   function rememberForm() {
     DRAFT_FIELDS.forEach(function (id) {
       var el = document.getElementById(id);
@@ -668,7 +916,7 @@
     out.push('');
     out.push(L.mSubtotal + ': ' + money(sums.subtotal));
     if (sums.discount > 0) {
-      out.push(L.mDiscount + ' ' + CFG.order.directDiscountPercent + ' %: −' + money(sums.discount));
+      out.push(L.mDiscount + ' ' + sums.discountPercent + ' %: −' + money(sums.discount));
     }
     if (data.type === 'delivery' && sums.zone) {
       out.push(L.deliveryFee + ': ' + (sums.fee > 0 ? money(sums.fee) : money(0)));
@@ -688,12 +936,22 @@
         out.push('⚠ ' + fill(L.mUnderMin, { min: sums.zone.minOrder }));
       }
     }
-    if (data.time) out.push(L.mTime + ': ' + data.time);
+    out.push(L.mTime + ': ' + data.time);
     if (data.company) out.push(L.mCompany + ': ' + data.company);
     if (data.notes) out.push(L.mNotes + ': ' + data.notes);
     if (data.business && CFG.business) {
       out.push(L.mLead + ': ≥ ' + CFG.business.leadTimeHours + ' ' + L.mHours);
     }
+
+    // Anything the guest was warned about is repeated here, so the same facts
+    // reach whoever answers the chat.
+    whenWarnings().forEach(function (warning) {
+      if (warning.kind === 'hours' || warning.kind === 'past') out.push('⚠ ' + L.mCheckTime);
+      if (warning.kind === 'lead') {
+        out.push('⚠ ' + fill(L.mCheckLead, { h: CFG.business.leadTimeHours }));
+      }
+    });
+    if (!isOpenNow()) out.push('⚠ ' + L.mPreorder);
 
     return out.join('\n');
   }
@@ -705,7 +963,7 @@
       type: form.type,
       business: !!document.getElementById('fBusiness') && document.getElementById('fBusiness').checked,
       name: val('fName'), phone: val('fPhone'), address: val('fAddress'),
-      plz: val('fPlz'), time: val('fTime'), company: val('fCompany'), notes: val('fNotes')
+      plz: val('fPlz'), time: whenText(), company: val('fCompany'), notes: val('fNotes')
     };
 
     var required = ['fName', 'fPhone'];
@@ -771,6 +1029,14 @@
         form.type = type.getAttribute('data-type');
         rememberForm();
         paintPanel();
+        return;
+      }
+
+      var when = e.target.closest('[data-when]');
+      if (when) {
+        form.when = when.getAttribute('data-when');
+        rememberForm();
+        paintPanel();
       }
     });
 
@@ -781,6 +1047,8 @@
         var note = document.getElementById('cartLeadNote');
         if (wrap) wrap.hidden = !form.business;
         if (note) note.hidden = !form.business;
+        // Ticking the box can waive the delivery fee, so the total moves.
+        paintSums();
       }
     });
 
@@ -797,6 +1065,7 @@
       // The postcode changes the fee and therefore the total, so the summary
       // is repainted in place — a full repaint would steal the caret.
       if (e.target.id === 'fPlz') paintSums();
+      if (e.target.id === 'fDate' || e.target.id === 'fTime') paintWhen();
     });
 
     // Deep link used by the business section and the "order now" buttons.
@@ -825,7 +1094,8 @@
       freeDeliveryFrom: b.freeDeliveryFrom,
       leadTimeHours: b.leadTimeHours,
       fromPersons: b.fromPersons,
-      discount: CFG.order.directDiscountPercent
+      discount: CFG.order.directDiscountPercent,
+      businessPickupDiscount: CFG.order.businessPickupDiscountPercent
     };
 
     [].forEach.call(document.querySelectorAll('[data-cfg]'), function (el) {
@@ -845,6 +1115,7 @@
     });
 
     renderBusinessHours();
+    renderAreas();
 
     // Corporate enquiry links carry a prefilled, structured template.
     [].forEach.call(document.querySelectorAll('[data-wa-template]'), function (el) {
@@ -878,6 +1149,24 @@
     return runs.filter(function (r) { return r.text; }).map(function (r) {
       return (r.from === r.to ? short[r.from] : short[r.from] + ' – ' + short[r.to]) + ' ' + r.text;
     });
+  }
+
+  // Visible delivery-area list. Same data as the basket, so a price change in
+  // the spreadsheet updates the marketing copy and the checkout together.
+  function renderAreas() {
+    var host = document.getElementById('areasList');
+    if (!host) return;
+    var rows = (CFG.delivery && CFG.delivery.zones) || [];
+    if (!rows.length) { host.innerHTML = ''; return; }
+
+    var minLabel = lang() === 'en' ? 'min.' : 'ab';
+    host.innerHTML = rows.map(function (row) {
+      return '<li class="area">' +
+        '<span class="area-plz">' + escapeHtml(row[0]) + '</span>' +
+        '<span class="area-city">' + escapeHtml(row[1]) + '</span>' +
+        '<span class="area-min">' + minLabel + ' ' + row[3] + ' €</span>' +
+        '</li>';
+    }).join('');
   }
 
   function renderBusinessHours() {
@@ -927,6 +1216,17 @@
       wireEvents();
       paint();
     }
+
+    // index.html has already fetched reviews.json for the carousel; it hands
+    // the figures over rather than us requesting the file a second time.
+    // aggregateRating is only ever emitted for ratings actually shown on the
+    // page — inventing or duplicating them is a structured-data violation.
+    document.addEventListener('kairo:reviews', function (e) {
+      var detail = e.detail || {};
+      if (!detail.rating || !detail.total) return;
+      schemaRating = { value: detail.rating, count: detail.total };
+      updateSchemaHours();
+    });
 
     // Language switch repaints everything that carries generated text.
     document.addEventListener('kairo:lang', function () {

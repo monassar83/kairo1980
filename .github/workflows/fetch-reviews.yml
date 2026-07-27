@@ -24,6 +24,8 @@ concurrency:
 jobs:
   fetch-reviews:
     runs-on: ubuntu-latest
+    outputs:
+      changed: ${{ steps.commit.outputs.changed }}
     steps:
       - name: Checkout repo
         uses: actions/checkout@v5
@@ -44,6 +46,7 @@ jobs:
       # Runs even when the fetch step failed: the request was still billed, and
       # request-log.json holds the spend. Losing it would hand back free calls.
       - name: Commit updated reviews
+        id: commit
         if: always()
         run: |
           git config --local user.email "action@github.com"
@@ -51,8 +54,17 @@ jobs:
           git add reviews.json request-log.json
           if git diff --staged --quiet; then
             echo "Nothing to publish."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
           git commit -m "Update Google reviews"
           git pull --rebase origin main
           git push
+
+  # Publishes the refreshed reviews. Only runs when something actually changed.
+  publish:
+    needs: fetch-reviews
+    if: needs.fetch-reviews.outputs.changed == 'true'
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit

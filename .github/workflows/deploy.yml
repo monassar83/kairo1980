@@ -1,0 +1,93 @@
+name: Deploy to Cloudflare
+
+on:
+  push:
+    branches: [main]
+    # Docs and the zone spreadsheet never reach the browser, so a change to
+    # them alone should not spend a deployment.
+    paths-ignore:
+      - '**.md'
+      - 'data/**'
+      - 'tools/**'
+      - '.github/workflows/fetch-reviews.yml'
+  workflow_dispatch:
+  # Called by fetch-reviews.yml: a push made with GITHUB_TOKEN deliberately
+  # does not trigger other workflows, so refreshed reviews would otherwise sit
+  # in the repo without ever reaching the live site.
+  workflow_call:
+
+permissions:
+  contents: read
+
+# A deploy publishes the whole directory, so two overlapping runs would race
+# to define "current". Queue them instead, and never cancel a half-finished
+# upload.
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: '22'
+
+      # Guards against publishing a site whose scripts cannot parse. The page
+      # has no build step, so this is the only thing standing between a typo
+      # in config.js and a dead basket in production.
+      - name: Check that the browser scripts parse
+        run: |
+          for file in config.js order.js zones.js fetch-reviews.js; do
+            node --check "$file"
+            echo "ok: $file"
+          done
+
+      # zones.js is generated. If someone edited the spreadsheet and forgot to
+      # rebuild — or hand-edited zones.js — the published prices would silently
+      # disagree with the source of truth. Rebuild and compare.
+      - name: Verify zones.js matches the spreadsheet
+        run: |
+          python -m pip install --quiet openpyxl
+          cp zones.js zones.js.published
+          python tools/build-zones.py
+          if ! diff -q zones.js.published zones.js > /dev/null; then
+            echo "::error::zones.js is out of date. Run 'python tools/build-zones.py' and commit the result."
+            diff zones.js.published zones.js || true
+            exit 1
+          fi
+          rm zones.js.published
+          echo "ok: zones.js matches data/delivery_zones.xlsx"
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      # IndexNow tells Bing, Yandex, Seznam and Naver that the page changed
+      # instead of waiting to be crawled again. Google does not participate —
+      # for Google, freshness comes from the sitemap and Search Console.
+      # The key is public by design: it is served at /<key>.txt to prove we
+      # control the domain, so there is nothing to keep secret here.
+      - name: Ping IndexNow
+        continue-on-error: true
+        run: |
+          KEY=168e760065044f7d27e17028d7ef2c88a1e8c5a1b83da9f1
+          curl -sS -X POST https://api.indexnow.org/IndexNow \
+            -H 'Content-Type: application/json; charset=utf-8' \
+            -d "{
+              \"host\": \"kairo1980.de\",
+              \"key\": \"$KEY\",
+              \"keyLocation\": \"https://kairo1980.de/$KEY.txt\",
+              \"urlList\": [
+                \"https://kairo1980.de/\",
+                \"https://kairo1980.de/impressum\",
+                \"https://kairo1980.de/datenschutz\"
+              ]
+            }" -w '\nIndexNow HTTP %{http_code}\n'

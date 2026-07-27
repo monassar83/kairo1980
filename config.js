@@ -25,9 +25,16 @@ window.KAIRO_CONFIG = {
     // back to plain "write us on WhatsApp" links, exactly as before.
     cartEnabled: true,
 
-    // Discount granted for ordering directly with us instead of via a
-    // delivery platform. Set to 0 to remove it everywhere.
+    // Discount for ordering directly with us instead of via a delivery
+    // platform. Applies to everyone, company or private, delivery or pickup.
+    // Set to 0 to remove it everywhere.
     directDiscountPercent: 10,
+
+    // Better rate for company orders that are collected in person: no driver,
+    // no vehicle, so the saving is shared. Applies only when the
+    // "Firmenbestellung" box is ticked AND pickup is selected; every other
+    // combination gets directDiscountPercent above.
+    businessPickupDiscountPercent: 15,
 
     // Currency symbol / locale used for every price shown by the basket.
     currency: '€',
@@ -40,8 +47,16 @@ window.KAIRO_CONFIG = {
     // and the announcement strip.
     enabled: true,
 
-    // Order value from which delivery is free (euros).
+    // Order value from which the delivery fee is waived (euros). The waiver is
+    // applied to the food subtotal, before the direct-order discount.
     freeDeliveryFrom: 100,
+
+    // Who the waiver applies to.
+    //   false -> any order reaching the threshold (current rule)
+    //   true  -> only orders with the "Firmenbestellung" box ticked
+    // Either way it is ADVERTISED only in the Firmen section — the basket
+    // states the fee it charges and never promotes free delivery.
+    freeDeliveryBusinessOnly: false,
 
     // Minimum lead time for large / corporate orders, in hours.
     leadTimeHours: 2,
