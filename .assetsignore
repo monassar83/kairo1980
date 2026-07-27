@@ -12,3 +12,8 @@ node_modules
 # Build-time only: runs in GitHub Actions, never in the browser.
 fetch-reviews.js
 request-log.json
+
+# Logo masters. Kept in git as the source for images/logo-mark.* and
+# images/logo-nav.*, but ~4 MB that no page ever requests.
+images/Logo.png
+images/logo-hero.png

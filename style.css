@@ -78,6 +78,24 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
   color: #f5e8cc; text-decoration: none;
   border-bottom: 1px solid rgba(245,232,204,0.5); padding-bottom: 3px;
 }
+/* Sits over the hero photograph, whose bright areas swallowed the original
+   low-opacity cream. Scrim plus a brighter gold keeps it readable. */
+.hero-offer {
+  display: inline-flex; align-items: baseline; justify-content: center; gap: 10px;
+  flex-wrap: wrap;
+  margin: 30px auto 0; padding: 11px 22px;
+  font-size: 13.5px; letter-spacing: 0.04em;
+  color: #f5e8cc;
+  background: rgba(20,14,6,0.42);
+  border: 1px solid rgba(200,165,90,0.28);
+  border-radius: 2px;
+  backdrop-filter: blur(3px);
+}
+.hero-offer-mark {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 23px; font-weight: 500; color: #e0b877;
+  letter-spacing: 0.02em; line-height: 1;
+}
 
 /* STRIP */
 .strip { display: grid; grid-template-columns: repeat(3,1fr); border-bottom: 1px solid rgba(200,165,90,0.2); }
@@ -153,6 +171,18 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
 .order-btn:hover { opacity: 0.85; }
 .order-btn.lieferando { background: #ff8000; color: #fff; }
 .order-btn.ubereats { background: #000; color: #fff; }
+.order-btn.whatsapp { background: #1f8f5f; color: #fff; }
+.order-note {
+  margin: 12px 0 0; font-size: 12.5px; line-height: 1.7;
+  color: #8a7038; letter-spacing: 0.02em;
+}
+.whatsapp-btn {
+  display: inline-block; font-size: 13px; letter-spacing: 0.03em;
+  color: #1f8f5f; text-decoration: none;
+  border-bottom: 1px solid rgba(31,143,95,0.35); padding-bottom: 2px;
+  transition: color 0.2s, border-color 0.2s;
+}
+.whatsapp-btn:hover { color: #176e49; border-color: rgba(31,143,95,0.7); }
 
 /* REVIEW LINK */
 .review-link {
@@ -165,10 +195,36 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
 .review-link:hover { color: #b8914a; }
 
 /* FOOTER */
-.footer { background: #1c1409; padding: 40px 80px; display: flex; align-items: center; justify-content: space-between; }
-.footer-brand { font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 300; letter-spacing: 0.12em; color: #f5e8cc; }
+/* BRAND BAND — the logo at a size that actually shows the artwork */
+.brand-band {
+  background: #f7f0e3;
+  border-top: 1px solid rgba(200,165,90,0.18);
+  padding: 72px 24px;
+  display: flex; justify-content: center;
+}
+.brand-band-logo {
+  width: 320px; max-width: 78vw; height: auto; display: block;
+}
+
+/* The old footer was two items with space-between, which stranded them at
+   opposite edges of a wide screen with a void in the middle. Centred stack. */
+.footer { background: #1c1409; padding: 44px 40px; }
+.footer-inner {
+  max-width: 900px; margin: 0 auto;
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  text-align: center;
+}
+.footer-brand { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 300; letter-spacing: 0.12em; color: #f5e8cc; }
 .footer-brand b { color: #b8914a; font-weight: 400; }
-.footer-copy { font-size: 12px; color: rgba(200,175,120,0.3); letter-spacing: 0.08em; }
+.footer-links {
+  display: flex; align-items: center; justify-content: center;
+  flex-wrap: wrap; gap: 10px;
+  font-size: 12.5px; letter-spacing: 0.04em;
+}
+.footer-links a { color: rgba(240,220,170,0.72); text-decoration: none; transition: color 0.2s; }
+.footer-links a:hover { color: #d4a85c; }
+.footer-dot { color: rgba(200,175,120,0.3); }
+.footer-copy { font-size: 12px; color: rgba(200,175,120,0.4); letter-spacing: 0.08em; }
 
 /* FADE IN ON SCROLL */
 .fade-in { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }

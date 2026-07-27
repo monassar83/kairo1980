@@ -28,7 +28,7 @@
   "name": "KAIRO 1980",
   "description": "Authentische moderne ägyptische Küche in Hockenheim. Frisch zubereitet, handgemacht – inspiriert von den Aromen Kairos.",
   "url": "https://kairo1980.de",
-  "logo": "https://kairo1980.de/images/logo.jpg",
+  "logo": "https://kairo1980.de/images/logo-mark.png",
   "image": "https://kairo1980.de/images/hero.jpg",
   "telephone": "+49-176-79906621",
   "email": "info@kairo1980.de",
@@ -86,7 +86,12 @@
 <body>
 
 <nav class="nav">
-  <a href="#"><img src="images/logo.jpg" alt="KAIRO 1980 – Moderne Ägyptische Küche Hockenheim" class="nav-logo-img"></a>
+  <a href="#">
+    <picture>
+      <source srcset="images/logo-nav.webp" type="image/webp">
+      <img src="images/logo-nav.png" alt="KAIRO 1980 – Moderne Ägyptische Küche Hockenheim" class="nav-logo-img" width="240" height="207">
+    </picture>
+  </a>
   <ul class="nav-links">
     <li><a href="#ueber-uns" class="t" data-de="Über uns" data-en="About us">Über uns</a></li>
     <li><a href="#speisekarte" class="t" data-de="Speisekarte" data-en="Menu">Speisekarte</a></li>
@@ -98,7 +103,7 @@
       <span class="lang-sep">|</span>
       <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
     </div>
-    <a href="#kontakt" class="nav-reserve t" data-de="Jetzt bestellen" data-en="Order now">Jetzt bestellen</a>
+    <a href="https://wa.me/4917679906621?text=Hallo%20KAIRO%201980!%20Ich%20m%C3%B6chte%20gerne%20bestellen%20%E2%80%93%20mit%2010%20%25%20Rabatt%20und%20ohne%20Liefergeb%C3%BChr." target="_blank" rel="noopener" class="nav-reserve t" data-de="Jetzt bestellen" data-en="Order now" data-de-href="https://wa.me/4917679906621?text=Hallo%20KAIRO%201980!%20Ich%20m%C3%B6chte%20gerne%20bestellen%20%E2%80%93%20mit%2010%20%25%20Rabatt%20und%20ohne%20Liefergeb%C3%BChr." data-en-href="https://wa.me/4917679906621?text=Hello%20KAIRO%201980!%20I'd%20like%20to%20place%20an%20order%20%E2%80%93%20with%2010%25%20off%20and%20no%20delivery%20fee.">Jetzt bestellen</a>
   </div>
 </nav>
 
@@ -107,8 +112,12 @@
   <div class="hero-content">
     <div class="hero-actions">
       <a href="#speisekarte" class="btn-primary t" data-de="Speisekarte" data-en="Our Menu">Speisekarte</a>
-      <a href="#kontakt" class="btn-ghost t" data-de="Jetzt bestellen" data-en="Order now">Jetzt bestellen</a>
+      <a href="https://wa.me/4917679906621?text=Hallo%20KAIRO%201980!%20Ich%20m%C3%B6chte%20gerne%20bestellen%20%E2%80%93%20mit%2010%20%25%20Rabatt%20und%20ohne%20Liefergeb%C3%BChr." target="_blank" rel="noopener" class="btn-ghost t" data-de="Per WhatsApp bestellen" data-en="Order via WhatsApp" data-de-href="https://wa.me/4917679906621?text=Hallo%20KAIRO%201980!%20Ich%20m%C3%B6chte%20gerne%20bestellen%20%E2%80%93%20mit%2010%20%25%20Rabatt%20und%20ohne%20Liefergeb%C3%BChr." data-en-href="https://wa.me/4917679906621?text=Hello%20KAIRO%201980!%20I'd%20like%20to%20place%20an%20order%20%E2%80%93%20with%2010%25%20off%20and%20no%20delivery%20fee.">Per WhatsApp bestellen</a>
     </div>
+    <p class="hero-offer">
+      <span class="hero-offer-mark">10 %</span>
+      <span class="t" data-de="Rabatt & keine Liefergebühr — direkt über WhatsApp bestellt" data-en="off &amp; no delivery fee — when you order direct via WhatsApp">Rabatt &amp; keine Liefergebühr — direkt über WhatsApp bestellt</span>
+    </p>
   </div>
 </section>
 
@@ -348,9 +357,11 @@
         <div style="margin-top: 36px;">
           <span class="info-eyebrow t" data-de="Jetzt bestellen" data-en="Order now">Jetzt bestellen</span>
           <div class="order-links">
+            <a href="https://wa.me/4917679906621?text=Hallo%20KAIRO%201980!%20Ich%20m%C3%B6chte%20gerne%20bestellen%20%E2%80%93%20mit%2010%20%25%20Rabatt%20und%20ohne%20Liefergeb%C3%BChr." target="_blank" rel="noopener" class="order-btn whatsapp t" data-de="WhatsApp — 10 % Rabatt" data-en="WhatsApp — 10% off" data-de-href="https://wa.me/4917679906621?text=Hallo%20KAIRO%201980!%20Ich%20m%C3%B6chte%20gerne%20bestellen%20%E2%80%93%20mit%2010%20%25%20Rabatt%20und%20ohne%20Liefergeb%C3%BChr." data-en-href="https://wa.me/4917679906621?text=Hello%20KAIRO%201980!%20I'd%20like%20to%20place%20an%20order%20%E2%80%93%20with%2010%25%20off%20and%20no%20delivery%20fee.">WhatsApp — 10 % Rabatt</a>
             <a href="https://www.lieferando.de/speisekarte/kairo-1980" target="_blank" class="order-btn lieferando">Lieferando</a>
             <a href="https://www.ubereats.com/de/store/kairo-1980/3a9t8nwzXfm3iAkRVtCemA" target="_blank" class="order-btn ubereats">Uber Eats</a>
           </div>
+          <p class="order-note t" data-de="Direkt bei uns bestellen: 10 % Rabatt und keine Liefergebühr." data-en="Order direct with us: 10% off and no delivery fee.">Direkt bei uns bestellen: 10 % Rabatt und keine Liefergebühr.</p>
         </div>
       </div>
       <div class="map-ph">
@@ -377,9 +388,28 @@
   </div>
 </section>
 
+<section class="brand-band fade-in">
+  <picture>
+    <source srcset="images/logo-mark.webp" type="image/webp">
+    <img src="images/logo-mark.png" width="680" height="586"
+         alt="KAIRO 1980 – Moderne Ägyptische Küche" class="brand-band-logo">
+  </picture>
+</section>
+
 <footer class="footer fade-in">
-  <span class="footer-brand">KAIRO <b>1980</b></span>
-  <span class="footer-copy t" data-de="© 2026 · Moderne Ägyptische Küche · Hockenheim" data-en="© 2026 · Modern Egyptian Cuisine · Hockenheim">© 2026 · Moderne Ägyptische Küche · Hockenheim</span>
+  <div class="footer-inner">
+    <span class="footer-brand">KAIRO <b>1980</b></span>
+    <nav class="footer-links" aria-label="Footer">
+      <a href="https://maps.google.com/?q=Rostocker+Stra%C3%9Fe+20a,+68766+Hockenheim" target="_blank" rel="noopener">Rostocker Straße 20a, Hockenheim</a>
+      <span class="footer-dot" aria-hidden="true">·</span>
+      <a href="tel:+4917679906621">+49 176 79906621</a>
+      <span class="footer-dot" aria-hidden="true">·</span>
+      <a href="mailto:info@kairo1980.de">info@kairo1980.de</a>
+      <span class="footer-dot" aria-hidden="true">·</span>
+      <a href="https://www.instagram.com/_kairo1980_/" target="_blank" rel="noopener" class="footer-instagram">Instagram</a>
+    </nav>
+    <span class="footer-copy t" data-de="© 2026 · Moderne Ägyptische Küche · Hockenheim" data-en="© 2026 · Modern Egyptian Cuisine · Hockenheim">© 2026 · Moderne Ägyptische Küche · Hockenheim</span>
+  </div>
 </footer>
 
 <script>
@@ -393,6 +423,10 @@ function setLang(lang) {
   document.querySelectorAll('.t').forEach(el => {
     const text = el.getAttribute('data-' + lang);
     if (text) el.textContent = text;
+    // Links may also carry a per-language target, e.g. the WhatsApp order
+    // buttons, whose prefilled message should match the visitor's language.
+    const href = el.getAttribute('data-' + lang + '-href');
+    if (href) el.setAttribute('href', href);
   });
 
   // Update title
