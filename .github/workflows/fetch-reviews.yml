@@ -1,11 +1,17 @@
 name: Fetch Google Reviews
 
 on:
-  # Mondays and Thursdays at 08:00 UTC. A day-of-month step like '*/4' restarts
-  # on the 1st, so it fires twice in two days at every month boundary.
+  # Once a week. Combined with the script's own monthly ceiling and 72h
+  # spacing guard this keeps the Places API at roughly 4-5 billed calls a
+  # month, with headroom for the occasional manual run.
   schedule:
-    - cron: '0 8 * * 1,4'
-  workflow_dispatch:  # Allow manual trigger
+    - cron: '0 8 * * 1'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Ignore the 72h spacing guard (the monthly ceiling still applies)'
+        type: boolean
+        default: false
 
 permissions:
   contents: write
@@ -32,15 +38,19 @@ jobs:
       - name: Fetch reviews from Google Places
         env:
           GOOGLE_PLACES_API_KEY: ${{ secrets.GOOGLE_PLACES_API_KEY }}
+          FORCE_FETCH: ${{ inputs.force }}
         run: node fetch-reviews.js
 
+      # Runs even when the fetch step failed: the request was still billed, and
+      # request-log.json holds the spend. Losing it would hand back free calls.
       - name: Commit updated reviews
+        if: always()
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
           git add reviews.json request-log.json
           if git diff --staged --quiet; then
-            echo "No review changes to publish."
+            echo "Nothing to publish."
             exit 0
           fi
           git commit -m "Update Google reviews"
