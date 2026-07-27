@@ -325,3 +325,30 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
   .review-card { padding: 24px; }
   .reviews-nav { width: 36px; height: 36px; font-size: 14px; }
 }
+
+@media (max-width: 480px) {
+  /* On a 390px phone the logo, the three links and the DE|EN switcher ended
+     up flush against each other with no gap, and "Über uns" wrapped onto two
+     lines. Buy back some room. */
+  .nav { padding: 0 14px; }
+  .nav-logo-img { height: 40px; }
+  .nav-links { gap: 10px; }
+  .nav-links a { font-size: 9px; letter-spacing: 0.06em; white-space: nowrap; }
+}
+
+@media (max-width: 640px) {
+  /* Side-by-side arrows left the card ~210px wide on a phone, which squeezed
+     the header until .reviews-track-wrap's overflow:hidden clipped the star
+     rating -- a 5-star review rendered as 3 stars. Give the card the full
+     width and drop the arrows underneath it. */
+  .reviews-carousel { flex-wrap: wrap; justify-content: center; gap: 16px; }
+  .reviews-track-wrap { flex: 0 0 100%; order: 1; }
+  .reviews-nav.prev { order: 2; }
+  .reviews-nav.next { order: 3; }
+  .reviews-nav { width: 44px; height: 44px; font-size: 16px; }
+
+  /* Safety net on very narrow screens: let the stars drop below the name
+     instead of overflowing the card. */
+  .review-header { flex-wrap: wrap; }
+  .review-stars { white-space: nowrap; }
+}
