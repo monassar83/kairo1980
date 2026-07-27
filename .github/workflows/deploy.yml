@@ -69,6 +69,12 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          # This is an assets-only Worker: wrangler.jsonc has `assets` but no
+          # `main`, which Wrangler only supports from 3.91 onwards. The action
+          # otherwise falls back to 3.90 and fails with "Missing entry-point".
+          # Pinned rather than floating so a deploy cannot break on its own.
+          wranglerVersion: '4.114.0'
+          command: deploy
 
       # IndexNow tells Bing, Yandex, Seznam and Naver that the page changed
       # instead of waiting to be crawled again. Google does not participate —
