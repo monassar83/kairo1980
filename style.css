@@ -332,7 +332,49 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
   color: #1c1409; margin-bottom: 24px;
 }
 .reviews-summary { margin-bottom: 40px; }
-.reviews-stars { color: #b8914a; font-size: 28px; letter-spacing: 4px; margin-bottom: 6px; }
+.reviews-stars {
+  color: #b8914a; font-size: 28px; letter-spacing: 4px; margin-bottom: 6px;
+  display: inline-block;
+}
+
+/* A slow highlight travels across the gold once every few seconds, then
+   rests. The gradient is clipped to the glyphs, so it reads as light moving
+   over gilding rather than as an animated banner. Guarded by @supports so a
+   browser without background-clip keeps plain gold instead of invisible
+   stars. */
+@supports ((-webkit-background-clip: text) or (background-clip: text)) {
+  .reviews-stars {
+    /* The bright stop stays a warm gold. Taking it to near-white made the
+       star under the highlight read as missing against the cream page. */
+    background-image: linear-gradient(105deg,
+      #b8914a 0%, #b8914a 41%, #cfa762 47%, #f0d191 52%,
+      #cfa762 57%, #b8914a 63%, #b8914a 100%);
+    background-size: 260% 100%;
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: reviews-star-sheen 5.5s ease-in-out infinite;
+  }
+}
+
+/* Percentages must stay within 0–100%: the gradient is wider than the text,
+   so 0% and 100% already park it fully to one side. Going beyond that moved
+   it off the glyphs entirely and the stars vanished. Both ends rest on the
+   gradient's solid gold; the highlight only passes through the middle. */
+@keyframes reviews-star-sheen {
+  0%        { background-position: 100% 0; }
+  45%, 100% { background-position: 0% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reviews-stars {
+    animation: none;
+    -webkit-text-fill-color: #b8914a;
+    color: #b8914a;
+  }
+}
 .reviews-score {
   font-family: 'Cormorant Garamond', serif;
   font-size: 22px; color: #1c1409;
