@@ -37,7 +37,7 @@ window.KAIRO_ZONES = [
   ['68259', 'Mannheim (Feudenheim)',       16.5,  50, 3],
   ['68199', 'Mannheim (Neckarau)',           17,  50, 4],
   ['67346', 'Speyer',                      null,  50, 8],
-  ['68305', 'Mannheim (Kafertal)',         null,  35, 5],
-  ['68309', 'Mannheim (Kafertal)',         null,  35, 5],
+  ['68305', 'Mannheim (Käfertal)',         null,  35, 5],
+  ['68309', 'Mannheim (Käfertal)',         null,  35, 5],
   ['76646', 'Bruchsal',                    null,  50, 8]
 ];

@@ -1184,19 +1184,44 @@
 
   // Visible delivery-area list. Same data as the basket, so a price change in
   // the spreadsheet updates the marketing copy and the checkout together.
+  //
+  // Grouped by minimum order rather than listed in one long table: the zones
+  // already fall into natural price tiers, a reader only cares which tier they
+  // are in, and it lets each town sit on one line instead of a three-column
+  // grid breaking "Oberhausen-Rheinhausen" across three.
   function renderAreas() {
     var host = document.getElementById('areasList');
     if (!host) return;
     var rows = (CFG.delivery && CFG.delivery.zones) || [];
     if (!rows.length) { host.innerHTML = ''; return; }
 
-    var minLabel = lang() === 'en' ? 'min.' : 'ab';
-    host.innerHTML = rows.map(function (row) {
-      return '<li class="area">' +
-        '<span class="area-plz">' + escapeHtml(row[0]) + '</span>' +
-        '<span class="area-city">' + escapeHtml(row[1]) + '</span>' +
-        '<span class="area-min">' + minLabel + ' ' + row[3] + ' €</span>' +
-        '</li>';
+    var en = lang() === 'en';
+    var tiers = [];
+    var byMin = {};
+
+    rows.forEach(function (row) {
+      var min = row[3];
+      if (!byMin[min]) { byMin[min] = []; tiers.push(min); }
+      byMin[min].push(row);
+    });
+    tiers.sort(function (a, b) { return a - b; });
+
+    host.innerHTML = tiers.map(function (min) {
+      var towns = byMin[min].slice().sort(function (a, b) {
+        return String(a[1]).localeCompare(String(b[1]), 'de');
+      }).map(function (row) {
+        return '<li class="area">' +
+          '<span class="area-city">' + escapeHtml(row[1]) + '</span> ' +
+          '<span class="area-plz">' + escapeHtml(row[0]) + '</span>' +
+          '</li>';
+      }).join('');
+
+      return '<div class="area-tier">' +
+        '<h3 class="area-tier-title">' +
+          (en ? 'Minimum order €' + min : 'Mindestbestellwert ' + min + ' €') +
+        '</h3>' +
+        '<ul class="area-towns">' + towns + '</ul>' +
+        '</div>';
     }).join('');
   }
 
