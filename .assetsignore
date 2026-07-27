@@ -13,6 +13,11 @@ node_modules
 fetch-reviews.js
 request-log.json
 
+# Source data and the generator that compiles it into zones.js. The generated
+# zones.js IS published; these two are the editing surface and stay private.
+data
+tools
+
 # Logo masters. Kept in git as the source for images/logo-mark.* and
 # images/logo-nav.*, but ~4 MB that no page ever requests.
 images/Logo.png

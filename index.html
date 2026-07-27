@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title class="t" data-de="KAIRO 1980 – Ägyptisches Restaurant Hockenheim | Moderne Ägyptische Küche" data-en="KAIRO 1980 – Egyptian Restaurant Hockenheim | Modern Egyptian Cuisine">KAIRO 1980 – Ägyptisches Restaurant Hockenheim | Moderne Ägyptische Küche</title>
-<meta name="description" content="KAIRO 1980 – Ägyptisches Restaurant in Hockenheim (Rhein-Neckar). Authentisches Koshary, Hummus, Hawawshy & mehr. Lieferservice & Abholung. Jetzt bei Lieferando oder Uber Eats bestellen!">
-<meta name="keywords" content="ägyptisches Restaurant Hockenheim, Koshary Hockenheim, ägyptisches Essen Hockenheim, Lieferservice Hockenheim, arabisches Essen Mannheim, orientalisches Restaurant Rhein-Neckar, Hummus Hockenheim, Hawawshy, ägyptischer Lieferservice, Egyptian restaurant Hockenheim, Egyptian food Germany, KAIRO 1980">
+<meta name="description" content="KAIRO 1980 – Ägyptisches Restaurant in Hockenheim (Rhein-Neckar). Authentisches Koshary, Hummus, Hawawshy & mehr. Lieferservice, Abholung und Catering fürs Büro – ab 100 € liefern wir kostenfrei.">
+<meta name="keywords" content="ägyptisches Restaurant Hockenheim, Koshary Hockenheim, ägyptisches Essen Hockenheim, Lieferservice Hockenheim, Catering Hockenheim, Büro Catering Rhein-Neckar, Firmenbestellung Essen Hockenheim, Business Lunch Hockenheim, Mittagessen Büro Hockenheim, arabisches Essen Mannheim, orientalisches Restaurant Rhein-Neckar, Hummus Hockenheim, Hawawshy, Egyptian restaurant Hockenheim, KAIRO 1980">
 <meta name="robots" content="index, follow">
 <meta name="author" content="KAIRO 1980">
 <link rel="canonical" href="https://kairo1980.de">
@@ -93,6 +93,7 @@
   <ul class="nav-links">
     <li><a href="#ueber-uns" class="t" data-de="Über uns" data-en="About us">Über uns</a></li>
     <li><a href="#speisekarte" class="t" data-de="Speisekarte" data-en="Menu">Speisekarte</a></li>
+    <li data-requires="business"><a href="#firmen" class="t" data-de="Firmen" data-en="Business">Firmen</a></li>
     <li><a href="#kontakt" class="t" data-de="Kontakt" data-en="Contact">Kontakt</a></li>
   </ul>
   <div class="nav-right">
@@ -101,7 +102,7 @@
       <span class="lang-sep">|</span>
       <button class="lang-btn" id="btn-en" onclick="setLang('en')">EN</button>
     </div>
-    <a href="https://wa.me/4917679906621?text=Hallo%20KAIRO%201980!%20Ich%20m%C3%B6chte%20gerne%20bestellen%20%E2%80%93%20mit%2010%20%25%20Rabatt%20und%20ohne%20Liefergeb%C3%BChr." target="_blank" rel="noopener" class="nav-reserve t" data-de="Jetzt bestellen" data-en="Order now" data-de-href="https://wa.me/4917679906621?text=Hallo%20KAIRO%201980!%20Ich%20m%C3%B6chte%20gerne%20bestellen%20%E2%80%93%20mit%2010%20%25%20Rabatt%20und%20ohne%20Liefergeb%C3%BChr." data-en-href="https://wa.me/4917679906621?text=Hello%20KAIRO%201980!%20I'd%20like%20to%20place%20an%20order%20%E2%80%93%20with%2010%25%20off%20and%20no%20delivery%20fee.">Jetzt bestellen</a>
+    <a href="#speisekarte" class="nav-reserve t" data-de="Jetzt bestellen" data-en="Order now">Jetzt bestellen</a>
   </div>
 </nav>
 
@@ -110,11 +111,11 @@
   <div class="hero-content">
     <div class="hero-actions">
       <a href="#speisekarte" class="btn-primary t" data-de="Speisekarte" data-en="Our Menu">Speisekarte</a>
-      <a href="https://wa.me/4917679906621?text=Hallo%20KAIRO%201980!%20Ich%20m%C3%B6chte%20gerne%20bestellen%20%E2%80%93%20mit%2010%20%25%20Rabatt%20und%20ohne%20Liefergeb%C3%BChr." target="_blank" rel="noopener" class="btn-ghost t" data-de="Per WhatsApp bestellen" data-en="Order via WhatsApp" data-de-href="https://wa.me/4917679906621?text=Hallo%20KAIRO%201980!%20Ich%20m%C3%B6chte%20gerne%20bestellen%20%E2%80%93%20mit%2010%20%25%20Rabatt%20und%20ohne%20Liefergeb%C3%BChr." data-en-href="https://wa.me/4917679906621?text=Hello%20KAIRO%201980!%20I'd%20like%20to%20place%20an%20order%20%E2%80%93%20with%2010%25%20off%20and%20no%20delivery%20fee.">Per WhatsApp bestellen</a>
+      <a href="https://wa.me/4917679906621" target="_blank" rel="noopener" class="btn-ghost t" data-wa-template="simple" data-de="Per WhatsApp bestellen" data-en="Order via WhatsApp">Per WhatsApp bestellen</a>
     </div>
     <p class="hero-offer">
-      <span class="hero-offer-mark">10 %</span>
-      <span class="t" data-de="Rabatt & keine Liefergebühr — direkt über WhatsApp bestellt" data-en="off &amp; no delivery fee — when you order direct via WhatsApp">Rabatt &amp; keine Liefergebühr — direkt über WhatsApp bestellt</span>
+      <span class="hero-offer-mark"><span data-cfg="discount">10</span> %</span>
+      <span class="hero-offer-text t" data-de="Rabatt auf Direktbestellungen" data-en="off on direct orders">Rabatt auf Direktbestellungen</span>
     </p>
   </div>
 </section>
@@ -136,6 +137,16 @@
     <p class="strip-text t" data-de="Aus echter Freude am Kochen und Teilen." data-en="Born from a genuine love of cooking and sharing.">Aus echter Freude am Kochen und Teilen.</p>
   </div>
 </div>
+
+<!-- Announcement rather than a modal: an interstitial costs mobile conversions
+     and cannot be linked to, while this scrolls to a section with its own URL. -->
+<a href="#firmen" class="announce" data-requires="business">
+  <span class="announce-tag t" data-de="Neu" data-en="New">Neu</span>
+  <span class="announce-text t"
+        data-de="Firmen- & Büro-Bestellungen — ab {freeDeliveryFrom} € liefern wir kostenfrei"
+        data-en="Corporate & office orders — free delivery from €{freeDeliveryFrom}">Firmen- &amp; Büro-Bestellungen — ab 100 € liefern wir kostenfrei</span>
+  <span class="announce-arrow" aria-hidden="true">→</span>
+</a>
 
 <section id="ueber-uns" class="fade-in">
   <div class="story">
@@ -171,7 +182,7 @@
 
     <div class="cat-head"><span class="cat-name t" data-de="Orientalische Vorspeisen" data-en="Oriental Starters">Orientalische Vorspeisen</span><div class="cat-line"></div></div>
 
-    <div class="mitem">
+    <div class="mitem" data-item="baba-ghanough" data-price="11.00">
       <div>
         <div class="mname">Baba Ghanough</div>
         <p class="mdesc t" data-de="Zartes Auberginenpüree aus gegrillter Aubergine, fein abgestimmt mit orientalischen Gewürzen, cremiger Tahini und einer leichten Knoblauchnote. Serviert mit arabischem Fladenbrot." data-en="Delicate grilled aubergine purée, finely balanced with oriental spices, creamy tahini and a hint of garlic. Served with Arabic flatbread.">Zartes Auberginenpüree aus gegrillter Aubergine, fein abgestimmt mit orientalischen Gewürzen, cremiger Tahini und einer leichten Knoblauchnote. Serviert mit arabischem Fladenbrot.</p>
@@ -180,16 +191,16 @@
       <div class="mprice">11,00 €</div>
     </div>
 
-    <div class="mitem">
+    <div class="mitem" data-item="eingelegte-auberginen" data-price="11.00">
       <div>
-        <div class="mname t" data-de="Frittierte Auberginen" data-en="Fried Aubergines">Frittierte Auberginen</div>
-        <p class="mdesc t" data-de="Fein geschnittene Auberginen, goldbraun frittiert und verfeinert mit Knoblauch, grünen Peperoni und frischer Petersilie. Delikat abgeschmeckt mit einem Hauch Limette und serviert mit arabischem Fladenbrot." data-en="Finely sliced aubergines, fried golden brown and finished with garlic, green peppers and fresh parsley. Delicately seasoned with a hint of lime and served with Arabic flatbread.">Fein geschnittene Auberginen, goldbraun frittiert und verfeinert mit Knoblauch, grünen Peperoni und frischer Petersilie. Delikat abgeschmeckt mit einem Hauch Limette und serviert mit arabischem Fladenbrot.</p>
+        <div class="mname t" data-de="Eingelegte Auberginen" data-en="Pickled Aubergines">Eingelegte Auberginen</div>
+        <p class="mdesc t" data-de="Klassischer ägyptischer Auberginensalat, mariniert mit Zitrone, Knoblauch, Peperoni und orientalischen Gewürzen. Leicht scharf und serviert mit arabischem Fladenbrot." data-en="Classic Egyptian aubergine salad, marinated with lemon, garlic, peppers and oriental spices. Lightly spicy and served with Arabic flatbread.">Klassischer ägyptischer Auberginensalat, mariniert mit Zitrone, Knoblauch, Peperoni und orientalischen Gewürzen. Leicht scharf und serviert mit arabischem Fladenbrot.</p>
         <div class="mtags"><span class="tag v t" data-de="Vegan" data-en="Vegan">Vegan</span></div>
       </div>
-      <div class="mprice">9,50 €</div>
+      <div class="mprice">11,00 €</div>
     </div>
 
-    <div class="mitem">
+    <div class="mitem" data-item="hummus" data-price="9.50">
       <div>
         <div class="mname">Hummus</div>
         <p class="mdesc t" data-de="Der bekannte Klassiker der arabischen Küche: Fein-cremiges Kichererbsenpüree mit feiner Limettennote und einem Hauch Knoblauch, garniert mit gerösteten Pinienkernen und serviert mit arabischem Fladenbrot." data-en="The well-known classic of Arabic cuisine: finely creamy chickpea purée with a subtle lime note and a hint of garlic, garnished with roasted pine nuts and served with Arabic flatbread.">Der bekannte Klassiker der arabischen Küche: Fein-cremiges Kichererbsenpüree mit feiner Limettennote und einem Hauch Knoblauch, garniert mit gerösteten Pinienkernen und serviert mit arabischem Fladenbrot.</p>
@@ -198,7 +209,7 @@
       <div class="mprice">9,50 €</div>
     </div>
 
-    <div class="mitem">
+    <div class="mitem" data-item="etwas-von-allem" data-price="26.00">
       <div>
         <div class="mname t" data-de="Etwas von allem" data-en="A Bit of Everything">Etwas von allem</div>
         <p class="mdesc t" data-de="Für alle, die unsere Vorspeisenwelt entdecken möchten: Samtiger Hummus, aromatisches Baba Ghanough und erfrischende frittierte Auberginen vereint auf einem Teller. Eine kleine Reise durch ägyptische Aromen." data-en="For those who want to explore our starter world: velvety Hummus, aromatic Baba Ghanough and refreshing fried aubergines united on one plate. A small journey through Egyptian flavours.">Für alle, die unsere Vorspeisenwelt entdecken möchten: Samtiger Hummus, aromatisches Baba Ghanough und erfrischende frittierte Auberginen vereint auf einem Teller. Eine kleine Reise durch ägyptische Aromen.</p>
@@ -207,7 +218,7 @@
       <div class="mprice">26,00 €</div>
     </div>
 
-    <div class="mitem">
+    <div class="mitem" data-item="salata-baladi" data-price="6.00">
       <div>
         <div class="mname">Salata Baladi</div>
         <p class="mdesc t" data-de="Frische Tomaten, Gurken, Zwiebeln und Petersilie in einer würzig abgeschmeckten traditionellen Marinade – in Ägypten bekannt als das berühmte „Whisky-Wasser" – eine aromatische orientalische Marinade." data-en="Fresh tomatoes, cucumbers, onions and parsley in a traditionally seasoned marinade – known in Egypt as the famous 'Whisky Water' – an aromatic oriental marinade.">Frische Tomaten, Gurken, Zwiebeln und Petersilie in einer würzig abgeschmeckten traditionellen Marinade – in Ägypten bekannt als das berühmte „Whisky-Wasser" – eine aromatische orientalische Marinade.</p>
@@ -218,7 +229,7 @@
 
     <div class="cat-head"><span class="cat-name t" data-de="Das Herz Ägyptens" data-en="The Heart of Egypt">Das Herz Ägyptens</span><div class="cat-line"></div></div>
 
-    <div class="mitem">
+    <div class="mitem" data-item="koshary" data-price="14.50">
       <div>
         <div class="mname">Koshary</div>
         <p class="mdesc t" data-de="Das ägyptische Nationalgericht: Berglinsen, Jasminreis, Gobbetti-Pasta und Kichererbsen, vollendet mit knusprig gerösteten Zwiebeln und einer milden Tomatensauce. Dazu unsere hausgemachten Daa'a- und Habanero-Saucen." data-en="The Egyptian national dish: mountain lentils, jasmine rice, Gobbetti pasta and chickpeas, topped with crispy roasted onions and a mild tomato sauce. Served with our homemade Daa'a and Habanero sauces.">Das ägyptische Nationalgericht: Berglinsen, Jasminreis, Gobbetti-Pasta und Kichererbsen, vollendet mit knusprig gerösteten Zwiebeln und einer milden Tomatensauce. Dazu unsere hausgemachten Daa'a- und Habanero-Saucen.</p>
@@ -227,7 +238,7 @@
       <div class="mprice">14,50 €</div>
     </div>
 
-    <div class="mitem">
+    <div class="mitem" data-item="foool" data-price="12.50">
       <div>
         <div class="mname">Foool</div>
         <p class="mdesc t" data-de="Der wohl bekannteste Frühstücksklassiker Ägyptens: Cremig gekochte Favabohnen, aromatisch verfeinert mit Tomaten, Knoblauch, Peperoni, feinem Olivenöl und einem Hauch Limette. Garniert mit frischen Zwiebeln und serviert mit unserem exklusiven ägyptischen Brot – ein echter Klassiker der ägyptischen Alltagsküche." data-en="Arguably Egypt's most beloved breakfast classic: creamy cooked fava beans, aromatically refined with tomatoes, garlic, peppers, fine olive oil and a hint of lime. Garnished with fresh onions and served with our exclusive Egyptian bread – a true classic of everyday Egyptian cuisine.">Der wohl bekannteste Frühstücksklassiker Ägyptens: Cremig gekochte Favabohnen, aromatisch verfeinert mit Tomaten, Knoblauch, Peperoni, feinem Olivenöl und einem Hauch Limette. Garniert mit frischen Zwiebeln und serviert mit unserem exklusiven ägyptischen Brot – ein echter Klassiker der ägyptischen Alltagsküche.</p>
@@ -238,7 +249,7 @@
 
     <div class="cat-head"><span class="cat-name t" data-de="Aus unserer Küche" data-en="From Our Kitchen">Aus unserer Küche</span><div class="cat-line"></div></div>
 
-    <div class="mitem">
+    <div class="mitem" data-item="kebda" data-price="26.50">
       <div>
         <div class="mname">Kebda</div>
         <p class="mdesc t" data-de="Ein Must-try für Fleischliebhaber: Fein geschnittene Kalbsleber, aromatisch angebraten mit Peperoni und orientalischen Gewürzen. Dazu Steakhouse Pommes, Rucola, unser exklusives ägyptisches Brot und ein erfrischender Tahini-Dip." data-en="A must-try for meat lovers: finely sliced veal liver, aromatically sautéed with peppers and oriental spices. Served with steakhouse fries, rocket, our exclusive Egyptian bread and a refreshing tahini dip.">Ein Must-try für Fleischliebhaber: Fein geschnittene Kalbsleber, aromatisch angebraten mit Peperoni und orientalischen Gewürzen. Dazu Steakhouse Pommes, Rucola, unser exklusives ägyptisches Brot und ein erfrischender Tahini-Dip.</p>
@@ -246,7 +257,7 @@
       <div class="mprice">26,50 €</div>
     </div>
 
-    <div class="mitem">
+    <div class="mitem" data-item="haehnchenschlegel" data-price="24.50">
       <div>
         <div class="mname t" data-de="Hähnchenschlegel" data-en="Chicken Drumsticks">Hähnchenschlegel</div>
         <p class="mdesc t" data-de="Drei saftige Hähnchenschlegel, kräftig gewürzt mit milden arabischen Gewürzen und einem Hauch Limette. Langsam gegart für besonders zartes und aromatisches Fleisch, serviert mit reichhaltigem Reis nach ägyptischer Art – herzhaft, intensiv und voller orientalischer Wärme." data-en="Three juicy chicken drumsticks, boldly seasoned with mild Arabic spices and a hint of lime. Slow-cooked for especially tender and aromatic meat, served with rich Egyptian-style rice – hearty, intense and full of oriental warmth.">Drei saftige Hähnchenschlegel, kräftig gewürzt mit milden arabischen Gewürzen und einem Hauch Limette. Langsam gegart für besonders zartes und aromatisches Fleisch, serviert mit reichhaltigem Reis nach ägyptischer Art – herzhaft, intensiv und voller orientalischer Wärme.</p>
@@ -256,7 +267,7 @@
 
     <div class="cat-head"><span class="cat-name t" data-de="Ägyptische Straßenküche" data-en="Egyptian Street Food">Ägyptische Straßenküche</span><div class="cat-line"></div></div>
 
-    <div class="mitem">
+    <div class="mitem" data-item="hawawshy" data-price="14.50">
       <div>
         <div class="mname">Hawawshy</div>
         <p class="mdesc t" data-de="Kräftig, saftig und voller orientalischer Aromen: Unser Hawawshy wird mit würzig gewürztem, frisch gewolftem Rindfleisch gefüllt und in unserem ägyptischen Fladenbrot gebacken. Verfeinert mit Zwiebeln, Paprika, frischen Kräutern und orientalischen Gewürzen. Serviert mit eingelegten Gurken und Tahini-Dip." data-en="Bold, juicy and full of oriental aromas: our Hawawshy is filled with spiced, freshly minced beef and baked in our Egyptian flatbread. Refined with onions, peppers, fresh herbs and oriental spices. Served with pickled cucumbers and tahini dip.">Kräftig, saftig und voller orientalischer Aromen: Unser Hawawshy wird mit würzig gewürztem, frisch gewolftem Rindfleisch gefüllt und in unserem ägyptischen Fladenbrot gebacken. Verfeinert mit Zwiebeln, Paprika, frischen Kräutern und orientalischen Gewürzen. Serviert mit eingelegten Gurken und Tahini-Dip.</p>
@@ -264,7 +275,7 @@
       <div class="mprice">14,50 €</div>
     </div>
 
-    <div class="mitem">
+    <div class="mitem" data-item="kebda-eskandarany" data-price="14.50">
       <div>
         <div class="mname">Kebda Eskandarany</div>
         <p class="mdesc t" data-de="Ein Klassiker aus Alexandria: Fein geschnittene Kalbsleber, nach ägyptischer Art aromatisch angebraten mit Peperoni, Knoblauch und einer fein abgestimmten orientalischen Gewürzmischung. Serviert in unserem exklusiven ägyptischen Brot. Serviert mit eingelegten Gurken und Tahini-Dip." data-en="A classic from Alexandria: finely sliced veal liver, aromatically sautéed Egyptian-style with peppers, garlic and a finely balanced oriental spice blend. Served in our exclusive Egyptian bread, with pickled cucumbers and tahini dip.">Ein Klassiker aus Alexandria: Fein geschnittene Kalbsleber, nach ägyptischer Art aromatisch angebraten mit Peperoni, Knoblauch und einer fein abgestimmten orientalischen Gewürzmischung. Serviert in unserem exklusiven ägyptischen Brot. Serviert mit eingelegten Gurken und Tahini-Dip.</p>
@@ -272,7 +283,7 @@
       <div class="mprice">14,50 €</div>
     </div>
 
-    <div class="mitem">
+    <div class="mitem" data-item="soguk-baladi" data-price="14.50">
       <div>
         <div class="mname">Soguk Baladi</div>
         <p class="mdesc t" data-de="Würzig, aromatisch und mit orientalischem Charakter: Fein geschnittene Soguk-Wurst, nach ägyptischer Art mit Tomaten und Peperoni herzhaft angebraten und verfeinert mit einer harmonischen Gewürzmischung. Serviert in unserem exklusiven ägyptischen Brot. Serviert mit eingelegten Gurken und Tahini-Dip." data-en="Spicy, aromatic and with oriental character: finely sliced Soguk sausage, heartily sautéed Egyptian-style with tomatoes and peppers and refined with a harmonious spice blend. Served in our exclusive Egyptian bread, with pickled cucumbers and tahini dip.">Würzig, aromatisch und mit orientalischem Charakter: Fein geschnittene Soguk-Wurst, nach ägyptischer Art mit Tomaten und Peperoni herzhaft angebraten und verfeinert mit einer harmonischen Gewürzmischung. Serviert in unserem exklusiven ägyptischen Brot. Serviert mit eingelegten Gurken und Tahini-Dip.</p>
@@ -282,7 +293,7 @@
 
     <div class="cat-head"><span class="cat-name t" data-de="Desserts & Süßes" data-en="Desserts & Sweets">Desserts & Süßes</span><div class="cat-line"></div></div>
 
-    <div class="mitem">
+    <div class="mitem" data-item="schokoladentoertchen" data-price="7.00">
       <div>
         <div class="mname t" data-de="Schokoladentörtchen" data-en="Chocolate Fondant">Schokoladentörtchen</div>
         <p class="mdesc t" data-de="Lauwarmes Schokoladentörtchen mit flüssigem Kern – der perfekte Abschluss zu unserem Menü." data-en="Warm chocolate fondant with a liquid centre – the perfect ending to our menu.">Lauwarmes Schokoladentörtchen mit flüssigem Kern – der perfekte Abschluss zu unserem Menü.</p>
@@ -291,7 +302,7 @@
       <div class="mprice">7,00 €</div>
     </div>
 
-    <div class="mitem">
+    <div class="mitem" data-item="om-ali" data-price="14.50">
       <div>
         <div class="mname">Om Ali</div>
         <p class="mdesc t" data-de="Das traditionelle ägyptische Nationaldessert: Fein buttriger Blätterteig, eingelegt in gewürzter Milch mit Kokosnussflocken und Rosinen, gekrönt von gerösteten Nüssen. Natürlich hausgemacht." data-en="The traditional Egyptian national dessert: delicately buttery puff pastry soaked in spiced milk with coconut flakes and raisins, crowned with roasted nuts. Naturally homemade.">Das traditionelle ägyptische Nationaldessert: Fein buttriger Blätterteig, eingelegt in gewürzter Milch mit Kokosnussflocken und Rosinen, gekrönt von gerösteten Nüssen. Natürlich hausgemacht.</p>
@@ -300,7 +311,7 @@
       <div class="mprice">14,50 €</div>
     </div>
 
-    <div class="mitem">
+    <div class="mitem" data-item="sakalans" data-price="12.50">
       <div>
         <div class="mname">Sakalans</div>
         <p class="mdesc t" data-de="Ein beliebter ägyptischer Süß-Snack mit cremiger Halawa, Honig und Mascarpone in unserem exklusiven ägyptischen Brot. Ergänzt mit knusprigen Walnüssen. Süß, cremig und angenehm harmonisch." data-en="A popular Egyptian sweet snack with creamy Halawa, honey and mascarpone in our exclusive Egyptian bread. Complemented with crunchy walnuts. Sweet, creamy and pleasantly harmonious.">Ein beliebter ägyptischer Süß-Snack mit cremiger Halawa, Honig und Mascarpone in unserem exklusiven ägyptischen Brot. Ergänzt mit knusprigen Walnüssen. Süß, cremig und angenehm harmonisch.</p>
@@ -310,24 +321,65 @@
     </div>
 
     <div class="cat-head"><span class="cat-name">Extras</span><div class="cat-line"></div></div>
-    <div class="mitem"><div><div class="mname t" data-de="Steakhouse Pommes" data-en="Steakhouse Fries">Steakhouse Pommes</div></div><div class="mprice">4,50 €</div></div>
-    <div class="mitem"><div><div class="mname t" data-de="Ägyptischer Reis" data-en="Egyptian Rice">Ägyptischer Reis</div></div><div class="mprice">5,50 €</div></div>
-    <div class="mitem"><div><div class="mname t" data-de="Ägyptisches Brot (1 Stück)" data-en="Egyptian Bread (1 piece)">Ägyptisches Brot (1 Stück)</div></div><div class="mprice">3,50 €</div></div>
-    <div class="mitem"><div><div class="mname t" data-de="Tahini Dip" data-en="Tahini Dip">Tahini Dip</div></div><div class="mprice">2,50 €</div></div>
-    <div class="mitem"><div><div class="mname t" data-de="Habanero Sauce" data-en="Habanero Sauce">Habanero Sauce</div></div><div class="mprice">2,50 €</div></div>
-    <div class="mitem"><div><div class="mname t" data-de="Tomatensauce" data-en="Tomato Sauce">Tomatensauce</div></div><div class="mprice">2,50 €</div></div>
+    <div class="mitem" data-item="steakhouse-pommes" data-price="6.00"><div><div class="mname t" data-de="Steakhouse Pommes" data-en="Steakhouse Fries">Steakhouse Pommes</div></div><div class="mprice">6,00 €</div></div>
+    <div class="mitem" data-item="aegyptischer-reis" data-price="5.50"><div><div class="mname t" data-de="Ägyptischer Reis" data-en="Egyptian Rice">Ägyptischer Reis</div></div><div class="mprice">5,50 €</div></div>
+    <div class="mitem" data-item="aegyptisches-brot-1-stueck" data-price="3.50"><div><div class="mname t" data-de="Ägyptisches Brot (1 Stück)" data-en="Egyptian Bread (1 piece)">Ägyptisches Brot (1 Stück)</div></div><div class="mprice">3,50 €</div></div>
+    <div class="mitem" data-item="tahini-dip" data-price="2.50"><div><div class="mname t" data-de="Tahini Dip" data-en="Tahini Dip">Tahini Dip</div></div><div class="mprice">2,50 €</div></div>
+    <div class="mitem" data-item="habanero-sauce" data-price="2.50"><div><div class="mname t" data-de="Habanero Sauce" data-en="Habanero Sauce">Habanero Sauce</div></div><div class="mprice">2,50 €</div></div>
+    <div class="mitem" data-item="tomatensauce" data-price="2.50"><div><div class="mname t" data-de="Tomatensauce" data-en="Tomato Sauce">Tomatensauce</div></div><div class="mprice">2,50 €</div></div>
 
     <div class="cat-head"><span class="cat-name t" data-de="Kalte Getränke" data-en="Cold Drinks">Kalte Getränke</span><div class="cat-line"></div></div>
-    <div class="mitem"><div><div class="mname t" data-de="Mineralwasser Still (0,25 l)" data-en="Still Water (0.25 l)">Mineralwasser Still (0,25 l)</div></div><div class="mprice">2,50 €</div></div>
-    <div class="mitem"><div><div class="mname t" data-de="Mineralwasser Sprudel (0,25 l)" data-en="Sparkling Water (0.25 l)">Mineralwasser Sprudel (0,25 l)</div></div><div class="mprice">2,50 €</div></div>
-    <div class="mitem"><div><div class="mname t" data-de="Fritz Kola (0,33 l)" data-en="Fritz Kola (0.33 l)">Fritz Kola (0,33 l)</div></div><div class="mprice">3,90 €</div></div>
-    <div class="mitem"><div><div class="mname t" data-de="Fritz Orange (0,33 l)" data-en="Fritz Orange (0.33 l)">Fritz Orange (0,33 l)</div></div><div class="mprice">3,90 €</div></div>
-    <div class="mitem"><div><div class="mname t" data-de="Fritz Zero Kola (0,33 l)" data-en="Fritz Zero Kola (0.33 l)">Fritz Zero Kola (0,33 l)</div></div><div class="mprice">3,90 €</div></div>
-    <div class="mitem"><div><div class="mname t" data-de="Hausgemachter Karkadeh (0,5 l)" data-en="Homemade Karkadeh (0.5 l)">Hausgemachter Karkadeh (0,5 l)</div><p class="mdesc t" data-de="Traditionelles ägyptisches Hibiskusgetränk mit erfrischend fruchtiger Note." data-en="Traditional Egyptian hibiscus drink with a refreshingly fruity note.">Traditionelles ägyptisches Hibiskusgetränk mit erfrischend fruchtiger Note.</p></div><div class="mprice">4,50 €</div></div>
+    <div class="mitem" data-item="mineralwasser-still-0-25-l" data-price="2.50"><div><div class="mname t" data-de="Mineralwasser Still (0,25 l)" data-en="Still Water (0.25 l)">Mineralwasser Still (0,25 l)</div></div><div class="mprice">2,50 €</div></div>
+    <div class="mitem" data-item="mineralwasser-sprudel-0-25-l" data-price="2.50"><div><div class="mname t" data-de="Mineralwasser Sprudel (0,25 l)" data-en="Sparkling Water (0.25 l)">Mineralwasser Sprudel (0,25 l)</div></div><div class="mprice">2,50 €</div></div>
+    <div class="mitem" data-item="fritz-kola-0-33-l" data-price="3.90"><div><div class="mname t" data-de="Fritz Kola (0,33 l)" data-en="Fritz Kola (0.33 l)">Fritz Kola (0,33 l)</div></div><div class="mprice">3,90 €</div></div>
+    <div class="mitem" data-item="fritz-orange-0-33-l" data-price="3.90"><div><div class="mname t" data-de="Fritz Orange (0,33 l)" data-en="Fritz Orange (0.33 l)">Fritz Orange (0,33 l)</div></div><div class="mprice">3,90 €</div></div>
+    <div class="mitem" data-item="fritz-zero-kola-0-33-l" data-price="3.90"><div><div class="mname t" data-de="Fritz Zero Kola (0,33 l)" data-en="Fritz Zero Kola (0.33 l)">Fritz Zero Kola (0,33 l)</div></div><div class="mprice">3,90 €</div></div>
+    <div class="mitem" data-item="hausgemachter-karkadeh-0-5-l" data-price="4.50"><div><div class="mname t" data-de="Hausgemachter Karkadeh (0,5 l)" data-en="Homemade Karkadeh (0.5 l)">Hausgemachter Karkadeh (0,5 l)</div><p class="mdesc t" data-de="Traditionelles ägyptisches Hibiskusgetränk mit erfrischend fruchtiger Note." data-en="Traditional Egyptian hibiscus drink with a refreshingly fruity note.">Traditionelles ägyptisches Hibiskusgetränk mit erfrischend fruchtiger Note.</p></div><div class="mprice">4,50 €</div></div>
   </div>
 </section>
 
-<section id="kontakt" class="fade-in" class="contact">
+<section id="firmen" class="business fade-in" data-requires="business">
+  <div class="business-inner">
+    <span class="menu-eyebrow t" data-de="Für Unternehmen" data-en="For companies">Für Unternehmen</span>
+    <h2 class="business-title t" data-de="Mittagessen fürs Büro" data-en="Lunch for the office">Mittagessen fürs Büro</h2>
+    <p class="business-lead t"
+       data-de="Ägyptische Küche für Meetings, Team-Lunches und Firmenfeiern — frisch gekocht, warm geliefert und so verpackt, dass jeder am Tisch nehmen kann, was er möchte. Ab {fromPersons} Personen stellen wir Ihnen gern ein Angebot zusammen."
+       data-en="Egyptian food for meetings, team lunches and company celebrations — freshly cooked, delivered warm and packed so everyone at the table can help themselves. From {fromPersons} people we are happy to put together a quote.">Ägyptische Küche für Meetings, Team-Lunches und Firmenfeiern — frisch gekocht, warm geliefert und so verpackt, dass jeder am Tisch nehmen kann, was er möchte. Ab 5 Personen stellen wir Ihnen gern ein Angebot zusammen.</p>
+
+    <div class="business-grid">
+      <div class="bcard">
+        <span class="bcard-num">01</span>
+        <h3 class="bcard-title t" data-de="Ab {freeDeliveryFrom} € liefern wir kostenfrei" data-en="Free delivery from €{freeDeliveryFrom}">Ab 100 € liefern wir kostenfrei</h3>
+        <p class="bcard-text t" data-de="Für Bestellungen ab {freeDeliveryFrom} € Bestellwert entfällt die Liefergebühr — im gesamten Liefergebiet rund um Hockenheim." data-en="Orders of €{freeDeliveryFrom} or more are delivered free of charge — anywhere in our delivery area around Hockenheim.">Für Bestellungen ab 100 € Bestellwert entfällt die Liefergebühr — im gesamten Liefergebiet rund um Hockenheim.</p>
+      </div>
+      <div class="bcard">
+        <span class="bcard-num">02</span>
+        <h3 class="bcard-title t" data-de="{leadTimeHours} Stunden Vorlauf" data-en="{leadTimeHours} hours lead time">2 Stunden Vorlauf</h3>
+        <p class="bcard-text t" data-de="Größere Bestellungen kochen wir frisch für Sie. Bitte geben Sie uns mindestens {leadTimeHours} Stunden Zeit — für Termine am Vortag angemeldet, umso besser." data-en="We cook larger orders fresh for you. Please allow at least {leadTimeHours} hours — a day's notice is even better.">Größere Bestellungen kochen wir frisch für Sie. Bitte geben Sie uns mindestens 2 Stunden Zeit — für Termine am Vortag angemeldet, umso besser.</p>
+      </div>
+      <div class="bcard">
+        <span class="bcard-num">03</span>
+        <h3 class="bcard-title t" data-de="Bestellung per WhatsApp" data-en="Order via WhatsApp">Bestellung per WhatsApp</h3>
+        <p class="bcard-text t" data-de="Der schnellste Weg: Sie schreiben uns, wir bestätigen Menge, Uhrzeit und Preis schriftlich. Regelmäßige Bestellungen legen wir Ihnen als Vorlage an." data-en="The fastest route: message us and we confirm quantities, time and price in writing. For recurring orders we keep your usual selection on file.">Der schnellste Weg: Sie schreiben uns, wir bestätigen Menge, Uhrzeit und Preis schriftlich. Regelmäßige Bestellungen legen wir Ihnen als Vorlage an.</p>
+      </div>
+      <div class="bcard">
+        <span class="bcard-num">04</span>
+        <h3 class="bcard-title t" data-de="Zahlung auf Rechnung" data-en="Payment by invoice">Zahlung auf Rechnung</h3>
+        <p class="bcard-text t" data-de="Für Firmenkunden stellen wir eine Rechnung mit ausgewiesener Mehrwertsteuer aus." data-en="For business customers we issue an invoice showing VAT separately.">Für Firmenkunden stellen wir eine Rechnung mit ausgewiesener Mehrwertsteuer aus.</p>
+        <p class="bcard-text t" data-requires="paypal" data-de="Auf Wunsch senden wir Ihnen einen PayPal-Zahlungslink über den exakten Betrag." data-en="On request we send you a PayPal payment link for the exact amount." hidden>Auf Wunsch senden wir Ihnen einen PayPal-Zahlungslink über den exakten Betrag.</p>
+      </div>
+    </div>
+
+    <p class="business-hours" id="businessHours"></p>
+
+    <div class="business-cta">
+      <a href="https://wa.me/4917679906621" target="_blank" rel="noopener" class="btn-primary t" data-wa-template="business" data-de="Angebot per WhatsApp anfragen" data-en="Request a quote via WhatsApp">Angebot per WhatsApp anfragen</a>
+      <a href="#speisekarte" class="btn-line t" data-de="Speisekarte ansehen" data-en="View the menu">Speisekarte ansehen</a>
+    </div>
+  </div>
+</section>
+
+<section id="kontakt" class="fade-in contact">
   <div class="contact-inner">
     <span class="menu-eyebrow t" data-de="Besuchen Sie uns" data-en="Visit us">Besuchen Sie uns</span>
     <div class="contact-title t" data-de="Kontakt & Öffnungszeiten" data-en="Contact & Opening Hours">Kontakt & Öffnungszeiten</div>
@@ -348,18 +400,23 @@
           <a href="https://g.page/r/CcsxCqNf8mEREBM/review" target="_blank" class="review-link t" data-de="⭐ Bewertung auf Google hinterlassen" data-en="⭐ Leave a review on Google">⭐ Bewertung auf Google hinterlassen</a>
         </div>
         <span class="info-eyebrow t" data-de="Öffnungszeiten" data-en="Opening Hours">Öffnungszeiten</span>
-        <div>
-          <div class="hrow"><span class="day t" data-de="Montag" data-en="Monday">Montag</span><span class="t" data-de="Geschlossen" data-en="Closed">Geschlossen</span></div>
+        <div class="hours-status" id="hoursStatus"></div>
+        <!-- Rendered from config.js so the table, the "open now" badge and the
+             schema.org opening hours can never disagree. The rows below are the
+             no-JavaScript fallback and are replaced on load. -->
+        <div id="hoursTable">
+          <div class="hrow"><span class="day t" data-de="Montag" data-en="Monday">Montag</span><span class="hclosed t" data-de="Geschlossen" data-en="Closed">Geschlossen</span></div>
           <div class="hrow"><span class="day t" data-de="Dienstag – Sonntag" data-en="Tuesday – Sunday">Dienstag – Sonntag</span><span class="t" data-de="18:00 – 23:00 Uhr" data-en="6:00 PM – 11:00 PM">18:00 – 23:00 Uhr</span></div>
         </div>
         <div style="margin-top: 36px;">
           <span class="info-eyebrow t" data-de="Jetzt bestellen" data-en="Order now">Jetzt bestellen</span>
           <div class="order-links">
-            <a href="https://wa.me/4917679906621?text=Hallo%20KAIRO%201980!%20Ich%20m%C3%B6chte%20gerne%20bestellen%20%E2%80%93%20mit%2010%20%25%20Rabatt%20und%20ohne%20Liefergeb%C3%BChr." target="_blank" rel="noopener" class="order-btn whatsapp t" data-de="WhatsApp — 10 % Rabatt" data-en="WhatsApp — 10% off" data-de-href="https://wa.me/4917679906621?text=Hallo%20KAIRO%201980!%20Ich%20m%C3%B6chte%20gerne%20bestellen%20%E2%80%93%20mit%2010%20%25%20Rabatt%20und%20ohne%20Liefergeb%C3%BChr." data-en-href="https://wa.me/4917679906621?text=Hello%20KAIRO%201980!%20I'd%20like%20to%20place%20an%20order%20%E2%80%93%20with%2010%25%20off%20and%20no%20delivery%20fee.">WhatsApp — 10 % Rabatt</a>
+            <a href="#speisekarte" class="order-btn whatsapp t" data-de="Speisekarte & Warenkorb" data-en="Menu & basket">Speisekarte &amp; Warenkorb</a>
+            <a href="https://wa.me/4917679906621" target="_blank" rel="noopener" class="order-btn whatsapp-plain t" data-wa-template="simple" data-de="Direkt per WhatsApp" data-en="Direct via WhatsApp">Direkt per WhatsApp</a>
             <a href="https://www.lieferando.de/speisekarte/kairo-1980" target="_blank" class="order-btn lieferando">Lieferando</a>
             <a href="https://www.ubereats.com/de/store/kairo-1980/3a9t8nwzXfm3iAkRVtCemA" target="_blank" class="order-btn ubereats">Uber Eats</a>
           </div>
-          <p class="order-note t" data-de="Direkt bei uns bestellen: 10 % Rabatt und keine Liefergebühr." data-en="Order direct with us: 10% off and no delivery fee.">Direkt bei uns bestellen: 10 % Rabatt und keine Liefergebühr.</p>
+          <p class="order-note t" data-de="Direkt bei uns bestellen: 10 % Rabatt auf Ihre Bestellung." data-en="Order direct with us: 10% off your order.">Direkt bei uns bestellen: 10 % Rabatt auf Ihre Bestellung.</p>
         </div>
       </div>
       <!-- Two-click solution: the Google Maps embed contacts Google and
@@ -452,6 +509,10 @@ function setLang(lang) {
   document.getElementById('btn-de').classList.toggle('active', lang === 'de');
   document.getElementById('btn-en').classList.toggle('active', lang === 'en');
 
+  // Opening hours, the basket and every config-driven number are rendered by
+  // order.js, which repaints itself when this fires.
+  document.dispatchEvent(new CustomEvent('kairo:lang', { detail: lang }));
+
   // Update mehr lesen button text based on state
   const btn = document.getElementById('mehrLesenBtn');
   const isOpen = document.getElementById('mehrLesenContent').classList.contains('open');
@@ -472,7 +533,7 @@ function toggleMehrLesen() {
 
 <div style="display:none" aria-hidden="true">
 KAIRO 1980 – Ägyptisches Restaurant und Lieferservice.
-Liefergebiet: Hockenheim 68766 · Reilingen 68799 · Neulußheim 68809 · Altlußheim 68804 · Ketsch 68775 · Edingen-Neckarhausen 68535 · Ladenburg 68526 · Walldorf 69190 · St. Leon-Rot 68789 · Sandhausen 69207 · Schwetzingen 68723 · Plankstadt 68723 · Brühl 68782 · Waghäusel 68753 · Oberhausen-Rheinhausen 68794 · Eppelheim 69117 · Wiesloch 69168 · Philippsburg 76661 · Rauenberg 69231 · Heidelberg 69115 69117 69120 69123 69124 69126 · Schifferstadt 67105 · Mannheim 68167 68169 68199 68259.
+Liefergebiet: Hockenheim 68766 · Reilingen 68799 · Neulußheim 68809 · Altlußheim 68804 · Ketsch 68775 · Edingen-Neckarhausen 68535 · Ladenburg 68526 · Walldorf 69190 · St. Leon-Rot 68789 · Sandhausen 69207 · Schwetzingen 68723 · Plankstadt 68723 · Brühl 68782 · Waghäusel 68753 · Oberhausen-Rheinhausen 68794 · Eppelheim 69214 · Wiesloch 69168 · Philippsburg 76661 · Rauenberg 69231 · Heidelberg 69115 69117 69120 69123 69124 69126 · Schifferstadt 67105 · Mannheim 68167 68169 68199 68259.
 </div>
 
 <script>
@@ -618,6 +679,14 @@ function startAutoAdvance() {
 
 loadReviews();
 </script>
+
+<!-- zones.js is generated from data/delivery_zones.xlsx by tools/build-zones.py;
+     config.js holds every other editable business rule; order.js renders the
+     opening hours, the basket and the WhatsApp handover from both. The load
+     order matters. -->
+<script src="zones.js"></script>
+<script src="config.js"></script>
+<script src="order.js"></script>
 
 </body>
 </html>
