@@ -78,9 +78,7 @@
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Cinzel:wght@400;500&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -364,8 +362,19 @@
           <p class="order-note t" data-de="Direkt bei uns bestellen: 10 % Rabatt und keine Liefergebühr." data-en="Order direct with us: 10% off and no delivery fee.">Direkt bei uns bestellen: 10 % Rabatt und keine Liefergebühr.</p>
         </div>
       </div>
-      <div class="map-ph">
-        <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2600.175357343614!2d8.544694011753359!3d49.32989876729051!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4797b97c5c6a0a77%3A0x1161f25fa30a31cb!2sKAIRO%201980!5e0!3m2!1sen!2sde!4v1779924687462!5m2!1sen!2sde" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="KAIRO 1980 Standort"></iframe>
+      <!-- Two-click solution: the Google Maps embed contacts Google and
+           discloses the visitor's IP address, so it is only loaded after the
+           visitor explicitly consents. -->
+      <div class="map-ph" id="mapHolder">
+        <div class="map-consent" id="mapConsent">
+          <p class="map-consent-text t"
+             data-de="Beim Laden der Karte werden Daten an Google übertragen, unter anderem Ihre IP-Adresse."
+             data-en="Loading the map transfers data to Google, including your IP address.">Beim Laden der Karte werden Daten an Google übertragen, unter anderem Ihre IP-Adresse.</p>
+          <button type="button" class="map-consent-btn t" id="mapConsentBtn"
+                  data-de="Karte laden" data-en="Load map">Karte laden</button>
+          <a class="map-consent-link t" href="datenschutz.html"
+             data-de="Datenschutzerklärung" data-en="Privacy policy">Datenschutzerklärung</a>
+        </div>
       </div>
     </div>
   </div>
@@ -407,6 +416,11 @@
       <a href="mailto:info@kairo1980.de">info@kairo1980.de</a>
       <span class="footer-dot" aria-hidden="true">·</span>
       <a href="https://www.instagram.com/_kairo1980_/" target="_blank" rel="noopener" class="footer-instagram">Instagram</a>
+    </nav>
+    <nav class="footer-links" aria-label="Rechtliches">
+      <a href="impressum.html" class="t" data-de="Impressum" data-en="Legal notice">Impressum</a>
+      <span class="footer-dot" aria-hidden="true">·</span>
+      <a href="datenschutz.html" class="t" data-de="Datenschutzerklärung" data-en="Privacy policy">Datenschutzerklärung</a>
     </nav>
     <span class="footer-copy t" data-de="© 2026 · Moderne Ägyptische Küche · Hockenheim" data-en="© 2026 · Modern Egyptian Cuisine · Hockenheim">© 2026 · Moderne Ägyptische Küche · Hockenheim</span>
   </div>
@@ -582,6 +596,25 @@ function startAutoAdvance() {
   if (reviewTimer || reviews.length < 2) return;
   reviewTimer = setInterval(() => moveReviews(1), 5000);
 }
+
+
+// Google Maps is embedded only after an explicit click (two-click solution),
+// so no visitor data reaches Google without consent.
+(function () {
+  const btn = document.getElementById('mapConsentBtn');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const holder = document.getElementById('mapHolder');
+    const frame = document.createElement('iframe');
+    frame.src = 'https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d2600.175357343614!2d8.544694011753359!3d49.32989876729051!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x4797b97c5c6a0a77%3A0x1161f25fa30a31cb!2sKAIRO%201980!5e0!3m2!1sen!2sde!4v1779924687462!5m2!1sen!2sde';
+    frame.setAttribute('allowfullscreen', '');
+    frame.setAttribute('loading', 'lazy');
+    frame.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
+    frame.title = 'KAIRO 1980 Standort';
+    holder.innerHTML = '';
+    holder.appendChild(frame);
+  });
+})();
 
 loadReviews();
 </script>
