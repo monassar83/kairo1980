@@ -329,7 +329,7 @@
   var schemaRating = null;
 
   function updateSchemaHours() {
-    var node = document.querySelector('script[type="application/ld+json"]');
+    var node = document.getElementById('restaurantSchema');
     if (!node) return;
     try {
       var data = JSON.parse(node.textContent);
@@ -598,13 +598,17 @@
     document.getElementById('cartClose').addEventListener('click', closePanel);
     document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape' && !els.panel.hidden) closePanel();
+      trapFocus(e);
     });
   }
+
+  var lastFocused = null;
 
   function openPanel() {
     // Outside opening hours "as soon as possible" is meaningless, so the panel
     // opens on the scheduling tab. Only ever pre-selected, never forced.
     if (!isOpenNow() && !draft.fDate && form.when === 'asap') form.when = 'scheduled';
+    lastFocused = document.activeElement;
     els.panel.hidden = false;
     els.backdrop.hidden = false;
     document.body.classList.add('cart-open');
@@ -617,6 +621,31 @@
     els.panel.hidden = true;
     els.backdrop.hidden = true;
     document.body.classList.remove('cart-open');
+    // Send focus back where it came from, so a keyboard user is not dropped
+    // at the top of the document after closing the drawer.
+    if (lastFocused && document.contains(lastFocused)) {
+      lastFocused.focus({ preventScroll: true });
+    }
+    lastFocused = null;
+  }
+
+  // The panel is aria-modal, so focus must not escape it while it is open.
+  function trapFocus(e) {
+    if (e.key !== 'Tab' || els.panel.hidden) return;
+    var focusable = els.panel.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled])');
+    var open = [].filter.call(focusable, function (el) {
+      return el.offsetParent !== null || el === document.activeElement;
+    });
+    if (!open.length) return;
+    var first = open[0], last = open[open.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
   }
 
   function field(id, label, type, placeholder, required) {
@@ -1116,6 +1145,8 @@
 
     renderBusinessHours();
     renderAreas();
+    renderFaqHours();
+    updateFaqSchema();
 
     // Corporate enquiry links carry a prefilled, structured template.
     [].forEach.call(document.querySelectorAll('[data-wa-template]'), function (el) {
@@ -1169,6 +1200,61 @@
     }).join('');
   }
 
+  // The opening-hours answer is written from config, never typed by hand, so
+  // it can never contradict the table above it.
+  function renderFaqHours() {
+    var host = document.querySelector('.faq-hours');
+    if (!host) return;
+    var L = t();
+    var en = lang() === 'en';
+
+    var lines = DAY_KEYS.map(function (key) {
+      var slots = slotsFor(key);
+      return L.days[key] + ': ' + (slots.length
+        ? slots.map(function (s) {
+            return (CFG.hours.lunch && CFG.hours.lunch.enabled ? L[s.kind] + ' ' : '') +
+              s.from + '–' + s.to;
+          }).join(', ')
+        : L.closed);
+    });
+
+    host.textContent = (en
+      ? 'Our current opening hours are: '
+      : 'Unsere aktuellen Öffnungszeiten: ') + lines.join(' · ') + '. ' + (en
+      ? 'The live status at the top of the contact section always shows whether we are open right now. Orders placed outside these hours reach us as a pre-order for a time you choose.'
+      : 'Der Status im Kontaktbereich zeigt jederzeit an, ob wir gerade geöffnet haben. Bestellungen außerhalb dieser Zeiten erreichen uns als Vorbestellung für Ihren Wunschtermin.');
+  }
+
+  // FAQPage built from the rendered <details>, so an edited answer updates the
+  // structured data automatically and the two can never disagree.
+  function buildFaqSchema() {
+    var items = document.querySelectorAll('#faq .faq-item');
+    if (!items.length) return null;
+    var entities = [];
+    [].forEach.call(items, function (item) {
+      if (item.hidden) return;
+      var q = item.querySelector('summary');
+      var a = item.querySelector('.faq-answer');
+      if (!q || !a) return;
+      var answer = a.textContent.replace(/\s+/g, ' ').trim();
+      if (!answer) return;
+      entities.push({
+        '@type': 'Question',
+        name: q.textContent.replace(/\s+/g, ' ').trim(),
+        acceptedAnswer: { '@type': 'Answer', text: answer }
+      });
+    });
+    if (!entities.length) return null;
+    return { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: entities };
+  }
+
+  function updateFaqSchema() {
+    var node = document.getElementById('faqSchema');
+    if (!node) return;
+    var data = buildFaqSchema();
+    node.textContent = data ? JSON.stringify(data, null, 2) : '';
+  }
+
   function renderBusinessHours() {
     var host = document.getElementById('businessHours');
     if (!host) return;
@@ -1217,17 +1303,6 @@
       paint();
     }
 
-    // index.html has already fetched reviews.json for the carousel; it hands
-    // the figures over rather than us requesting the file a second time.
-    // aggregateRating is only ever emitted for ratings actually shown on the
-    // page — inventing or duplicating them is a structured-data violation.
-    document.addEventListener('kairo:reviews', function (e) {
-      var detail = e.detail || {};
-      if (!detail.rating || !detail.total) return;
-      schemaRating = { value: detail.rating, count: detail.total };
-      updateSchemaHours();
-    });
-
     // Language switch repaints everything that carries generated text.
     document.addEventListener('kairo:lang', function () {
       renderHours();
@@ -1238,6 +1313,17 @@
     // Keep "open now" honest on a tab left open across closing time.
     setInterval(function () { renderStatus(berlinNow()); }, 60000);
   }
+
+  // Registered at module level, not inside init(): app.js fetches reviews.json
+  // and a cached response could resolve before DOMContentLoaded, which would
+  // lose the rating. aggregateRating is only ever emitted for figures actually
+  // rendered on the page — inventing them is a structured-data violation.
+  document.addEventListener('kairo:reviews', function (e) {
+    var detail = e.detail || {};
+    if (!detail.rating || !detail.total) return;
+    schemaRating = { value: detail.rating, count: detail.total };
+    updateSchemaHours();
+  });
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);

@@ -9,6 +9,14 @@
   Referrer-Policy: strict-origin-when-cross-origin
   X-Frame-Options: SAMEORIGIN
   Permissions-Policy: geolocation=(), microphone=(), camera=(), interest-cohort=()
+  Cross-Origin-Opener-Policy: same-origin
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  # No 'unsafe-inline' anywhere: every script lives in its own file and every
+  # style in style.css, so the policy can stay strict. google.com is allowed
+  # only as a frame, and only after the visitor clicks "Karte laden" — the map
+  # is never loaded without consent. form-action 'self' keeps the basket form
+  # from being repointed if a script were ever injected.
+  Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src https://www.google.com; form-action 'self'; base-uri 'self'; frame-ancestors 'self'; object-src 'none'; upgrade-insecure-requests
 
 # Opening hours, delivery prices and the menu live here. A visitor holding a
 # stale copy would be shown wrong prices or wrong hours, so these always
@@ -27,6 +35,8 @@
 # Behaviour and styling: a few minutes of staleness is harmless and saves the
 # round trip on the common repeat visit.
 /order.js
+  Cache-Control: public, max-age=300, must-revalidate
+/app.js
   Cache-Control: public, max-age=300, must-revalidate
 /style.css
   Cache-Control: public, max-age=300, must-revalidate

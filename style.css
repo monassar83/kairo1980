@@ -3,6 +3,32 @@
 html { scroll-behavior: smooth; }
 body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4; color: #1c1409; }
 
+/* ACCESSIBILITY
+   A visible focus ring on every interactive element. :focus-visible means
+   mouse users never see it, so nothing about the design changes. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+summary:focus-visible {
+  outline: 2px solid #b8914a;
+  outline-offset: 3px;
+  border-radius: 1px;
+}
+
+/* Keyboard users can jump the nav straight to the menu. Off-screen until
+   focused, so it never affects the visual design. */
+.skip-link {
+  position: absolute; left: 50%; top: -60px; z-index: 100;
+  transform: translateX(-50%);
+  padding: 12px 22px;
+  background: #1c1409; color: #f5e8cc;
+  font-family: 'Cinzel', serif; font-size: 10px;
+  letter-spacing: 0.18em; text-transform: uppercase; text-decoration: none;
+  transition: top 0.2s;
+}
+.skip-link:focus { top: 0; }
+
 /* NAV */
 .nav {
   position: sticky; top: 0; z-index: 20;
@@ -40,11 +66,16 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
 
 /* HERO */
 .hero {
-  position: relative; min-height: 100vh; align-items: flex-end; padding-bottom: 80px;
+  position: relative; min-height: 100vh; padding-bottom: 80px;
   display: flex; align-items: center; justify-content: center;
   text-align: center;
-  background: url('images/hero.jpg') center/cover no-repeat;
+  background: #1c1409;
   overflow: hidden;
+}
+.hero-img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center;
 }
 .hero-overlay {
   position: absolute; inset: 0;
@@ -66,11 +97,6 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
   color: rgba(245,232,204,0.86);
   max-width: 540px; margin: 0 auto 34px;
   text-shadow: 0 1px 12px rgba(20,13,4,0.85);
-}
-.hero-desc {
-  font-size: 16px; line-height: 1.85;
-  color: rgba(240,220,170,0.8);
-  max-width: 480px; margin: 0 auto 40px;
 }
 .hero-actions { display: flex; align-items: center; justify-content: center; gap: 36px; }
 .btn-primary {
@@ -173,6 +199,9 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
 .info-eyebrow { font-family: 'Cinzel', serif; font-size: 9px; letter-spacing: 0.26em; text-transform: uppercase; color: #b8914a; display: block; margin-bottom: 7px; }
 .info-val { font-size: 14px; line-height: 1.9; color: #4a3010; margin-bottom: 28px; }
 .info-val a { color: #8a6828; text-decoration: none; }
+/* Replaced inline style attributes so the CSP can forbid inline styles. */
+.info-phone { display: block; margin-bottom: 8px; }
+.contact-order { margin-top: 36px; }
 .hrow { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(200,165,90,0.2); font-size: 14px; color: #4a3010; }
 .hrow .day { color: #9a8050; }
 .map-ph { background: #ecdfc4; border-radius: 2px; height: 320px; overflow: hidden; width: 100%; }
@@ -296,29 +325,6 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
 }
 .footer-instagram:hover { color: #d4a85c; }
 
-/* REVIEWS SECTION */
-.reviews-section {
-  background: #fcf9f4;
-  padding: 80px 80px 40px;
-  border-top: 1px solid rgba(200,165,90,0.15);
-}
-.reviews-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-}
-.reviews-title {
-  font-family: 'Cormorant Garamond', serif;
-  font-size: 40px;
-  font-weight: 300;
-  color: #1c1409;
-  margin-bottom: 40px;
-}
-
-@media (max-width: 900px) {
-  .reviews-section { padding: 60px 24px 32px; }
-  .reviews-title { font-size: 30px; }
-}
-
 /* REVIEWS CAROUSEL */
 .reviews-section {
   background: #fcf9f4;
@@ -429,10 +435,17 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
 .reviews-dots {
   display: flex; gap: 8px; justify-content: center; margin-bottom: 32px;
 }
+/* A real <button>: the dots are controls, so they must be reachable by
+   keyboard and announced as such. Padding gives a 24px touch target around
+   the 8px visual dot without changing the layout. */
 .dot {
   width: 8px; height: 8px; border-radius: 50%;
-  background: rgba(184,145,74,0.25); cursor: pointer; transition: background 0.2s;
+  background: rgba(184,145,74,0.25);
+  border: none; padding: 0; cursor: pointer;
+  transition: background 0.2s;
+  background-clip: content-box;
 }
+.dot:focus-visible { outline: 2px solid #b8914a; outline-offset: 4px; }
 .dot.active { background: #b8914a; }
 .reviews-cta {
   display: inline-block;
@@ -459,6 +472,8 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
   .nav-logo-img { height: 40px; }
   .nav-links { gap: 10px; }
   .nav-links a { font-size: 9px; letter-spacing: 0.06em; white-space: nowrap; }
+  /* Five links do not fit a 390px bar. FAQ is reachable from the footer. */
+  .nav-hide-sm { display: none; }
 }
 
 @media (max-width: 640px) {
@@ -629,6 +644,49 @@ body { font-family: 'DM Sans', sans-serif; font-weight: 300; background: #fcf9f4
   .business { padding: 60px 24px; }
   .business-title { font-size: 32px; }
   .business-lead { margin-bottom: 36px; }
+}
+
+/* ===========================================================================
+   FAQ — native <details>, no JavaScript needed to open an answer
+   =========================================================================== */
+.faq { background: #fff; padding: 84px 80px; }
+.faq-inner { max-width: 860px; margin: 0 auto; }
+.faq-title {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 40px; font-weight: 300; color: #1c1409; margin: 0 0 34px;
+}
+.faq-item { border-bottom: 1px solid #f0e6d4; }
+.faq-item summary {
+  display: flex; align-items: baseline; gap: 14px;
+  padding: 20px 0; cursor: pointer;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 20px; color: #1c1409; line-height: 1.4;
+  list-style: none;
+  transition: color 0.2s;
+}
+.faq-item summary::-webkit-details-marker { display: none; }
+.faq-item summary::after {
+  content: "+"; margin-left: auto;
+  font-family: 'DM Sans', sans-serif; font-size: 20px; color: #b8914a;
+  line-height: 1; flex-shrink: 0;
+  transition: transform 0.25s ease;
+}
+.faq-item[open] summary::after { content: "−"; }
+.faq-item summary:hover { color: #a07838; }
+.faq-item summary:focus-visible {
+  outline: 2px solid #b8914a; outline-offset: 3px;
+}
+.faq-answer { padding: 0 34px 22px 0; }
+.faq-answer p {
+  font-size: 14px; line-height: 1.95; color: #5a4020; margin: 0;
+}
+.faq-answer p + p { margin-top: 12px; }
+
+@media (max-width: 900px) {
+  .faq { padding: 56px 24px; }
+  .faq-title { font-size: 30px; }
+  .faq-item summary { font-size: 18px; padding: 17px 0; }
+  .faq-answer { padding-right: 0; }
 }
 
 /* ===========================================================================

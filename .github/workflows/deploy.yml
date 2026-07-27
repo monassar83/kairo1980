@@ -32,6 +32,10 @@ jobs:
     steps:
       - name: Checkout repo
         uses: actions/checkout@v5
+        with:
+          # build-sitemap.py dates each URL from the last commit that touched
+          # it, which needs more than the default single-commit checkout.
+          fetch-depth: 0
 
       - name: Setup Node.js
         uses: actions/setup-node@v5
@@ -63,6 +67,15 @@ jobs:
           fi
           rm zones.js.published
           echo "ok: zones.js matches data/delivery_zones.xlsx"
+
+      # Dates come from git history, so the published sitemap is accurate
+      # without anyone remembering to edit it. Regenerated rather than
+      # verified: there is no reason for a human to hand-maintain this file.
+      - name: Regenerate sitemap.xml
+        run: |
+          python tools/build-sitemap.py
+          python -c "import xml.dom.minidom; xml.dom.minidom.parse('sitemap.xml')"
+          echo "sitemap.xml is well-formed"
 
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
