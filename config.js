@@ -122,7 +122,7 @@ window.KAIRO_CONFIG = {
     // `lunch` window while leaving `evening` at null.
     days: {
       mon: { closed: true,  lunch: null,               evening: null },
-      tue: { closed: false, lunch: ['11:30', '14:30'], evening: ['18:00', '23:00'] },
+      tue: { closed: true,  lunch: null,               evening: null },
       wed: { closed: false, lunch: ['11:30', '14:30'], evening: ['18:00', '23:00'] },
       thu: { closed: false, lunch: ['11:30', '14:30'], evening: ['18:00', '23:00'] },
       fri: { closed: false, lunch: ['11:30', '14:30'], evening: ['18:00', '23:00'] },
