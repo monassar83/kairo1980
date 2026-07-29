@@ -21,7 +21,12 @@
   var CFG = window.KAIRO_CONFIG;
   if (!CFG) return;
 
-  var STORAGE_KEY = 'kairo.cart.v1';
+  // v2 stores { savedAt, items } instead of a bare id -> qty map, so a basket
+  // can expire. v1 keys are removed on sight rather than migrated: they carry
+  // no timestamp, so there is no way to tell a five-minute-old basket from a
+  // five-week-old one.
+  var STORAGE_KEY = 'kairo.cart.v2';
+  var LEGACY_STORAGE_KEYS = ['kairo.cart.v1'];
   var DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
   var SCHEMA_DAY = {
     mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday',
@@ -36,6 +41,7 @@
       until: 'bis', opensAgain: 'öffnet wieder',
       today: 'Heute',
       add: 'Hinzufügen', remove: 'Entfernen',
+      cartOpen: 'Bestellung öffnen', itemsOne: 'Gericht', itemsMany: 'Gerichte',
       cart: 'Bestellung', cartEmpty: 'Ihr Warenkorb ist noch leer.',
       cartEmptyHint: 'Tippen Sie in der Speisekarte auf „+", um Gerichte hinzuzufügen.',
       subtotal: 'Zwischensumme', discount: 'Direktbestellung', total: 'Gesamt',
@@ -89,6 +95,7 @@
       until: 'until', opensAgain: 'opens again',
       today: 'Today',
       add: 'Add', remove: 'Remove',
+      cartOpen: 'Open your order', itemsOne: 'dish', itemsMany: 'dishes',
       cart: 'Your order', cartEmpty: 'Your basket is still empty.',
       cartEmptyHint: 'Tap "+" next to a dish in the menu to add it.',
       subtotal: 'Subtotal', discount: 'Direct order', total: 'Total',
@@ -435,18 +442,57 @@
   var items = {};   // id -> { el, price, node }
   var cart = {};    // id -> qty
 
+  /* --- basket persistence -------------------------------------------------
+     A basket is a short-lived intention, not a saved document. Remembering it
+     forever is the behaviour a guest reads as a bug: they close the tab, come
+     back next week and find an order they no longer want — priced at whatever
+     the menu said back then. Remembering it for nothing is just as bad, since
+     a reload, a phone call or a detour to the delivery-area list would empty
+     it. So it is kept on a sliding window, set in config.js, and the clock
+     restarts on every change.
+  ------------------------------------------------------------------------- */
+
+  function cartLifetimeMs() {
+    var minutes = CFG.order.cartLifetimeMinutes;
+    if (minutes === 0) return 0;                       // never remembered
+    return (minutes > 0 ? minutes : 120) * 60000;      // unset -> 2 hours
+  }
+
+  function clearStoredCart() {
+    try { localStorage.removeItem(STORAGE_KEY); } catch (e) { /* private mode */ }
+  }
+
   function loadCart() {
+    LEGACY_STORAGE_KEYS.forEach(function (key) {
+      try { localStorage.removeItem(key); } catch (e) { /* private mode */ }
+    });
+
+    var lifetime = cartLifetimeMs();
+    if (!lifetime) { clearStoredCart(); return; }
+
     try {
-      var raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-      Object.keys(raw).forEach(function (id) {
-        var qty = parseInt(raw[id], 10);
+      var raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+      if (!raw || typeof raw !== 'object' || !raw.items) { clearStoredCart(); return; }
+
+      // A negative age means the device clock moved backwards; that basket is
+      // no more trustworthy than an expired one.
+      var age = Date.now() - raw.savedAt;
+      if (!(raw.savedAt > 0) || age < 0 || age > lifetime) { clearStoredCart(); return; }
+
+      Object.keys(raw.items).forEach(function (id) {
+        var qty = parseInt(raw.items[id], 10);
         if (items[id] && qty > 0) cart[id] = Math.min(qty, 99);
       });
-    } catch (e) { /* ignore corrupted storage */ }
+    } catch (e) { clearStoredCart(); }
   }
 
   function saveCart() {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(cart)); } catch (e) { /* private mode */ }
+    if (!cartLifetimeMs() || !count()) { clearStoredCart(); return; }
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        savedAt: Date.now(), items: cart
+      }));
+    } catch (e) { /* private mode */ }
   }
 
   function itemName(id) {
@@ -511,6 +557,22 @@
     else cart[id] = Math.min(qty, 99);
     saveCart();
     paint();
+    bumpFab();
+  }
+
+  // The steam rises once whenever the basket changes: on a long menu the
+  // button sits far from the dish that was just tapped, and a change with no
+  // acknowledgement reads as a tap that did not register.
+  var bumpTimer = null;
+  function bumpFab() {
+    if (!els.fab || els.fab.hidden) return;
+    els.fab.classList.remove('is-bumped');
+    void els.fab.offsetWidth;                 // restart the animation
+    els.fab.classList.add('is-bumped');
+    clearTimeout(bumpTimer);
+    bumpTimer = setTimeout(function () {
+      if (els.fab) els.fab.classList.remove('is-bumped');
+    }, 1200);
   }
 
   /* --- menu wiring ------------------------------------------------------- */
@@ -561,13 +623,46 @@
 
   /* --- panel ------------------------------------------------------------- */
 
+  // A supermarket trolley is the wrong metaphor for a restaurant: nobody
+  // wheels a trolley through a kitchen. This is a cloche — the domed cover a
+  // plate travels under — drawn in the same hairline weight as the rest of the
+  // page, with three wisps of steam that rise every time the basket changes.
+  //
+  // The dome alone read as a notification bell, which is the shape it shares.
+  // What separates them is the plate: the platter runs WIDER than the dome on
+  // both sides and closes underneath with a shallow curve, so the silhouette
+  // is a covered dish seen from the side. A bell has neither the overhang nor
+  // the base — it flares open at the bottom. The knob sits directly on the
+  // dome rather than on a stem, which is the other half of the difference: a
+  // bell hangs from a loop above it.
+  var CART_ICON =
+    '<svg class="cart-icon" viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false">' +
+      '<g fill="none" stroke="currentColor" stroke-width="1.4" ' +
+         'stroke-linecap="round" stroke-linejoin="round">' +
+        '<g class="cart-icon-steam">' +
+          '<path d="M8.7 7.4c1-.9.3-2.1 0-2.8"/>' +
+          '<path d="M12 6.6c1-.9.3-2.1 0-2.8"/>' +
+          '<path d="M15.3 7.4c1-.9.3-2.1 0-2.8"/>' +
+        '</g>' +
+        // The lid is its own group so it can lift off the plate when a dish is
+        // added. The plate below stays put, which is what makes the movement
+        // read as a lid rather than as the whole icon jiggling.
+        '<g class="cart-icon-lid">' +
+          '<circle cx="12" cy="10.55" r="0.85"/>' +
+          '<path d="M5 18.4a7 7 0 0 1 14 0"/>' +
+        '</g>' +
+        '<path d="M2.4 18.4h19.2"/>' +
+        '<path d="M4.6 18.4c.5 1.8 3.4 2.9 7.4 2.9s6.9-1.1 7.4-2.9"/>' +
+      '</g>' +
+    '</svg>';
+
   var els = {};
 
   function buildPanel() {
     var wrap = document.createElement('div');
     wrap.innerHTML =
       '<button type="button" class="cart-fab" id="cartFab" hidden>' +
-        '<span class="cart-fab-icon" aria-hidden="true">🛒</span>' +
+        '<span class="cart-fab-icon">' + CART_ICON + '</span>' +
         '<span class="cart-fab-count" id="cartFabCount">0</span>' +
         '<span class="cart-fab-total" id="cartFabTotal"></span>' +
       '</button>' +
@@ -826,7 +921,8 @@
 
     var ids = Object.keys(cart);
     if (!ids.length) {
-      els.body.innerHTML = '<div class="cart-empty"><p>' + L.cartEmpty + '</p><p class="cart-empty-hint">' +
+      els.body.innerHTML = '<div class="cart-empty"><span class="cart-empty-icon">' +
+        CART_ICON + '</span><p>' + L.cartEmpty + '</p><p class="cart-empty-hint">' +
         L.cartEmptyHint + '</p></div>';
       return;
     }
@@ -907,13 +1003,18 @@
     });
   }
 
+  // The count and the total are the only text in the button, and neither says
+  // what pressing it does — so the accessible name has to.
   function paint() {
     paintMenu();
     var n = count();
     if (els.fab) {
+      var L = t();
       els.fab.hidden = n === 0;
       els.fabCount.textContent = n;
       els.fabTotal.textContent = money(totals().total);
+      els.fab.setAttribute('aria-label', L.cartOpen + ' — ' + n + ' ' +
+        (n === 1 ? L.itemsOne : L.itemsMany) + ', ' + money(totals().total));
     }
     // The panel stays open when the last line is removed — it shows the empty
     // state, which is clearer than the drawer vanishing under the guest.
@@ -1122,7 +1223,6 @@
     var values = {
       freeDeliveryFrom: b.freeDeliveryFrom,
       leadTimeHours: b.leadTimeHours,
-      fromPersons: b.fromPersons,
       discount: CFG.order.directDiscountPercent,
       businessPickupDiscount: CFG.order.businessPickupDiscountPercent
     };
@@ -1189,6 +1289,12 @@
   // already fall into natural price tiers, a reader only cares which tier they
   // are in, and it lets each town sit on one line instead of a three-column
   // grid breaking "Oberhausen-Rheinhausen" across three.
+  //
+  // The delivery fee is stated per town, not per tier, because it varies
+  // inside a tier — three towns with the same €50 minimum are charged €3, €4
+  // and €8. Publishing it here is the same figure the basket charges, from the
+  // same row of the spreadsheet, so the page cannot promise one price and
+  // invoice another.
   function renderAreas() {
     var host = document.getElementById('areasList');
     if (!host) return;
@@ -1210,9 +1316,13 @@
       var towns = byMin[min].slice().sort(function (a, b) {
         return String(a[1]).localeCompare(String(b[1]), 'de');
       }).map(function (row) {
+        var fee = Number(row[4]) || 0;
         return '<li class="area">' +
-          '<span class="area-city">' + escapeHtml(row[1]) + '</span> ' +
+          '<span class="area-city">' + escapeHtml(row[1]) + '</span>' +
           '<span class="area-plz">' + escapeHtml(row[0]) + '</span>' +
+          '<span class="area-fee' + (fee > 0 ? '' : ' is-free') + '">' +
+            (fee > 0 ? money(fee) : (en ? 'free' : 'frei')) +
+          '</span>' +
           '</li>';
       }).join('');
 
@@ -1298,17 +1408,20 @@
     }
   }
 
+  // The template asks for what actually decides the order — budget and time —
+  // and no longer for a head count, which told us nothing we could cook from.
   function businessTemplate(kind) {
-    var b = CFG.business || {};
     if (lang() === 'en') {
       return kind === 'business'
         ? 'Hello KAIRO 1980, I would like a quote for a corporate order.\n\n' +
-          'Company: \nNumber of people: \nDate & time: \nDelivery address: \nNotes: '
+          'Company: \nApprox. order value: \nDate & time it is needed: \n' +
+          'Delivery or pickup: \nDelivery address: \nNotes (allergies, etc.): '
         : "Hello KAIRO 1980! I'd like to place an order.";
     }
     return kind === 'business'
       ? 'Hallo KAIRO 1980, ich möchte ein Angebot für eine Firmenbestellung.\n\n' +
-        'Firma: \nPersonenzahl: \nDatum & Uhrzeit: \nLieferadresse: \nAnmerkung: '
+        'Firma: \nUngefährer Bestellwert: \nDatum & Uhrzeit: \n' +
+        'Lieferung oder Abholung: \nLieferadresse: \nAnmerkung (Allergien o. Ä.): '
       : 'Hallo KAIRO 1980! Ich möchte gerne bestellen.';
   }
 

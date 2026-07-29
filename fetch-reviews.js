@@ -101,6 +101,16 @@ const req = https.get(url, (res) => {
             avatar: r.authorAttribution?.photoUri || '',
             rating: r.rating,
             text: r.text?.text || '',
+            // The language the guest actually wrote in. The site never
+            // translates a review — it is a quoted statement by a named
+            // person — but it must mark the text so a screen reader
+            // pronounces it correctly and Google knows what it is.
+            lang: r.originalText?.languageCode || r.text?.languageCode || 'de',
+            // Machine-readable, so the page can phrase "3 weeks ago" in
+            // whichever language the visitor picked. `time` below is Google's
+            // own German wording, kept as the fallback for entries fetched
+            // before this field existed.
+            publishTime: r.publishTime || '',
             time: r.relativePublishTimeDescription || ''
           }))
       };

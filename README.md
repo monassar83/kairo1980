@@ -17,6 +17,7 @@ in the delivery spreadsheet. Neither needs a developer.
 | Free-delivery threshold for companies | `config.js` → `business.freeDeliveryFrom` | commit |
 | Lead time for large orders | `config.js` → `business.leadTimeHours` | commit |
 | Direct-order discount | `config.js` → `order.directDiscountPercent` | commit |
+| How long a basket is remembered | `config.js` → `order.cartLifetimeMinutes` | commit |
 | Show the PayPal buttons | `config.js` → `payment.paypalMe` | commit |
 | Hide the whole business section | `config.js` → `business.enabled` | commit |
 | Turn the basket off entirely | `config.js` → `order.cartEnabled` | commit |
@@ -65,6 +66,20 @@ A postcode outside the sheet is **not** rejected. The basket relabels itself as
 a non-binding enquiry and the message is flagged for you to judge — an
 automatic refusal would throw away large orders and you would never hear about
 them.
+
+The delivery-area section on the page lists every town with its postcode and
+its delivery fee, grouped by minimum order value. It is rendered from the same
+row of the spreadsheet the basket charges from, so the published price and the
+invoiced price cannot drift apart.
+
+### How long the basket is remembered
+
+`order.cartLifetimeMinutes` (default 120) is a sliding window that restarts on
+every change. It is long enough that a reload, a phone call or a look at the
+delivery area does not empty the basket, and short enough that somebody
+returning tomorrow starts fresh instead of meeting an order they no longer want
+at prices that may have moved. Set it to `0` to forget the basket the moment
+the tab closes.
 
 ### Adding a dish
 

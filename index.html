@@ -6,14 +6,21 @@
 <title class="t" data-de="KAIRO 1980 – Ägyptisches Restaurant Hockenheim | Moderne Ägyptische Küche" data-en="KAIRO 1980 – Egyptian Restaurant Hockenheim | Modern Egyptian Cuisine">KAIRO 1980 – Ägyptisches Restaurant Hockenheim | Moderne Ägyptische Küche</title>
 <meta name="description" content="KAIRO 1980 – Ägyptisches Restaurant in Hockenheim (Rhein-Neckar). Authentisches Koshary, Hummus, Hawawshy & mehr. Lieferservice, Abholung und Catering fürs Büro – Firmenbestellungen mit 2 Stunden Vorlauf.">
 <meta name="keywords" content="ägyptisches Restaurant Hockenheim, Koshary Hockenheim, ägyptisches Essen Hockenheim, Lieferservice Hockenheim, Catering Hockenheim, Büro Catering Rhein-Neckar, Firmenbestellung Essen Hockenheim, Business Lunch Hockenheim, Mittagessen Büro Hockenheim, arabisches Essen Mannheim, orientalisches Restaurant Rhein-Neckar, Hummus Hockenheim, Hawawshy, Egyptian restaurant Hockenheim, KAIRO 1980">
-<meta name="robots" content="index, follow">
+<!-- max-image-preview:large is what lets Google show the hero photograph next
+     to the result rather than a thumbnail; the snippet limits stop it from
+     truncating the description on its own. -->
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 <meta name="author" content="KAIRO 1980">
+<meta name="theme-color" content="#1c1409">
 <link rel="canonical" href="https://kairo1980.de">
 <meta property="og:type" content="restaurant">
 <meta property="og:title" content="KAIRO 1980 – Moderne Ägyptische Küche in Hockenheim">
 <meta property="og:description" content="Authentisches ägyptisches Comfort Food mit Seele. Koshary, Hummus, Hawawshy & mehr. Lieferservice & Abholung in Hockenheim.">
 <meta property="og:url" content="https://kairo1980.de">
 <meta property="og:image" content="https://kairo1980.de/images/hero.jpg">
+<meta property="og:image:width" content="1920">
+<meta property="og:image:height" content="1280">
+<meta property="og:image:alt" content="Ägyptische Gerichte von KAIRO 1980 in Hockenheim">
 <meta property="og:locale" content="de_DE">
 <meta property="og:locale:alternate" content="en_GB">
 <meta property="og:site_name" content="KAIRO 1980">
@@ -21,6 +28,7 @@
 <meta name="twitter:title" content="KAIRO 1980 – Moderne Ägyptische Küche in Hockenheim">
 <meta name="twitter:description" content="Authentisches ägyptisches Comfort Food. Lieferservice & Abholung in Hockenheim.">
 <meta name="twitter:image" content="https://kairo1980.de/images/hero.jpg">
+<meta name="twitter:image:alt" content="Ägyptische Gerichte von KAIRO 1980 in Hockenheim">
 <!-- Base structured data. order.js rewrites the opening hours, the delivery
      towns, the menu and the rating into this block from the same config and
      DOM the page renders, so the markup and the data cannot diverge. The
@@ -33,7 +41,10 @@
   "description": "Authentische moderne ägyptische Küche in Hockenheim. Frisch zubereitet, handgemacht – inspiriert von den Aromen Kairos.",
   "url": "https://kairo1980.de",
   "logo": "https://kairo1980.de/images/logo-mark.png",
-  "image": "https://kairo1980.de/images/hero.jpg",
+  "image": [
+    "https://kairo1980.de/images/hero.jpg",
+    "https://kairo1980.de/images/logo-mark.png"
+  ],
   "telephone": "+49-176-79906621",
   "email": "info@kairo1980.de",
   "address": {
@@ -66,6 +77,7 @@
   "areaServed": ["Hockenheim","Reilingen","Neulußheim","Altlußheim","Ketsch","Edingen-Neckarhausen","Ladenburg","Walldorf","St. Leon-Rot","Sandhausen","Schwetzingen","Plankstadt","Brühl","Waghäusel","Oberhausen-Rheinhausen","Eppelheim","Wiesloch","Philippsburg","Rauenberg","Heidelberg","Schifferstadt","Mannheim"],
   "keywords": "Koshary, Hummus, Hawawshy, Baba Ghanough, ägyptisches Restaurant, Lieferservice Hockenheim",
   "priceRange": "€€",
+  "hasMap": "https://maps.google.com/?q=Rostocker+Stra%C3%9Fe+20a,+68766+Hockenheim",
   "hasMenu": "https://kairo1980.de/#speisekarte",
   "sameAs": [
     "https://www.lieferando.de/speisekarte/kairo-1980",
@@ -167,16 +179,25 @@
   </picture>
   <div class="hero-overlay"></div>
   <div class="hero-content">
+    <!-- The h1 is the single strongest on-page ranking signal, so the town
+         stays inside it — but as a micro-caps location line in the same
+         eyebrow system used everywhere else on the page, not as the italic
+         "in Hockenheim" that read like an address appended to the headline.
+         It carries the exact phrase people search for, and the sub-line no
+         longer repeats the town two lines later. -->
     <h1 class="hero-title">
       <span class="t" data-de="Moderne ägyptische Küche" data-en="Modern Egyptian cuisine">Moderne ägyptische Küche</span>
-      <em class="t" data-de="in Hockenheim" data-en="in Hockenheim">in Hockenheim</em>
+      <span class="hero-title-place t" data-de="Ägyptisches Restaurant · Hockenheim" data-en="Egyptian Restaurant · Hockenheim">Ägyptisches Restaurant · Hockenheim</span>
     </h1>
     <p class="hero-sub t"
-       data-de="Koshary, Hummus, Hawawshy und ägyptisches Streetfood — frisch gekocht, geliefert in Hockenheim, Schwetzingen, Speyer, Heidelberg und Mannheim."
-       data-en="Koshary, hummus, hawawshy and Egyptian street food — freshly cooked, delivered in Hockenheim, Schwetzingen, Speyer, Heidelberg and Mannheim.">Koshary, Hummus, Hawawshy und ägyptisches Streetfood — frisch gekocht, geliefert in Hockenheim, Schwetzingen, Speyer, Heidelberg und Mannheim.</p>
+       data-de="Koshary, Hummus und Hawawshy — frisch gekocht und warm geliefert in über 30 Orte im Rhein-Neckar-Kreis."
+       data-en="Koshary, hummus and hawawshy — freshly cooked and delivered warm to more than 30 towns across the Rhein-Neckar region.">Koshary, Hummus und Hawawshy — frisch gekocht und warm geliefert in über 30 Orte im Rhein-Neckar-Kreis.</p>
+    <!-- One order route, not two. The WhatsApp button that stood here opened a
+         second, worse way of ordering the same food — the basket composes the
+         same message with quantities, address and total already in it. -->
     <div class="hero-actions">
-      <a href="#speisekarte" class="btn-primary t" data-de="Speisekarte" data-en="Our Menu">Speisekarte</a>
-      <a href="https://wa.me/4917679906621" target="_blank" rel="noopener" class="btn-ghost t" data-wa-template="simple" data-de="Per WhatsApp bestellen" data-en="Order via WhatsApp">Per WhatsApp bestellen</a>
+      <a href="#speisekarte" class="btn-primary t" data-de="Speisekarte ansehen" data-en="View the menu">Speisekarte ansehen</a>
+      <a href="#liefergebiet" class="btn-ghost t" data-de="Liefern wir zu Ihnen?" data-en="Do we deliver to you?">Liefern wir zu Ihnen?</a>
     </div>
     <p class="hero-offer">
       <span class="hero-offer-mark"><span data-cfg="discount">10</span> %</span>
@@ -407,20 +428,36 @@
   <div class="business-inner">
     <span class="menu-eyebrow t" data-de="Für Unternehmen" data-en="For companies">Für Unternehmen</span>
     <h2 class="business-title t" data-de="Mittagessen fürs Büro" data-en="Lunch for the office">Mittagessen fürs Büro</h2>
+    <!-- Head count deliberately does not appear anywhere in this section. What
+         decides whether we can take a corporate order is the order value and
+         the notice we get, so those are the only two numbers stated — and both
+         come from config.js rather than being typed into the copy. -->
     <p class="business-lead t"
-       data-de="Ägyptische Küche für Meetings, Team-Lunches und Firmenfeiern — frisch gekocht, warm geliefert und so verpackt, dass jeder am Tisch nehmen kann, was er möchte. Ab {fromPersons} Personen stellen wir Ihnen gern ein Angebot zusammen."
-       data-en="Egyptian food for meetings, team lunches and company celebrations — freshly cooked, delivered warm and packed so everyone at the table can help themselves. From {fromPersons} people we are happy to put together a quote.">Ägyptische Küche für Meetings, Team-Lunches und Firmenfeiern — frisch gekocht, warm geliefert und so verpackt, dass jeder am Tisch nehmen kann, was er möchte. Ab 5 Personen stellen wir Ihnen gern ein Angebot zusammen.</p>
+       data-de="Ägyptische Küche für Meetings, Team-Lunches und Firmenfeiern — frisch gekocht, warm geliefert und so verpackt, dass jeder am Tisch nehmen kann, was er möchte. Zwei Zahlen genügen uns: Ihr Bestellwert und Ihre Wunschzeit."
+       data-en="Egyptian food for meetings, team lunches and company celebrations — freshly cooked, delivered warm and packed so everyone at the table can help themselves. Two numbers are all we need: your order value and the time you want it.">Ägyptische Küche für Meetings, Team-Lunches und Firmenfeiern — frisch gekocht, warm geliefert und so verpackt, dass jeder am Tisch nehmen kann, was er möchte. Zwei Zahlen genügen uns: Ihr Bestellwert und Ihre Wunschzeit.</p>
+
+    <!-- The two facts that decide a corporate order, stated once, large. -->
+    <div class="business-facts">
+      <div class="bfact">
+        <span class="bfact-num"><span data-cfg="freeDeliveryFrom">100</span> €</span>
+        <span class="bfact-label t" data-de="Bestellwert — ab hier liefern wir kostenfrei" data-en="Order value — free delivery from here">Bestellwert — ab hier liefern wir kostenfrei</span>
+      </div>
+      <div class="bfact">
+        <span class="bfact-num"><span data-cfg="leadTimeHours">2</span> <span class="bfact-unit t" data-de="Std." data-en="hrs">Std.</span></span>
+        <span class="bfact-label t" data-de="Vorlauf — mehr ist besser, weniger fragen Sie uns" data-en="Notice — more is better, for less just ask">Vorlauf — mehr ist besser, weniger fragen Sie uns</span>
+      </div>
+    </div>
 
     <div class="business-grid">
       <div class="bcard">
         <span class="bcard-num">01</span>
-        <h3 class="bcard-title t" data-de="Firmenbestellungen ab {freeDeliveryFrom} €: Lieferung frei" data-en="Corporate orders from €{freeDeliveryFrom}: delivery free">Firmenbestellungen ab 100 €: Lieferung frei</h3>
-        <p class="bcard-text t" data-de="Bei Firmen- und Büro-Bestellungen ab {freeDeliveryFrom} € Bestellwert übernehmen wir die Liefergebühr — im gesamten Liefergebiet rund um Hockenheim. Für private Bestellungen gelten die regulären Lieferkosten." data-en="For corporate and office orders of €{freeDeliveryFrom} or more we cover the delivery fee — anywhere in our delivery area around Hockenheim. Regular delivery rates apply to private orders.">Bei Firmen- und Büro-Bestellungen ab 100 € Bestellwert übernehmen wir die Liefergebühr — im gesamten Liefergebiet rund um Hockenheim. Für private Bestellungen gelten die regulären Lieferkosten.</p>
+        <h3 class="bcard-title t" data-de="Lieferung frei ab {freeDeliveryFrom} €" data-en="Free delivery from €{freeDeliveryFrom}">Lieferung frei ab 100 €</h3>
+        <p class="bcard-text t" data-de="Bei Firmen- und Büro-Bestellungen ab {freeDeliveryFrom} € Bestellwert übernehmen wir die Liefergebühr — im gesamten Liefergebiet rund um Hockenheim. Darunter gilt die Gebühr Ihrer Postleitzahl, wie unten im Liefergebiet aufgeführt." data-en="For corporate and office orders of €{freeDeliveryFrom} or more we cover the delivery fee — anywhere in our delivery area around Hockenheim. Below that, the fee for your postcode applies, as listed in the delivery area below.">Bei Firmen- und Büro-Bestellungen ab 100 € Bestellwert übernehmen wir die Liefergebühr — im gesamten Liefergebiet rund um Hockenheim. Darunter gilt die Gebühr Ihrer Postleitzahl, wie unten im Liefergebiet aufgeführt.</p>
       </div>
       <div class="bcard">
         <span class="bcard-num">02</span>
-        <h3 class="bcard-title t" data-de="{leadTimeHours} Stunden Vorlauf" data-en="{leadTimeHours} hours lead time">2 Stunden Vorlauf</h3>
-        <p class="bcard-text t" data-de="Größere Bestellungen kochen wir frisch für Sie. Bitte geben Sie uns mindestens {leadTimeHours} Stunden Zeit — für Termine am Vortag angemeldet, umso besser." data-en="We cook larger orders fresh for you. Please allow at least {leadTimeHours} hours — a day's notice is even better.">Größere Bestellungen kochen wir frisch für Sie. Bitte geben Sie uns mindestens 2 Stunden Zeit — für Termine am Vortag angemeldet, umso besser.</p>
+        <h3 class="bcard-title t" data-de="Auf die Minute geplant" data-en="Planned to the minute">Auf die Minute geplant</h3>
+        <p class="bcard-text t" data-de="Sagen Sie uns die Uhrzeit, zu der gegessen wird. Wir kochen so, dass alles warm und pünktlich bei Ihnen steht, und bestätigen Menge, Zeit und Preis vorab schriftlich. Ab {leadTimeHours} Stunden Vorlauf ist das sicher planbar." data-en="Tell us the time you want to eat. We cook so that everything arrives warm and on time, and we confirm quantities, time and price in writing beforehand. With {leadTimeHours} hours' notice that is reliably plannable.">Sagen Sie uns die Uhrzeit, zu der gegessen wird. Wir kochen so, dass alles warm und pünktlich bei Ihnen steht, und bestätigen Menge, Zeit und Preis vorab schriftlich. Ab 2 Stunden Vorlauf ist das sicher planbar.</p>
       </div>
       <div class="bcard">
         <span class="bcard-num">03</span>
@@ -429,13 +466,8 @@
       </div>
       <div class="bcard">
         <span class="bcard-num">04</span>
-        <h3 class="bcard-title t" data-de="Bestellung per WhatsApp" data-en="Order via WhatsApp">Bestellung per WhatsApp</h3>
-        <p class="bcard-text t" data-de="Der schnellste Weg: Sie schreiben uns, wir bestätigen Menge, Uhrzeit und Preis schriftlich. Regelmäßige Bestellungen legen wir Ihnen als Vorlage an." data-en="The fastest route: message us and we confirm quantities, time and price in writing. For recurring orders we keep your usual selection on file.">Der schnellste Weg: Sie schreiben uns, wir bestätigen Menge, Uhrzeit und Preis schriftlich. Regelmäßige Bestellungen legen wir Ihnen als Vorlage an.</p>
-      </div>
-      <div class="bcard">
-        <span class="bcard-num">05</span>
         <h3 class="bcard-title t" data-de="Zahlung auf Rechnung" data-en="Payment by invoice">Zahlung auf Rechnung</h3>
-        <p class="bcard-text t" data-de="Für Firmenkunden stellen wir eine Rechnung mit ausgewiesener Mehrwertsteuer aus." data-en="For business customers we issue an invoice showing VAT separately.">Für Firmenkunden stellen wir eine Rechnung mit ausgewiesener Mehrwertsteuer aus.</p>
+        <p class="bcard-text t" data-de="Für Firmenkunden stellen wir eine Rechnung mit ausgewiesener Mehrwertsteuer aus. Regelmäßige Bestellungen legen wir Ihnen als Vorlage an." data-en="For business customers we issue an invoice showing VAT separately. For recurring orders we keep your usual selection on file.">Für Firmenkunden stellen wir eine Rechnung mit ausgewiesener Mehrwertsteuer aus. Regelmäßige Bestellungen legen wir Ihnen als Vorlage an.</p>
         <p class="bcard-text t" data-requires="paypal" data-de="Auf Wunsch senden wir Ihnen einen PayPal-Zahlungslink über den exakten Betrag." data-en="On request we send you a PayPal payment link for the exact amount." hidden>Auf Wunsch senden wir Ihnen einen PayPal-Zahlungslink über den exakten Betrag.</p>
       </div>
     </div>
@@ -467,7 +499,7 @@
 
       <details class="faq-item">
         <summary class="t" data-de="Wohin liefern Sie und was kostet die Lieferung?" data-en="Where do you deliver and what does delivery cost?">Wohin liefern Sie und was kostet die Lieferung?</summary>
-        <div class="faq-answer"><p class="t" data-de="Wir liefern in über 30 Orte rund um Hockenheim, unter anderem Reilingen, Ketsch, Schwetzingen, Walldorf, Wiesloch, Heidelberg, Mannheim, Speyer und Schifferstadt. Die vollständige Liste mit Postleitzahl und Mindestbestellwert finden Sie im Abschnitt Liefergebiet. Die Liefergebühr richtet sich nach Ihrer Postleitzahl und wird im Warenkorb angezeigt, sobald Sie sie eingeben — es gibt keine versteckten Kosten. Ist Ihr Ort nicht dabei, können Sie uns trotzdem unverbindlich anfragen." data-en="We deliver to more than 30 towns around Hockenheim, including Reilingen, Ketsch, Schwetzingen, Walldorf, Wiesloch, Heidelberg, Mannheim, Speyer and Schifferstadt. The full list with postcode and minimum order value is in the delivery area section. The delivery fee depends on your postcode and is shown in the basket as soon as you enter it — there are no hidden costs. If your town is not listed you can still send us a non-binding enquiry.">Wir liefern in über 30 Orte rund um Hockenheim, unter anderem Reilingen, Ketsch, Schwetzingen, Walldorf, Wiesloch, Heidelberg, Mannheim, Speyer und Schifferstadt. Die vollständige Liste mit Postleitzahl und Mindestbestellwert finden Sie im Abschnitt Liefergebiet. Die Liefergebühr richtet sich nach Ihrer Postleitzahl und wird im Warenkorb angezeigt, sobald Sie sie eingeben — es gibt keine versteckten Kosten. Ist Ihr Ort nicht dabei, können Sie uns trotzdem unverbindlich anfragen.</p></div>
+        <div class="faq-answer"><p class="t" data-de="Wir liefern in über 30 Orte rund um Hockenheim, unter anderem Reilingen, Ketsch, Schwetzingen, Walldorf, Wiesloch, Heidelberg, Mannheim, Speyer und Schifferstadt. Die vollständige Liste mit Postleitzahl, Mindestbestellwert und Liefergebühr finden Sie im Abschnitt Liefergebiet. Dieselbe Gebühr zeigt der Warenkorb an, sobald Sie Ihre Postleitzahl eingeben — es gibt keine versteckten Kosten. Ist Ihr Ort nicht dabei, können Sie uns trotzdem unverbindlich anfragen." data-en="We deliver to more than 30 towns around Hockenheim, including Reilingen, Ketsch, Schwetzingen, Walldorf, Wiesloch, Heidelberg, Mannheim, Speyer and Schifferstadt. The full list with postcode, minimum order value and delivery fee is in the delivery area section. The basket shows the very same fee as soon as you enter your postcode — there are no hidden costs. If your town is not listed you can still send us a non-binding enquiry.">Wir liefern in über 30 Orte rund um Hockenheim, unter anderem Reilingen, Ketsch, Schwetzingen, Walldorf, Wiesloch, Heidelberg, Mannheim, Speyer und Schifferstadt. Die vollständige Liste mit Postleitzahl, Mindestbestellwert und Liefergebühr finden Sie im Abschnitt Liefergebiet. Dieselbe Gebühr zeigt der Warenkorb an, sobald Sie Ihre Postleitzahl eingeben — es gibt keine versteckten Kosten. Ist Ihr Ort nicht dabei, können Sie uns trotzdem unverbindlich anfragen.</p></div>
       </details>
 
       <details class="faq-item">
@@ -477,7 +509,7 @@
 
       <details class="faq-item" data-requires="business">
         <summary class="t" data-de="Liefern Sie auch für Firmen und Büros?" data-en="Do you cater for companies and offices?">Liefern Sie auch für Firmen und Büros?</summary>
-        <div class="faq-answer"><p class="faq-cfg t" data-de="Ja, das ist einer unserer Schwerpunkte. Wir beliefern Meetings, Team-Lunches und Firmenfeiern im gesamten Liefergebiet. Ab {fromPersons} Personen erstellen wir Ihnen gern ein Angebot. Firmenbestellungen ab {freeDeliveryFrom} € Bestellwert liefern wir ohne Liefergebühr, und für Firmenbestellungen, die Sie selbst abholen, erhalten Sie {businessPickupDiscount} % statt {discount} % Rabatt. Bitte planen Sie mindestens {leadTimeHours} Stunden Vorlauf ein. Am schnellsten geht es per WhatsApp." data-en="Yes, it is one of our specialities. We cater meetings, team lunches and company celebrations across our whole delivery area. From {fromPersons} people we are happy to prepare a quote. Corporate orders of €{freeDeliveryFrom} or more are delivered without a delivery fee, and corporate orders you collect yourself get {businessPickupDiscount}% instead of {discount}% off. Please allow at least {leadTimeHours} hours lead time. WhatsApp is the fastest way to reach us.">Ja, das ist einer unserer Schwerpunkte. Wir beliefern Meetings, Team-Lunches und Firmenfeiern im gesamten Liefergebiet. Ab 5 Personen erstellen wir Ihnen gern ein Angebot. Firmenbestellungen ab 100 € Bestellwert liefern wir ohne Liefergebühr, und für Firmenbestellungen, die Sie selbst abholen, erhalten Sie 15 % statt 10 % Rabatt. Bitte planen Sie mindestens 2 Stunden Vorlauf ein. Am schnellsten geht es per WhatsApp.</p></div>
+        <div class="faq-answer"><p class="faq-cfg t" data-de="Ja, das ist einer unserer Schwerpunkte. Wir beliefern Meetings, Team-Lunches und Firmenfeiern im gesamten Liefergebiet — unabhängig von der Personenzahl. Entscheidend sind für uns nur der Bestellwert und Ihre Wunschzeit: Firmenbestellungen ab {freeDeliveryFrom} € Bestellwert liefern wir ohne Liefergebühr, und für Firmenbestellungen, die Sie selbst abholen, erhalten Sie {businessPickupDiscount} % statt {discount} % Rabatt. Bitte planen Sie mindestens {leadTimeHours} Stunden Vorlauf ein. Am schnellsten geht es per WhatsApp." data-en="Yes, it is one of our specialities. We cater meetings, team lunches and company celebrations across our whole delivery area — whatever the head count. Only two things matter to us: the order value and the time you need it. Corporate orders of €{freeDeliveryFrom} or more are delivered without a delivery fee, and corporate orders you collect yourself get {businessPickupDiscount}% instead of {discount}% off. Please allow at least {leadTimeHours} hours lead time. WhatsApp is the fastest way to reach us.">Ja, das ist einer unserer Schwerpunkte. Wir beliefern Meetings, Team-Lunches und Firmenfeiern im gesamten Liefergebiet — unabhängig von der Personenzahl. Entscheidend sind für uns nur der Bestellwert und Ihre Wunschzeit: Firmenbestellungen ab 100 € Bestellwert liefern wir ohne Liefergebühr, und für Firmenbestellungen, die Sie selbst abholen, erhalten Sie 15 % statt 10 % Rabatt. Bitte planen Sie mindestens 2 Stunden Vorlauf ein. Am schnellsten geht es per WhatsApp.</p></div>
       </details>
 
       <details class="faq-item">
@@ -523,7 +555,7 @@
         <span class="info-eyebrow t" data-de="Telefon & WhatsApp" data-en="Phone & WhatsApp">Telefon & WhatsApp</span>
         <div class="info-val">
           <a href="tel:+4917679906621" class="info-phone">+49 176 79906621</a>
-          <a href="https://wa.me/4917679906621" target="_blank" class="whatsapp-btn t" data-de="💬 Auf WhatsApp schreiben" data-en="💬 Message on WhatsApp">💬 Auf WhatsApp schreiben</a>
+          <a href="https://wa.me/4917679906621" target="_blank" rel="noopener" class="whatsapp-btn t" data-wa-template="simple" data-de="Auf WhatsApp schreiben" data-en="Message on WhatsApp">Auf WhatsApp schreiben</a>
         </div>
         <span class="info-eyebrow t" data-de="Bewertungen" data-en="Reviews">Bewertungen</span>
         <div class="info-val">
@@ -538,15 +570,21 @@
           <div class="hrow"><span class="day t" data-de="Montag & Dienstag" data-en="Monday & Tuesday">Montag &amp; Dienstag</span><span class="hclosed t" data-de="Geschlossen" data-en="Closed">Geschlossen</span></div>
           <div class="hrow"><span class="day t" data-de="Mittwoch – Sonntag" data-en="Wednesday – Sunday">Mittwoch – Sonntag</span><span class="t" data-de="18:00 – 23:00 Uhr" data-en="6:00 PM – 11:00 PM">18:00 – 23:00 Uhr</span></div>
         </div>
+        <!-- One primary way to order, and the platforms named honestly as an
+             alternative rather than as four equal buttons. The "direct via
+             WhatsApp" button was removed: it produced the same chat as the
+             basket, only without the order in it. -->
         <div class="contact-order">
           <span class="info-eyebrow t" data-de="Jetzt bestellen" data-en="Order now">Jetzt bestellen</span>
           <div class="order-links">
-            <a href="#speisekarte" class="order-btn whatsapp t" data-de="Speisekarte & Warenkorb" data-en="Menu & basket">Speisekarte &amp; Warenkorb</a>
-            <a href="https://wa.me/4917679906621" target="_blank" rel="noopener" class="order-btn whatsapp-plain t" data-wa-template="simple" data-de="Direkt per WhatsApp" data-en="Direct via WhatsApp">Direkt per WhatsApp</a>
-            <a href="https://www.lieferando.de/speisekarte/kairo-1980" target="_blank" class="order-btn lieferando">Lieferando</a>
-            <a href="https://www.ubereats.com/de/store/kairo-1980/3a9t8nwzXfm3iAkRVtCemA" target="_blank" class="order-btn ubereats">Uber Eats</a>
+            <a href="#speisekarte" class="order-btn is-direct t" data-de="Speisekarte & Warenkorb" data-en="Menu & basket">Speisekarte &amp; Warenkorb</a>
           </div>
-          <p class="order-note t" data-de="Direkt bei uns bestellen: 10 % Rabatt auf Ihre Bestellung." data-en="Order direct with us: 10% off your order.">Direkt bei uns bestellen: 10 % Rabatt auf Ihre Bestellung.</p>
+          <p class="order-note t" data-de="Direkt bei uns bestellen: {discount} % Rabatt auf Ihre Bestellung." data-en="Order direct with us: {discount}% off your order.">Direkt bei uns bestellen: 10 % Rabatt auf Ihre Bestellung.</p>
+          <span class="order-alt-label t" data-de="Lieber über eine Plattform?" data-en="Prefer a platform?">Lieber über eine Plattform?</span>
+          <div class="order-links order-links-alt">
+            <a href="https://www.lieferando.de/speisekarte/kairo-1980" target="_blank" rel="noopener" class="order-btn is-platform lieferando">Lieferando</a>
+            <a href="https://www.ubereats.com/de/store/kairo-1980/3a9t8nwzXfm3iAkRVtCemA" target="_blank" rel="noopener" class="order-btn is-platform ubereats">Uber Eats</a>
+          </div>
         </div>
       </div>
       <!-- Two-click solution: the Google Maps embed contacts Google and
@@ -567,10 +605,10 @@
   </div>
 </section>
 
-<section class="reviews-section">
+<section id="bewertungen" class="reviews-section fade-in" aria-labelledby="reviewsHeading">
   <div class="reviews-inner">
     <span class="menu-eyebrow t" data-de="Was unsere Kunden sagen" data-en="What our customers say">Was unsere Kunden sagen</span>
-    <h2 class="reviews-title t" data-de="Kundenbewertungen" data-en="Customer Reviews">Kundenbewertungen</h2>
+    <h2 class="reviews-title t" id="reviewsHeading" data-de="Kundenbewertungen" data-en="Customer Reviews">Kundenbewertungen</h2>
     <div class="reviews-summary" id="reviewsSummary"></div>
     <div class="reviews-carousel">
       <button class="reviews-nav prev" data-action="reviews-prev" aria-label="Vorherige Bewertung">&#8592;</button>
@@ -594,8 +632,8 @@
     <span class="menu-eyebrow t" data-de="Liefergebiet" data-en="Delivery area">Liefergebiet</span>
     <h2 class="areas-title t" data-de="Wir liefern in Ihre Stadt" data-en="We deliver to your town">Wir liefern in Ihre Stadt</h2>
     <p class="areas-lead t"
-       data-de="Ägyptisches Essen aus Hockenheim — geliefert in die folgenden Orte im Rhein-Neckar-Kreis und der Vorderpfalz. Angegeben sind Postleitzahl und Mindestbestellwert."
-       data-en="Egyptian food from Hockenheim — delivered to the following towns in the Rhein-Neckar district and the Vorderpfalz. Postcode and minimum order value are shown.">Ägyptisches Essen aus Hockenheim — geliefert in die folgenden Orte im Rhein-Neckar-Kreis und der Vorderpfalz. Angegeben sind Postleitzahl und Mindestbestellwert.</p>
+       data-de="Ägyptisches Essen aus Hockenheim — geliefert in die folgenden Orte im Rhein-Neckar-Kreis und der Vorderpfalz. Zu jedem Ort stehen Postleitzahl und Liefergebühr; der Mindestbestellwert gilt für die ganze Gruppe. Genau diese Werte rechnet auch der Warenkorb."
+       data-en="Egyptian food from Hockenheim — delivered to the following towns in the Rhein-Neckar district and the Vorderpfalz. Each town shows its postcode and delivery fee; the minimum order value applies to the whole group. These are the very figures the basket calculates with.">Ägyptisches Essen aus Hockenheim — geliefert in die folgenden Orte im Rhein-Neckar-Kreis und der Vorderpfalz. Zu jedem Ort stehen Postleitzahl und Liefergebühr; der Mindestbestellwert gilt für die ganze Gruppe. Genau diese Werte rechnet auch der Warenkorb.</p>
     <div class="areas-list" id="areasList"></div>
     <p class="areas-note t"
        data-de="Ihr Ort ist nicht dabei? Schreiben Sie uns — bei größeren Bestellungen liefern wir auch darüber hinaus."

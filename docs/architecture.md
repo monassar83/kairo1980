@@ -15,8 +15,8 @@ to prevent.
 | Fact | Single source | Derived by |
 | --- | --- | --- |
 | Opening hours, lunch flag | `config.js` → `hours` | hours table, live status, `openingHoursSpecification`, FAQ answer, corporate hours line |
-| Delivery postcodes, fees, minimums | `data/delivery_zones.xlsx` | `zones.js` (generated) → basket fee, zone hints, delivery-area section, `areaServed` |
-| Discounts, thresholds, lead time | `config.js` → `order`, `business` | basket totals, WhatsApp message, business cards, FAQ, hero badge |
+| Delivery postcodes, fees, minimums | `data/delivery_zones.xlsx` | `zones.js` (generated) → basket fee, zone hints, delivery-area section incl. published fees, `areaServed` |
+| Discounts, thresholds, lead time, basket lifetime | `config.js` → `order`, `business` | basket totals, WhatsApp message, business cards and figures, FAQ, hero badge |
 | Menu items, prices, diet tags | `index.html` (`.mitem[data-item][data-price]`) | basket, `hasMenu` schema |
 | Ratings | `reviews.json` (fetched) | carousel, `aggregateRating` |
 
@@ -51,6 +51,13 @@ Validation is **advisory, never blocking**. An unknown postcode, a closed-hours
 slot or a sub-minimum order warns the guest and flags the message — it does not
 refuse the order. An automatic rejection silently discards large orders and you
 never learn they existed.
+
+The basket is stored under `kairo.cart.v2` as `{ savedAt, items }` and expires
+after `order.cartLifetimeMinutes` of inactivity. The timestamp is the whole
+point of the v2 shape: v1 stored a bare quantity map, which made a five-minute
+old basket indistinguishable from a five-week old one, so it could only be kept
+forever or thrown away on every visit. Stale and malformed entries are deleted
+on load rather than migrated.
 
 ## Growing into multiple pages
 

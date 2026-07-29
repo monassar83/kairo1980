@@ -20,6 +20,7 @@ tools
 
 # Internal maintenance notes — no reason to serve them to visitors.
 README.md
+CLAUDE.md
 docs
 
 # Logo masters. Kept in git as the source for images/logo-mark.* and

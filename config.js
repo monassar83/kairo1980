@@ -36,6 +36,15 @@ window.KAIRO_CONFIG = {
     // combination gets directDiscountPercent above.
     businessPickupDiscountPercent: 15,
 
+    // How long a basket survives after the last change, in minutes.
+    // A basket is a short-lived intention, not a saved document: it must
+    // survive a reload, a phone call or a detour to the delivery-area list,
+    // but a guest returning tomorrow should start fresh rather than meet an
+    // order they no longer want — at prices that may since have changed.
+    //   0  -> never remembered (the basket is gone as soon as the tab closes)
+    //   120 -> the current rule, roughly one evening's browsing
+    cartLifetimeMinutes: 120,
+
     // Currency symbol / locale used for every price shown by the basket.
     currency: '€',
     locale: 'de-DE'
@@ -59,11 +68,7 @@ window.KAIRO_CONFIG = {
     freeDeliveryBusinessOnly: false,
 
     // Minimum lead time for large / corporate orders, in hours.
-    leadTimeHours: 2,
-
-    // From how many meals we treat an order as a corporate order. Used only
-    // for the wording in the enquiry template.
-    fromPersons: 5
+    leadTimeHours: 2
   },
 
   /* --- Delivery area ------------------------------------------------------

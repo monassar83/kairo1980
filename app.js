@@ -30,10 +30,10 @@
       if (href) el.setAttribute('href', href);
     });
 
-    // Update title
-    document.title = lang === 'de'
-      ? 'KAIRO 1980 – Moderne Ägyptische Küche'
-      : 'KAIRO 1980 – Modern Egyptian Cuisine';
+    // The <title> element carries class="t" and both languages itself, so the
+    // loop above has already swapped it. Assigning document.title here as well
+    // replaced the keyword-bearing title with a short one the moment anybody
+    // touched the language switch.
 
     // Update active button
     document.getElementById('btn-de').classList.toggle('active', lang === 'de');
@@ -89,6 +89,90 @@
     .filter(Boolean)
     .join('</p><p class="review-text">');
 
+  /* --- review dates -------------------------------------------------------
+     The review TEXT is never translated. It is a quoted statement by a named
+     person: rewriting it puts words in their mouth, a machine translation of a
+     testimonial reads as marketing rather than as evidence, and translating it
+     would mean sending guest content to a third-party service, which this site
+     deliberately never does. The text is marked with its own `lang` instead,
+     so screen readers pronounce it correctly.
+     Everything AROUND the quote is the site speaking, and that does follow the
+     visitor's choice — including the date, which arrived from Google as the
+     German string "vor 4 Wochen" and stayed German on the English page.
+  ------------------------------------------------------------------------- */
+
+  const RELATIVE_STEPS = [
+    ['year', 31536000], ['month', 2592000], ['week', 604800],
+    ['day', 86400], ['hour', 3600], ['minute', 60]
+  ];
+
+  function relativeTime(iso, fallback) {
+    if (!iso || typeof Intl === 'undefined' || !Intl.RelativeTimeFormat) return fallback || '';
+    const then = Date.parse(iso);
+    if (isNaN(then)) return fallback || '';
+    const seconds = (then - Date.now()) / 1000;
+    const fmt = new Intl.RelativeTimeFormat(currentLang === 'en' ? 'en-GB' : 'de-DE',
+      { numeric: 'auto' });
+    for (const [unit, size] of RELATIVE_STEPS) {
+      if (Math.abs(seconds) >= size) return fmt.format(Math.round(seconds / size), unit);
+    }
+    return fmt.format(Math.round(seconds), 'second');
+  }
+
+  /* --- rating summary -----------------------------------------------------
+     "5.0 / 5 · 13 Bewertungen auf Google" put three numbers on one line with
+     nothing but a middot between them, so 5 and 13 collided and the score read
+     as "5.0/5.13" at a glance. The score and the sample size are two different
+     facts and now sit on two lines: the score large, the count quiet beneath
+     it. Both are formatted for the current locale, so German shows 5,0 with a
+     comma and a thousands separator where one is needed.
+  ------------------------------------------------------------------------- */
+
+  let summaryFigures = null;
+
+  function renderSummary() {
+    const summary = document.getElementById('reviewsSummary');
+    if (!summary || !summaryFigures) return;
+    const { rating, total } = summaryFigures;
+    const en = document.documentElement.lang === 'en';
+    const locale = en ? 'en-GB' : 'de-DE';
+
+    // Each star is its own element so the last earned one can catch the sheen
+    // as it arrives. Deliberately NOT drawn larger than its neighbours: an
+    // oversized glyph in a row of five reads as a rendering fault, not as
+    // emphasis. The light finishing on it is what completes the row.
+    const full = Math.max(0, Math.min(5, Math.round(rating)));
+    const stars = Array.from({ length: 5 }, (_, i) => {
+      const filled = i < full;
+      const cls = 'star' + (filled ? '' : ' is-empty') +
+                  (filled && i === full - 1 ? ' is-last' : '');
+      return `<span class="${cls}">${filled ? '★' : '☆'}</span>`;
+    }).join('');
+
+    const score = rating.toLocaleString(locale, {
+      minimumFractionDigits: 1, maximumFractionDigits: 1
+    });
+    const count = total.toLocaleString(locale);
+
+    summary.innerHTML = `
+      <div class="reviews-stars" role="img" aria-label="${score} ${en ? 'out of' : 'von'} 5">${stars}</div>
+      <p class="reviews-score">
+        <span class="reviews-score-value">${score}</span><span class="reviews-score-max">${en ? 'out of 5' : 'von 5'}</span>
+      </p>
+      <p class="reviews-count">${count} ${en ? 'reviews on Google' : 'Bewertungen auf Google'}</p>
+    `;
+  }
+
+  // The summary and the review dates are the site's own words about the
+  // reviews, so both follow the language switch. The quoted text does not.
+  document.addEventListener('kairo:lang', () => {
+    renderSummary();
+    if (!reviews.length) return;
+    const showing = currentReview;
+    renderReviews();
+    goToReview(Math.min(showing, reviews.length - 1));
+  });
+
   async function loadReviews() {
     try {
       const res = await fetch('/reviews.json?v=' + Date.now());
@@ -98,15 +182,8 @@
       const rating = data.rating || 5;
       const total = data.totalRatings || 0;
 
-      // Summary
-      const summary = document.getElementById('reviewsSummary');
-      if (summary) {
-        const stars = '★'.repeat(Math.round(rating)) + '☆'.repeat(5 - Math.round(rating));
-        summary.innerHTML = `
-          <div class="reviews-stars">${stars}</div>
-          <div class="reviews-score">${rating.toFixed(1)} <span class="reviews-total">/ 5 · ${total} ${document.documentElement.lang === 'en' ? 'reviews on Google' : 'Bewertungen auf Google'}</span></div>
-        `;
-      }
+      summaryFigures = { rating: rating, total: total };
+      renderSummary();
 
       // Hand the real figures to order.js, which mirrors them into the
       // structured data. Only what is rendered here is ever marked up.
@@ -149,11 +226,16 @@
           <div class="review-avatar">${escapeHtml(author.charAt(0).toUpperCase())}</div>
           <div>
             <div class="review-author">${escapeHtml(author)}</div>
-            <div class="review-time">${escapeHtml(r.time)}</div>
+            <div class="review-time">${escapeHtml(relativeTime(r.publishTime, r.time))}</div>
           </div>
-          <div class="review-stars">${'★'.repeat(stars)}</div>
+          <div class="review-stars" role="img" aria-label="${stars}/5">${'★'.repeat(stars)}</div>
         </div>
-        <p class="review-text">${formatReviewText(r.text)}</p>
+        <div class="review-body" lang="${escapeHtml(r.lang || 'de')}">
+          <p class="review-text">${formatReviewText(r.text)}</p>
+        </div>
+        <button type="button" class="review-more t" data-action="review-toggle"
+                aria-expanded="false"
+                data-de="${MORE.de}" data-en="${MORE.en}" hidden>${MORE[currentLang] || MORE.de}</button>
       </div>
     `;
     }).join('');
@@ -161,7 +243,63 @@
     dots.innerHTML = reviews.map((_, i) =>
       `<button type="button" class="dot ${i === 0 ? 'active' : ''}" data-action="reviews-goto" data-index="${i}" aria-label="${i + 1}"></button>`
     ).join('');
+
+    markOverflowingReviews();
   }
+
+  /* --- review length ------------------------------------------------------
+     Every card shared one grid cell, so the whole carousel was as tall as the
+     single longest review — one 400-word essay and the section became a wall
+     of text that pushed the rest of the page down on every screen. Reviews are
+     now clamped to a readable block and only the ones that genuinely overflow
+     offer to expand. The measurement has to happen after layout, and the fonts
+     land after first paint, so it is repeated once the fonts are ready.
+  ------------------------------------------------------------------------- */
+
+  const MORE = { de: 'Mehr lesen', en: 'Read more' };
+  const LESS = { de: 'Weniger lesen', en: 'Read less' };
+
+  function markOverflowingReviews() {
+    document.querySelectorAll('.review-card').forEach(card => {
+      const body = card.querySelector('.review-body');
+      const btn = card.querySelector('.review-more');
+      // An expanded card measures as "fits" by definition — re-measuring it
+      // would collapse it under the reader on the next resize.
+      if (!body || !btn || body.classList.contains('is-open')) return;
+      // A card that is faded out still has a laid-out box, so scrollHeight is
+      // meaningful for every review, not just the visible one.
+      const overflows = body.scrollHeight - body.clientHeight > 4;
+      body.classList.toggle('is-clamped', overflows);
+      btn.hidden = !overflows;
+    });
+  }
+
+  function toggleReview(btn) {
+    const card = btn.closest('.review-card');
+    const body = card && card.querySelector('.review-body');
+    if (!body) return;
+    const open = body.classList.toggle('is-open');
+    btn.setAttribute('aria-expanded', String(open));
+    const labels = open ? LESS : MORE;
+    btn.setAttribute('data-de', labels.de);
+    btn.setAttribute('data-en', labels.en);
+    btn.textContent = labels[currentLang] || labels.de;
+    // An expanded review must not be swiped away mid-sentence.
+    if (open) stopAutoAdvance();
+    else startAutoAdvance();
+  }
+
+  // Web fonts land after first paint and change every line break, so the
+  // measurement is taken again once they are in, and after a resize.
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(markOverflowingReviews);
+  }
+
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(markOverflowingReviews, 200);
+  });
 
   function moveReviews(dir) {
     if (!reviews.length) return;
@@ -184,8 +322,25 @@
   // which set currentReview to NaN and left the carousel permanently blank.
   function startAutoAdvance() {
     if (reviewTimer || reviews.length < 2) return;
+    // Never resume under a review the visitor has opened to read.
+    if (document.querySelector('.review-body.is-open')) return;
     reviewTimer = setInterval(() => moveReviews(1), 5000);
   }
+
+  function stopAutoAdvance() {
+    clearInterval(reviewTimer);
+    reviewTimer = null;
+  }
+
+  // Reading stops the carousel; leaving lets it run again. Text that slides
+  // away mid-sentence is the most common complaint about auto-playing
+  // testimonials, and a hover is the clearest signal that someone is reading.
+  (function () {
+    const carousel = document.querySelector('.reviews-carousel');
+    if (!carousel) return;
+    ['mouseenter', 'focusin'].forEach(ev => carousel.addEventListener(ev, stopAutoAdvance));
+    ['mouseleave', 'focusout'].forEach(ev => carousel.addEventListener(ev, startAutoAdvance));
+  })();
 
 
   // Google Maps is embedded only after an explicit click (two-click solution),
@@ -225,6 +380,8 @@
       moveReviews(1);
     } else if (action === 'reviews-goto') {
       goToReview(parseInt(target.getAttribute('data-index'), 10));
+    } else if (action === 'review-toggle') {
+      toggleReview(target);
     }
   });
 
