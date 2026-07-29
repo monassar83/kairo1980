@@ -77,15 +77,18 @@ jobs:
           python -c "import xml.dom.minidom; xml.dom.minidom.parse('sitemap.xml')"
           echo "sitemap.xml is well-formed"
 
+      # v4 of the action runs on Node 24. v3 targeted Node 20, which GitHub has
+      # deprecated and was already force-running on 24. v4's only breaking
+      # change is its default Wrangler version, which does not affect us: the
+      # version is pinned explicitly below.
       - name: Deploy to Cloudflare Workers
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           # This is an assets-only Worker: wrangler.jsonc has `assets` but no
-          # `main`, which Wrangler only supports from 3.91 onwards. The action
-          # otherwise falls back to 3.90 and fails with "Missing entry-point".
-          # Pinned rather than floating so a deploy cannot break on its own.
+          # `main`, which Wrangler only supports from 3.91 onwards. Pinned
+          # rather than floating so a deploy cannot break on its own.
           wranglerVersion: '4.114.0'
           command: deploy
 
