@@ -20,7 +20,6 @@ import io
 import os
 import re
 import sys
-from datetime import date
 
 try:
     import openpyxl
@@ -125,17 +124,21 @@ def main():
             zone['min_order'], zone['fee']))
     lines[-1] = lines[-1].rstrip(',')
 
+    # Nothing here may vary between two runs over the same spreadsheet: the
+    # deploy workflow rebuilds this file and diffs it against the committed
+    # one. A build date in the header made every deploy fail the day after
+    # zones.js was last committed. `git log zones.js` dates it accurately.
     body = (
         '/* AUTO-GENERATED — DO NOT EDIT.\n'
         '   Source : data/delivery_zones.xlsx\n'
         '   Rebuild: python tools/build-zones.py\n'
-        '   Written: %s · %d postcodes\n'
+        '   Zones  : %d postcodes\n'
         '\n'
         '   Edit the spreadsheet, re-run the command, commit both files.\n'
         '   Columns: [ postcode, place, km, minimum order EUR, delivery fee EUR ]\n'
         '*/\n'
         'window.KAIRO_ZONES = [\n%s\n];\n'
-    ) % (date.today().isoformat(), len(zones), '\n'.join(lines))
+    ) % (len(zones), '\n'.join(lines))
 
     io.open(TARGET, 'w', encoding='utf-8', newline='\n').write(body)
     print('zones.js written — %d postcodes, %s'

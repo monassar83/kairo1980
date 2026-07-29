@@ -1,7 +1,7 @@
 /* AUTO-GENERATED — DO NOT EDIT.
    Source : data/delivery_zones.xlsx
    Rebuild: python tools/build-zones.py
-   Written: 2026-07-27 · 33 postcodes
+   Zones  : 33 postcodes
 
    Edit the spreadsheet, re-run the command, commit both files.
    Columns: [ postcode, place, km, minimum order EUR, delivery fee EUR ]
