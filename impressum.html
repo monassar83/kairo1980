@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Impressum | KAIRO 1980</title>
-<meta name="description" content="Impressum und Anbieterkennzeichnung nach § 5 DDG für KAIRO 1980, Hockenheim.">
+<title class="t" data-de="Impressum | KAIRO 1980" data-en="Legal notice | KAIRO 1980" data-ar="بيانات الناشر | KAIRO 1980">Impressum | KAIRO 1980</title>
+<meta name="description" class="t" data-t="content" data-de="Impressum und Anbieterkennzeichnung nach § 5 DDG für KAIRO 1980, Hockenheim." data-en="Legal notice and provider identification pursuant to § 5 DDG for KAIRO 1980, Hockenheim." data-ar="بيانات الناشر وتعريف مقدّم الخدمة طبقاً للمادة § 5 DDG لـ KAIRO 1980، هوكنهايم." content="Impressum und Anbieterkennzeichnung nach § 5 DDG für KAIRO 1980, Hockenheim.">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://kairo1980.de/impressum">
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
@@ -12,6 +12,7 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="fonts/fonts.css">
 <link rel="stylesheet" href="style.css">
+<script src="lang.js" defer></script>
 </head>
 <body>
 
@@ -19,21 +20,31 @@
   <a href="/">
     <picture>
       <source srcset="images/logo-nav.webp" type="image/webp">
-      <img src="images/logo-nav.png" alt="KAIRO 1980 – Moderne Ägyptische Küche Hockenheim" class="nav-logo-img" width="240" height="207">
+      <img src="images/logo-nav.png" alt="KAIRO 1980 – Moderne Ägyptische Küche Hockenheim" class="nav-logo-img t" data-t="alt" data-de="KAIRO 1980 – Moderne Ägyptische Küche Hockenheim" data-en="KAIRO 1980 – Modern Egyptian Cuisine Hockenheim" data-ar="KAIRO 1980 – مطبخ مصري عصري في هوكنهايم" width="240" height="207">
     </picture>
   </a>
   <ul class="nav-links">
-    <li><a href="/#ueber-uns">Über uns</a></li>
-    <li><a href="/#speisekarte">Speisekarte</a></li>
-    <li><a href="/#kontakt">Kontakt</a></li>
+    <li><a href="/#ueber-uns" class="t" data-de="Über uns" data-en="About us" data-ar="من إحنا">Über uns</a></li>
+    <li><a href="/#speisekarte" class="t" data-de="Speisekarte" data-en="Menu" data-ar="المنيو">Speisekarte</a></li>
+    <li><a href="/#kontakt" class="t" data-de="Kontakt" data-en="Contact" data-ar="تواصل معانا">Kontakt</a></li>
   </ul>
+  <div class="nav-right">
+    <div class="lang-switcher" role="group" aria-label="Sprache / Language / اللغة">
+      <button class="lang-btn active" data-action="lang" data-lang="de" lang="de">DE</button>
+      <span class="lang-sep" aria-hidden="true">|</span>
+      <button class="lang-btn" data-action="lang" data-lang="en" lang="en">EN</button>
+      <span class="lang-sep" aria-hidden="true">|</span>
+      <button class="lang-btn is-ar" data-action="lang" data-lang="ar" lang="ar">العربية</button>
+    </div>
+  </div>
 </nav>
 
 <main class="legal">
-  <h1 class="legal-title">Impressum</h1>
+  <h1 class="legal-title t" data-de="Impressum" data-en="Legal notice" data-ar="بيانات الناشر">Impressum</h1>
+  <p class="legal-note t" data-de="" data-en="This is a courtesy translation. The legally binding version of this page is the German one." data-ar="دي ترجمة للتسهيل بس. النسخة الملزِمة قانوناً للصفحة دي هي النسخة الألمانية."></p>
 
-  <h2>Angaben gemäß § 5 DDG</h2>
-  <p>
+  <h2 class="t" data-t="html" data-de="Angaben gemäß § 5 DDG" data-en="Information pursuant to § 5 DDG" data-ar="بيانات مقدّم الخدمة طبقاً للمادة § 5 DDG">Angaben gemäß § 5 DDG</h2>
+  <p class="t" data-t="html" data-de="Kairo 1980&lt;br&gt; Inhaber: Sherif Esmat Sayed Mohamed Abdalla&lt;br&gt; Rostocker Straße 20a&lt;br&gt; 68766 Hockenheim&lt;br&gt; Deutschland" data-en="Kairo 1980&lt;br&gt; Owner: Sherif Esmat Sayed Mohamed Abdalla&lt;br&gt; Rostocker Straße 20a&lt;br&gt; 68766 Hockenheim&lt;br&gt; Germany" data-ar="&lt;bdi&gt;Kairo 1980&lt;/bdi&gt;&lt;br&gt; المالك: &lt;bdi&gt;Sherif Esmat Sayed Mohamed Abdalla&lt;/bdi&gt;&lt;br&gt; &lt;bdi&gt;Rostocker Straße 20a&lt;/bdi&gt;&lt;br&gt; &lt;bdi&gt;68766 Hockenheim&lt;/bdi&gt;&lt;br&gt; ألمانيا">
     Kairo 1980<br>
     Inhaber: Sherif Esmat Sayed Mohamed Abdalla<br>
     Rostocker Straße 20a<br>
@@ -41,33 +52,33 @@
     Deutschland
   </p>
 
-  <h2>Kontakt</h2>
-  <p>
+  <h2 class="t" data-t="html" data-de="Kontakt" data-en="Contact" data-ar="التواصل">Kontakt</h2>
+  <p class="t" data-t="html" data-de="Telefon: &lt;a href=&quot;tel:+4917679906621&quot;&gt;+49 176 79906621&lt;/a&gt;&lt;br&gt; E-Mail: &lt;a href=&quot;mailto:info@kairo1980.de&quot;&gt;info@kairo1980.de&lt;/a&gt;" data-en="Phone: &lt;a href=&quot;tel:+4917679906621&quot;&gt;+49 176 79906621&lt;/a&gt;&lt;br&gt; E-mail: &lt;a href=&quot;mailto:info@kairo1980.de&quot;&gt;info@kairo1980.de&lt;/a&gt;" data-ar="التليفون: &lt;a href=&quot;tel:+4917679906621&quot;&gt;+49 176 79906621&lt;/a&gt;&lt;br&gt; البريد الإلكتروني: &lt;a href=&quot;mailto:info@kairo1980.de&quot;&gt;info@kairo1980.de&lt;/a&gt;">
     Telefon: <a href="tel:+4917679906621">+49 176 79906621</a><br>
     E-Mail: <a href="mailto:info@kairo1980.de">info@kairo1980.de</a>
   </p>
 
-  <h2>Wirtschafts-Identifikationsnummer</h2>
-  <p>
+  <h2 class="t" data-t="html" data-de="Wirtschafts-Identifikationsnummer" data-en="Economic identification number" data-ar="رقم التعريف الاقتصادي">Wirtschafts-Identifikationsnummer</h2>
+  <p class="t" data-t="html" data-de="Wirtschafts-Identifikationsnummer gemäß § 139c der Abgabenordnung:&lt;br&gt; DE462882173-00001" data-en="Economic identification number pursuant to § 139c of the German Fiscal Code (Abgabenordnung):&lt;br&gt; DE462882173-00001" data-ar="رقم التعريف الاقتصادي طبقاً للمادة § 139c من قانون الضرائب الألماني (Abgabenordnung):&lt;br&gt; DE462882173-00001">
     Wirtschafts-Identifikationsnummer gemäß § 139c der Abgabenordnung:<br>
     DE462882173-00001
   </p>
 
-  <h2>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
+  <h2 class="t" data-t="html" data-de="Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV" data-en="Responsible for the content pursuant to § 18 (2) MStV" data-ar="المسؤول عن المحتوى طبقاً للمادة § 18 فقرة 2 MStV">Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h2>
   <p>
     Sherif Esmat Sayed Mohamed Abdalla<br>
     Rostocker Straße 20a<br>
     68766 Hockenheim
   </p>
 
-  <h2>Verbraucherstreitbeilegung</h2>
-  <p>
+  <h2 class="t" data-t="html" data-de="Verbraucherstreitbeilegung" data-en="Consumer dispute resolution" data-ar="تسوية منازعات المستهلكين">Verbraucherstreitbeilegung</h2>
+  <p class="t" data-t="html" data-de="Wir sind nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen." data-en="We are neither willing nor obliged to take part in dispute resolution proceedings before a consumer arbitration board." data-ar="إحنا مش مستعدين ولا ملزمين بالمشاركة في إجراءات تسوية المنازعات أمام هيئة تحكيم المستهلكين.">
     Wir sind nicht bereit und nicht verpflichtet, an Streitbeilegungsverfahren
     vor einer Verbraucherschlichtungsstelle teilzunehmen.
   </p>
 
-  <h2>Haftung für Inhalte</h2>
-  <p>
+  <h2 class="t" data-t="html" data-de="Haftung für Inhalte" data-en="Liability for content" data-ar="المسؤولية عن المحتوى">Haftung für Inhalte</h2>
+  <p class="t" data-t="html" data-de="Als Diensteanbieter sind wir gemäß § 7 Abs. 1 DDG für eigene Inhalte auf diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Nach den §§ 8 bis 10 DDG sind wir als Diensteanbieter jedoch nicht verpflichtet, übermittelte oder gespeicherte fremde Informationen zu überwachen oder nach Umständen zu forschen, die auf eine rechtswidrige Tätigkeit hinweisen. Verpflichtungen zur Entfernung oder Sperrung der Nutzung von Informationen nach den allgemeinen Gesetzen bleiben hiervon unberührt. Eine diesbezügliche Haftung ist jedoch erst ab dem Zeitpunkt der Kenntnis einer konkreten Rechtsverletzung möglich. Bei Bekanntwerden von entsprechenden Rechtsverletzungen werden wir diese Inhalte umgehend entfernen." data-en="As a service provider we are responsible for our own content on these pages under the general laws, pursuant to § 7 (1) DDG. Under §§ 8 to 10 DDG, however, we as a service provider are not obliged to monitor transmitted or stored third-party information, or to investigate circumstances that indicate unlawful activity. Obligations to remove or block the use of information under the general laws remain unaffected. Liability in this respect is, however, only possible from the point in time at which a concrete infringement of the law becomes known. Should we become aware of such infringements, we will remove the content concerned immediately." data-ar="كمقدّم خدمة، إحنا مسؤولين عن المحتوى الخاص بينا على الصفحات دي طبقاً للقوانين العامة وللمادة § 7 فقرة 1 DDG. لكن طبقاً للمواد §§ 8 لحد 10 DDG إحنا مش ملزمين نراقب المعلومات اللي بتتبعت أو بتتخزن من طرف تالت، ولا نبحث عن ظروف بتشير لنشاط غير قانوني. الالتزامات بإزالة أو حجب استخدام المعلومات طبقاً للقوانين العامة بتفضل قائمة. لكن المسؤولية في الحالة دي بتبدأ من وقت العلم بمخالفة قانونية محددة. وأول ما نعرف بأي مخالفة زي دي هنشيل المحتوى ده فوراً.">
     Als Diensteanbieter sind wir gemäß § 7 Abs. 1 DDG für eigene Inhalte auf
     diesen Seiten nach den allgemeinen Gesetzen verantwortlich. Nach den
     §§ 8 bis 10 DDG sind wir als Diensteanbieter jedoch nicht verpflichtet,
@@ -80,8 +91,8 @@
     Rechtsverletzungen werden wir diese Inhalte umgehend entfernen.
   </p>
 
-  <h2>Haftung für Links</h2>
-  <p>
+  <h2 class="t" data-t="html" data-de="Haftung für Links" data-en="Liability for links" data-ar="المسؤولية عن الروابط">Haftung für Links</h2>
+  <p class="t" data-t="html" data-de="Unser Angebot enthält Links zu externen Websites Dritter, auf deren Inhalte wir keinen Einfluss haben. Deshalb können wir für diese fremden Inhalte auch keine Gewähr übernehmen. Für die Inhalte der verlinkten Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich. Die verlinkten Seiten wurden zum Zeitpunkt der Verlinkung auf mögliche Rechtsverstöße überprüft. Rechtswidrige Inhalte waren zum Zeitpunkt der Verlinkung nicht erkennbar. Eine permanente inhaltliche Kontrolle der verlinkten Seiten ist jedoch ohne konkrete Anhaltspunkte einer Rechtsverletzung nicht zumutbar. Bei Bekanntwerden von Rechtsverletzungen werden wir derartige Links umgehend entfernen." data-en="Our website contains links to external third-party websites over whose content we have no influence. We can therefore accept no liability for that third-party content. The respective provider or operator of the linked pages is always responsible for their content. The linked pages were checked for possible legal infringements at the time of linking. Unlawful content was not recognisable at that time. A permanent review of the content of the linked pages is, however, not reasonable without concrete indications of an infringement. Should we become aware of any infringements, we will remove such links immediately." data-ar="الموقع بتاعنا فيه روابط لمواقع خارجية تبع أطراف تانية، وإحنا ملناش أي تأثير على محتواها. وعشان كده مش بنتحمل أي مسؤولية عن المحتوى ده. المسؤول دايماً عن محتوى الصفحات المرتبطة هو صاحبها أو مشغّلها. الصفحات دي اتراجعت وقت وضع الرابط ومكانش فيها أي مخالفات واضحة. لكن المراجعة الدائمة لمحتوى الصفحات المرتبطة من غير سبب واضح لمخالفة مش عملية. وأول ما نعرف بأي مخالفة هنشيل الروابط دي فوراً.">
     Unser Angebot enthält Links zu externen Websites Dritter, auf deren Inhalte
     wir keinen Einfluss haben. Deshalb können wir für diese fremden Inhalte auch
     keine Gewähr übernehmen. Für die Inhalte der verlinkten Seiten ist stets der
@@ -94,8 +105,8 @@
     entfernen.
   </p>
 
-  <h2>Urheberrecht</h2>
-  <p>
+  <h2 class="t" data-t="html" data-de="Urheberrecht" data-en="Copyright" data-ar="حقوق النشر">Urheberrecht</h2>
+  <p class="t" data-t="html" data-de="Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung, Verbreitung und jede Art der Verwertung außerhalb der Grenzen des Urheberrechtes bedürfen der schriftlichen Zustimmung des jeweiligen Autors bzw. Erstellers. Downloads und Kopien dieser Seite sind nur für den privaten, nicht kommerziellen Gebrauch gestattet." data-en="The content and works created by the site operators on these pages are subject to German copyright law. Reproduction, editing, distribution and any kind of use outside the limits of copyright law require the written consent of the respective author or creator. Downloads and copies of this page are permitted for private, non-commercial use only." data-ar="المحتوى والأعمال اللي بيعملها مشغّلو الموقع على الصفحات دي محمية بقانون حقوق النشر الألماني. النسخ والتعديل والتوزيع وأي شكل من أشكال الاستغلال خارج حدود قانون حقوق النشر محتاج موافقة كتابية من صاحب العمل. تحميل ونسخ الصفحة دي مسموح للاستخدام الشخصي غير التجاري بس.">
     Die durch die Seitenbetreiber erstellten Inhalte und Werke auf diesen Seiten
     unterliegen dem deutschen Urheberrecht. Die Vervielfältigung, Bearbeitung,
     Verbreitung und jede Art der Verwertung außerhalb der Grenzen des
@@ -104,18 +115,18 @@
     nicht kommerziellen Gebrauch gestattet.
   </p>
 
-  <p class="legal-back"><a href="/">&#8592; Zurück zur Startseite</a></p>
+  <p class="legal-back" class="t" data-t="html" data-de="&lt;a href=&quot;/&quot;&gt;&#8592; Zurück zur Startseite&lt;/a&gt;" data-en="&lt;a href=&quot;/&quot;&gt;&#8592; Back to the homepage&lt;/a&gt;" data-ar="&lt;a href=&quot;/&quot;&gt;&#8594; الرجوع للصفحة الرئيسية&lt;/a&gt;"><a href="/">&#8592; Zurück zur Startseite</a></p>
 </main>
 
 <footer class="footer">
   <div class="footer-inner">
     <span class="footer-brand">KAIRO <b>1980</b></span>
-    <nav class="footer-links" aria-label="Footer">
-      <a href="/impressum">Impressum</a>
+    <nav class="footer-links t" data-t="aria-label" aria-label="Footer" data-de="Footer" data-en="Footer" data-ar="روابط أسفل الصفحة">
+      <a href="/impressum" class="t" data-de="Impressum" data-en="Legal notice" data-ar="بيانات الناشر">Impressum</a>
       <span class="footer-dot" aria-hidden="true">·</span>
-      <a href="/datenschutz">Datenschutz</a>
+      <a href="/datenschutz" class="t" data-de="Datenschutz" data-en="Privacy" data-ar="الخصوصية">Datenschutz</a>
     </nav>
-    <span class="footer-copy">© 2026 · Moderne Ägyptische Küche · Hockenheim</span>
+    <span class="footer-copy t" data-de="© 2026 · Moderne Ägyptische Küche · Hockenheim" data-en="© 2026 · Modern Egyptian Cuisine · Hockenheim" data-ar="© 2026 · مطبخ مصري عصري · هوكنهايم">© 2026 · Moderne Ägyptische Küche · Hockenheim</span>
   </div>
 </footer>
 

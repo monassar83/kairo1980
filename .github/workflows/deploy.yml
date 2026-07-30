@@ -47,7 +47,7 @@ jobs:
       # in config.js and a dead basket in production.
       - name: Check that the browser scripts parse
         run: |
-          for file in config.js order.js zones.js fetch-reviews.js; do
+          for file in lang.js config.js order.js app.js qr.js zones.js fetch-reviews.js; do
             node --check "$file"
             echo "ok: $file"
           done

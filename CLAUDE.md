@@ -19,15 +19,18 @@ spreadsheet before publishing.
 
 ```
 index.html   markup only — no inline script, no inline style, ever
+lang.js      language: detection, memory, direction, the switch (all pages)
 config.js    every business rule and feature flag
 zones.js     GENERATED from data/delivery_zones.xlsx — never hand-edit
 order.js     hours, basket, WhatsApp handover, structured data
-app.js       page chrome: language switch, scroll reveal, reviews carousel
+app.js       page chrome: scroll reveal, reviews carousel, map consent
+qr.js        QR encoder, loaded on demand by the WhatsApp fallback only
 style.css    all styles
 _headers     cache policy + CSP
 ```
 
-Load order is `zones.js` → `config.js` → `order.js` → `app.js`, all `defer`.
+Load order is `lang.js` → `zones.js` → `config.js` → `order.js` → `app.js`,
+all `defer`. `qr.js` is fetched at runtime, never on page load.
 
 ## The one rule
 
@@ -43,6 +46,7 @@ into a second file, stop — that is the bug this architecture exists to prevent
 | Discounts, thresholds, lead time, basket lifetime | `config.js` → `order`, `business` |
 | Dishes, prices, diet tags | `index.html` `.mitem[data-item][data-price]` |
 | Ratings and reviews | `reviews.json` (fetched weekly) |
+| Every visible string | `data-de` / `data-en` / `data-ar` on the element itself |
 
 Translated copy carries `{placeholders}` (e.g. `{freeDeliveryFrom}`) that
 `applyConfig()` in order.js fills at runtime. The literal numbers in the markup
@@ -54,8 +58,26 @@ are only the no-JavaScript fallback — update both or neither.
   `onclick=` in the markup. Event wiring goes through the delegated
   `[data-action]` / `[data-act]` handlers. Setting `el.style.x` from JS is
   fine (CSSOM, not an inline attribute); parsing a style attribute is not.
-- **Bilingual.** Every visible string needs `class="t" data-de="…" data-en="…"`
-  or it will not switch. Generated text must repaint on the `kairo:lang` event.
+- **Trilingual: German, English, Egyptian Arabic.** Every visible string needs
+  `class="t" data-de="…" data-en="…" data-ar="…"` or it will not switch.
+  Generated text must repaint on the `kairo:lang` event, and every key in the
+  `T` table in order.js must exist in all three dictionaries — they are checked
+  against each other, not filled in later. `data-t="content|alt|aria-label|
+  placeholder|title"` writes an attribute instead of the text; `data-t="html"`
+  is for legal prose that contains a link, and is used nowhere else.
+- **Arabic is a direction, not a stylesheet.** The layout mirrors because every
+  rule is written in logical properties (`margin-inline`, `border-inline-start`,
+  `text-align: start`) and `lang.js` sets `dir="rtl"`. Do not add a physical
+  `left`/`right` property: it will be correct in two languages and wrong in the
+  third. The only `[dir="rtl"]` rules that may exist are the ones direction
+  cannot express — a mirrored arrow, a drop shadow, and the LTR isolation that
+  keeps "+49 176 79906621" and "11,00 €" from being reordered inside an Arabic
+  sentence.
+- **Arabic typography is not Latin typography.** No `letter-spacing` and no
+  `text-transform` — the script is cursive and has no capitals; both are
+  switched off under `:root[lang="ar"]`, and the small-caps labels get size and
+  weight instead. Amiri for display, Cairo for text, both self-hosted and both
+  behind a `unicode-range` so no Latin reader ever downloads them.
 - **`zones.js` is generated.** Edit `data/delivery_zones.xlsx`, then
   `python tools/build-zones.py`. CI fails the deploy if the two disagree.
 - **No third-party requests on load.** No fonts CDN, no analytics, no cookies.
@@ -124,6 +146,26 @@ are only the no-JavaScript fallback — update both or neither.
 - **The reviews carousel has a fixed height** so the page cannot jump every
   five seconds. The height comes from the 5-line clamp, not from the longest
   review. Longer reviews get "Mehr lesen".
+
+## Brand, and what is never translated
+
+KAIRO 1980 is a brand: the name, the logo, the domain, `info@kairo1980.de`,
+the WhatsApp number, the Instagram handle, Lieferando, Uber Eats, Google,
+PayPal, `Fritz Kola`, the street address and every technical identifier are the
+same string in all three languages. They carry no `data-*` attributes, so no
+switch can touch them. German statute citations (§ 5 DDG, § 139c AO, Art. 6
+DSGVO) stay in German in the English and Arabic legal texts — a translated
+citation is not a citation. **Dish names are identical in German and English**
+— the printed menu, the shop signage and the delivery platforms all use the
+same spelling — and are written in Arabic script only on the Arabic page.
+
+## Legal pages
+
+`impressum.html` and `datenschutz.html` carry all three languages in the same
+markup. **German is the binding version**; the English and Arabic texts show a
+notice saying so, which is empty in German (`.legal-note:empty` hides it). The
+German wording was never retyped when the translations were added — it was read
+out of the file and put back — so the binding text cannot drift.
 
 ## Local preview
 

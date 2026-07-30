@@ -34,7 +34,11 @@
 
 # Behaviour and styling: a few minutes of staleness is harmless and saves the
 # round trip on the common repeat visit.
+/lang.js
+  Cache-Control: public, max-age=300, must-revalidate
 /order.js
+  Cache-Control: public, max-age=300, must-revalidate
+/qr.js
   Cache-Control: public, max-age=300, must-revalidate
 /app.js
   Cache-Control: public, max-age=300, must-revalidate

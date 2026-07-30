@@ -45,7 +45,7 @@
       lunchClause: 'Bitte beachten: Mittags ist nur Abholung möglich, Lieferungen ab {evening} Uhr.',
       lunchByArrangement: 'Firmenbestellungen zu anderen Zeiten nach Absprache.',
       businessByArrangement: 'Liefertermine für Firmenbestellungen nach Absprache — sagen Sie uns einfach, wann Sie es brauchen.',
-      cartLunchPickup: 'Mittags ({windows}) bieten wir ausschließlich Abholung an. Für eine Lieferung wählen Sie unter „Wunschtermin" bitte eine Zeit ab {evening} Uhr.',
+      cartLunchPickup: 'Mittags ({windows}) bieten wir ausschließlich Abholung an. Für eine Lieferung wählen Sie unter „Wunschtermin“ bitte eine Zeit ab {evening} Uhr.',
       warnLunchSoon: 'Der Mittagsservice startet erst am {date}. Bis dahin sind wir abends ab {evening} Uhr für Sie da — senden Sie die Bestellung gern trotzdem, wir antworten im Chat.',
       openNow: 'Jetzt geöffnet', closedNow: 'Zurzeit geschlossen',
       until: 'bis', opensAgain: 'öffnet wieder',
@@ -53,7 +53,7 @@
       add: 'Hinzufügen', remove: 'Entfernen',
       cartOpen: 'Bestellung öffnen', itemsOne: 'Gericht', itemsMany: 'Gerichte',
       cart: 'Bestellung', cartEmpty: 'Ihr Warenkorb ist noch leer.',
-      cartEmptyHint: 'Tippen Sie in der Speisekarte auf „+", um Gerichte hinzuzufügen.',
+      cartEmptyHint: 'Tippen Sie in der Speisekarte auf „+“, um Gerichte hinzuzufügen.',
       subtotal: 'Zwischensumme', discount: 'Direktbestellung', total: 'Gesamt',
       type: 'Lieferung oder Abholung', delivery: 'Lieferung', pickup: 'Abholung',
       name: 'Name', phone: 'Telefon', address: 'Straße & Hausnummer',
@@ -67,7 +67,7 @@
       when: 'Wunschtermin', asap: 'So schnell wie möglich', scheduled: 'Für später planen',
       dateLabel: 'Datum', timeLabel: 'Uhrzeit',
       closedNote: 'Wir haben gerade geschlossen. Sie können trotzdem vorbestellen — wählen Sie einen Wunschtermin, wir bestätigen ihn im Chat.',
-      warnClosedAsap: 'Wir sind gerade geschlossen, „so schnell wie möglich" heißt daher: zur nächsten Öffnung ({next}).',
+      warnClosedAsap: 'Wir sind gerade geschlossen, „so schnell wie möglich“ heißt daher: zur nächsten Öffnung ({next}).',
       warnOutsideHours: 'Zu diesem Termin haben wir geschlossen. Senden Sie die Bestellung trotzdem — wir schlagen im Chat eine passende Zeit vor.',
       warnLeadTime: 'Für Firmenbestellungen brauchen wir mindestens {h} Stunden Vorlauf. Wir prüfen den Termin und bestätigen ihn im Chat.',
       warnPastTime: 'Dieser Termin liegt in der Vergangenheit.',
@@ -111,7 +111,22 @@
       mCheckLead: 'Weniger als {h} Std. Vorlauf — bitte prüfen',
       mSubtotal: 'Zwischensumme', mDiscount: 'Rabatt', mTotal: 'Gesamt', mPaypal: 'PayPal',
       mOutsideArea: 'PLZ ausserhalb des Liefergebiets — Anfrage zur Prüfung',
-      mUnderMin: 'Unter dem Mindestbestellwert ({min} €)'
+      mUnderMin: 'Unter dem Mindestbestellwert ({min} €)',
+      noWhatsapp: 'Kein WhatsApp auf diesem Gerät?',
+      qrHint: 'Scannen Sie den Code mit der Handykamera — WhatsApp öffnet sich auf dem Handy mit Ihrer fertigen Bestellung.',
+      qrHintLong: 'Scannen Sie den Code mit der Handykamera — der Chat öffnet sich auf Ihrem Handy. Kopieren Sie die Bestellung mit der Schaltfläche darunter und fügen Sie sie dort ein.',
+      qrAlt: 'QR-Code, der WhatsApp mit Ihrer Bestellung öffnet',
+      copyOrder: 'Bestellung kopieren', copied: 'Kopiert ✓',
+      callUs: 'Anrufen', smsUs: 'Per SMS senden',
+      openAgain: 'WhatsApp erneut öffnen',
+      areaFree: 'frei',
+      areaMinOrder: 'Mindestbestellwert {min} €',
+      faqHoursLead: 'Unsere aktuellen Öffnungszeiten: ',
+      faqHoursTail: 'Der Status im Kontaktbereich zeigt jederzeit an, ob wir gerade geöffnet haben. Bestellungen außerhalb dieser Zeiten erreichen uns als Vorbestellung für Ihren Wunschtermin.',
+      waBusiness: 'Hallo KAIRO 1980, ich möchte ein Angebot für eine Firmenbestellung.\n\n' +
+        'Firma: \nUngefährer Bestellwert: \nDatum & Uhrzeit: \n' +
+        'Lieferung oder Abholung: \nLieferadresse: \nAnmerkung (Allergien o. Ä.): ',
+      waSimple: 'Hallo KAIRO 1980! Ich möchte gerne bestellen.'
     },
     en: {
       days: { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' },
@@ -188,16 +203,129 @@
       mCheckLead: 'Less than {h} hrs lead time — please check',
       mSubtotal: 'Subtotal', mDiscount: 'Discount', mTotal: 'Total', mPaypal: 'PayPal',
       mOutsideArea: 'Postcode outside the delivery area — request to be checked',
-      mUnderMin: 'Below the minimum order (€{min})'
+      mUnderMin: 'Below the minimum order (€{min})',
+      noWhatsapp: 'No WhatsApp on this device?',
+      qrHint: 'Scan the code with your phone camera — WhatsApp opens on the phone with your order already written.',
+      qrHintLong: 'Scan the code with your phone camera — the chat opens on your phone. Copy the order with the button below and paste it there.',
+      qrAlt: 'QR code that opens WhatsApp with your order',
+      copyOrder: 'Copy the order', copied: 'Copied ✓',
+      callUs: 'Call us', smsUs: 'Send by SMS',
+      openAgain: 'Open WhatsApp again',
+      areaFree: 'free',
+      areaMinOrder: 'Minimum order €{min}',
+      faqHoursLead: 'Our current opening hours are: ',
+      faqHoursTail: 'The live status at the top of the contact section always shows whether we are open right now. Orders placed outside these hours reach us as a pre-order for a time you choose.',
+      waBusiness: 'Hello KAIRO 1980, I would like a quote for a corporate order.\n\n' +
+        'Company: \nApprox. order value: \nDate & time it is needed: \n' +
+        'Delivery or pickup: \nDelivery address: \nNotes (allergies, etc.): ',
+      waSimple: 'Hello KAIRO 1980! I would like to place an order.'
+    },
+    ar: {
+      days: { mon: 'الاثنين', tue: 'الثلاثاء', wed: 'الأربعاء', thu: 'الخميس', fri: 'الجمعة', sat: 'السبت', sun: 'الأحد' },
+      lunch: 'الغداء', evening: 'المساء', closed: 'مغلق',
+      pickupOnly: 'استلام فقط',
+      lunchSoon: 'جديد من {date}: خدمة الغداء {windows}.',
+      lunchNow: 'خدمة الغداء: {windows}.',
+      lunchPickupOnly: 'الغداء بالاستلام من المطعم بس — والتوصيل من الساعة {evening}.',
+      lunchWithDelivery: 'وقت الغداء بنوصّل وتقدر تستلم بنفسك.',
+      lunchClause: 'للعلم: وقت الغداء الاستلام بس، والتوصيل من الساعة {evening}.',
+      lunchByArrangement: 'طلبات الشركات في مواعيد تانية بالاتفاق معانا.',
+      businessByArrangement: 'مواعيد توصيل طلبات الشركات بالاتفاق — قول لنا بس محتاجها إمتى.',
+      cartLunchPickup: 'وقت الغداء ({windows}) عندنا استلام من المطعم بس. لو عايز توصيل، اختار تحت «الموعد المطلوب» وقت من الساعة {evening}.',
+      warnLunchSoon: 'خدمة الغداء بتبدأ يوم {date}. لحد ساعتها إحنا معاك بالليل من الساعة {evening} — ابعت الطلب عادي وهنرد عليك في الشات.',
+      openNow: 'مفتوح دلوقتي', closedNow: 'مغلق دلوقتي',
+      until: 'لحد', opensAgain: 'هنفتح تاني',
+      today: 'النهارده',
+      add: 'أضف', remove: 'شيل',
+      cartOpen: 'افتح الطلب', itemsOne: 'طبق', itemsMany: 'أطباق',
+      cart: 'طلبك', cartEmpty: 'السلة لسه فاضية.',
+      cartEmptyHint: 'دوس على «+» جنب أي طبق في المنيو عشان تضيفه.',
+      subtotal: 'الإجمالي المبدئي', discount: 'طلب مباشر', total: 'الإجمالي',
+      type: 'توصيل ولا استلام', delivery: 'توصيل', pickup: 'استلام',
+      name: 'الاسم', phone: 'التليفون', address: 'الشارع ورقم البيت',
+      addressPh: 'مثال: Rostocker Straße 20a',
+      postcode: 'الرمز البريدي', postcodePh: '68766',
+      deliveryFee: 'التوصيل',
+      zoneOk: 'بنوصّل لـ {city}.',
+      zoneFee: 'التوصيل لـ {city}: {fee}.',
+      zoneBelowMin: 'فاضل {missing} على الحد الأدنى للطلب في {city} ({min} €).',
+      zoneUnknown: 'الرمز البريدي ده برة منطقة التوصيل بتاعتنا. تقدر تبعتلنا استفسار من غير أي التزام — ده لسه مش طلب. هنشوف نقدر نوصّلك ولا لأ ونرد عليك في الشات.',
+      when: 'الموعد المطلوب', asap: 'في أقرب وقت', scheduled: 'حدد موعد بعدين',
+      dateLabel: 'التاريخ', timeLabel: 'الساعة',
+      closedNote: 'إحنا مقفولين دلوقتي، بس تقدر تطلب مقدماً — اختار الموعد اللي يناسبك وهنأكده لك في الشات.',
+      warnClosedAsap: 'إحنا مقفولين دلوقتي، يعني «في أقرب وقت» معناها أول ما نفتح ({next}).',
+      warnOutsideHours: 'الموعد ده إحنا مقفولين فيه. ابعت الطلب برضه — وهنقترح عليك وقت مناسب في الشات.',
+      warnLeadTime: 'طلبات الشركات محتاجة {h} ساعات تحضير على الأقل. هنشوف الموعد ونأكده لك في الشات.',
+      warnPastTime: 'الموعد ده عدّى خلاص.',
+      notes: 'ملاحظات', notesPh: 'حساسية، الجرس، الدور …',
+      company: 'الشركة / عنوان الفاتورة',
+      isBusiness: 'طلب شركة',
+      leadTime: 'الطلبات الكبيرة يا ريت قبلها بـ {h} ساعات على الأقل.',
+      send: 'ابعت على واتساب', sendRequest: 'ابعت استفسار من غير التزام',
+      sending: 'بنفتح واتساب …',
+      sentTitleRequest: 'الاستفسار جاهز',
+      sentTextRequest: 'من فضلك ابعت الرسالة. ده استفسار مش طلب مؤكد — هنقولك في الشات نقدر نوصّلك ولا لأ.',
+      msgTitleRequest: 'استفسار (مش طلب) من kairo1980.de',
+      privacy: 'بياناتك بتتكتب في رسالة واتساب بس — إحنا مش بنحفظ أي حاجة على الموقع ده.',
+      required: 'من فضلك املا الخانة دي.',
+      sentTitle: 'واتساب اتفتح',
+      sentText: 'من فضلك ابعت الرسالة الجاهزة — وهنأكد طلبك في الشات على طول.',
+      payNow: 'ادفع دلوقتي بـ PayPal', payHint: 'اختياري — تقدر تدفع عند الاستلام برضه.',
+      or: 'أو',
+      pay: { cash: 'كاش', giro: 'كارت EC/Giro', card: 'كارت ائتمان' },
+      payOnSite: 'الدفع عند ال{type}: {methods}.',
+      payOnline: 'أو ادفع أونلاين بـ PayPal — لينك الدفع بيوصلك أول ما تبعت الطلب.',
+      payInvoice: 'فاتورة (لعملاء الشركات)',
+      atPickup: 'استلام', atDelivery: 'توصيل',
+      payMethod: 'طريقة الدفع',
+      payOptionOnline: 'أونلاين بـ PayPal',
+      payOptionOnSite: 'الدفع عند الاستلام',
+      payOnlineHint: 'أول ما تبعت الطلب هيفتح PayPal بالمبلغ بالظبط {total}. طلبك بيبقى مؤكد لما نرد عليك في الشات — وتقدر تدفع بعد كده عادي.',
+      mPayment: 'الدفع',
+      mPayOnline: 'أونلاين بـ PayPal (برجاء التأكد من وصول المبلغ)',
+      mPayOnSite: 'عند ال{type} ({methods})',
+      newOrder: 'طلب جديد', close: 'إغلاق',
+      msgTitle: 'طلب جديد من kairo1980.de',
+      msgBusiness: 'طلب شركة',
+      mLead: 'وقت التحضير', mHours: 'ساعة',
+      mType: 'النوع', mName: 'الاسم', mPhone: 'التليفون', mAddress: 'العنوان',
+      mTime: 'الموعد المطلوب', mNotes: 'ملاحظات', mCompany: 'الشركة',
+      mPreorder: 'طلب مسبق — اتبعت برة مواعيد العمل',
+      mCheckTime: 'الموعد المطلوب برة مواعيد العمل — برجاء المراجعة',
+      mCheckLead: 'أقل من {h} ساعات تحضير — برجاء المراجعة',
+      mSubtotal: 'الإجمالي المبدئي', mDiscount: 'خصم', mTotal: 'الإجمالي', mPaypal: 'PayPal',
+      mOutsideArea: 'الرمز البريدي برة منطقة التوصيل — استفسار للمراجعة',
+      mUnderMin: 'أقل من الحد الأدنى للطلب ({min} €)',
+      noWhatsapp: 'مفيش واتساب على الجهاز ده؟',
+      qrHint: 'امسح الكود بكاميرا الموبايل — واتساب هيفتح على تليفونك والطلب مكتوب جاهز.',
+      qrHintLong: 'امسح الكود بكاميرا الموبايل — الشات هيفتح على تليفونك. انسخ الطلب بالزرار اللي تحت والزقه هناك.',
+      qrAlt: 'كود QR بيفتح واتساب وفيه طلبك',
+      copyOrder: 'انسخ الطلب', copied: 'اتنسخ ✓',
+      callUs: 'اتصل بينا', smsUs: 'ابعت SMS',
+      openAgain: 'افتح واتساب تاني',
+      areaFree: 'مجاني',
+      areaMinOrder: 'الحد الأدنى للطلب {min} €',
+      faqHoursLead: 'مواعيد العمل الحالية: ',
+      faqHoursTail: 'حالة المطعم في قسم التواصل بتوضّح دايماً إحنا مفتوحين دلوقتي ولا لأ. والطلبات برة المواعيد دي بتوصلنا كطلب مسبق للموعد اللي اخترته.',
+      waBusiness: 'أهلاً KAIRO 1980، عايز عرض سعر لطلب شركة.\n\n' +
+        'الشركة: \nقيمة الطلب التقريبية: \nالتاريخ والساعة: \n' +
+        'توصيل ولا استلام: \nعنوان التوصيل: \nملاحظات (حساسية وخلافه): ',
+      waSimple: 'أهلاً KAIRO 1980! عايز أطلب من فضلك.'
     }
   };
 
+  // Whatever lang.js put on <html>, as long as this file has that dictionary.
   function lang() {
-    return document.documentElement.lang === 'en' ? 'en' : 'de';
+    var tag = document.documentElement.lang;
+    return Object.prototype.hasOwnProperty.call(T, tag) ? tag : 'de';
   }
   function t() {
     return T[lang()];
   }
+
+  // Arabic uses Latin digits: the prices are German prices on a German
+  // receipt, and Egypt reads them this way day to day anyway.
+  var DATE_LOCALE = { de: 'de-DE', en: 'en-GB', ar: 'ar-EG-u-nu-latn' };
 
   var money = function (value) {
     return new Intl.NumberFormat(CFG.order.locale || 'de-DE', {
@@ -558,7 +686,7 @@
     if (!sections.length) return null;
     return {
       '@type': 'Menu',
-      name: lang() === 'en' ? 'Menu' : 'Speisekarte',
+      name: { de: 'Speisekarte', en: 'Menu', ar: 'المنيو' }[lang()],
       url: 'https://kairo1980.de/#speisekarte',
       hasMenuSection: sections
     };
@@ -1426,6 +1554,106 @@
     return out.join('\n');
   }
 
+  /* --- when WhatsApp is not on this device ---------------------------------
+     On a phone the handover is one tap. On a desktop it opens WhatsApp Web,
+     and a guest whose phone is not linked to that browser meets a login screen
+     with their order nowhere in sight — a basket built and then a dead end.
+
+     So the confirmation screen carries a way out, collapsed until it is
+     needed: a QR code that opens the same prepared message on the phone, the
+     order text on the clipboard, a phone number, and SMS. Deliberately NOT
+     e-mail: an order is only ordered once it has been read, and this
+     restaurant answers its phone, not its inbox.
+
+     The QR is generated on the spot, and qr.js is fetched only when somebody
+     actually opens the panel — nobody pays for it on the way in.
+  ------------------------------------------------------------------------- */
+
+  var lastOrder = null;      // { url, text } of the message just handed over
+
+  function loadQr(done) {
+    if (window.KairoQR) { done(true); return; }
+    var script = document.createElement('script');
+    script.src = 'qr.js';
+    script.onload = function () { done(!!window.KairoQR); };
+    script.onerror = function () { done(false); };
+    document.head.appendChild(script);
+  }
+
+  function fallbackHtml() {
+    var L = t();
+    if (!lastOrder) return '';
+    var sms = 'sms:' + CFG.whatsapp.number.replace(/^/, '+') +
+      '?body=' + encodeURIComponent(lastOrder.text);
+    return '<details class="cart-fallback" id="cartFallback">' +
+      '<summary>' + escapeHtml(L.noWhatsapp) + '</summary>' +
+      '<div class="cart-fallback-body">' +
+        '<div class="cart-qr" id="cartQr"></div>' +
+        '<p class="cart-qr-hint" id="cartQrHint"></p>' +
+        '<div class="cart-fallback-actions">' +
+          '<button type="button" class="cart-alt" id="cartCopy">' + escapeHtml(L.copyOrder) + '</button>' +
+          '<a class="cart-alt" href="tel:+' + escapeHtml(CFG.whatsapp.number) + '">' + escapeHtml(L.callUs) + '</a>' +
+          '<a class="cart-alt" href="' + escapeHtml(sms) + '">' + escapeHtml(L.smsUs) + '</a>' +
+          '<a class="cart-alt" href="' + escapeHtml(lastOrder.url) + '" target="_blank" rel="noopener">' +
+            escapeHtml(L.openAgain) + '</a>' +
+        '</div>' +
+      '</div>' +
+      '</details>';
+  }
+
+  // A QR carrying a whole order can run to a thousand bytes; past a point the
+  // modules get too fine to scan off a screen. So the code carries the full
+  // message while it comfortably fits, and falls back to the bare chat link —
+  // with the copy button doing the rest — when it does not.
+  var QR_TEXT_LIMIT = 900;
+
+  function paintQr() {
+    var host = document.getElementById('cartQr');
+    var hint = document.getElementById('cartQrHint');
+    if (!host || !lastOrder || host.getAttribute('data-done')) return;
+    host.setAttribute('data-done', '1');
+    var L = t();
+    var full = lastOrder.url.length <= QR_TEXT_LIMIT;
+    var payload = full ? lastOrder.url : 'https://wa.me/' + CFG.whatsapp.number;
+    loadQr(function (ready) {
+      if (!ready) { host.remove(); return; }
+      var svg = window.KairoQR.svg(payload, { width: 232 });
+      if (!svg) { host.remove(); return; }
+      host.innerHTML = svg;
+      var node = host.querySelector('svg');
+      if (node) node.setAttribute('aria-label', L.qrAlt);
+      if (hint) hint.textContent = full ? L.qrHint : L.qrHintLong;
+    });
+  }
+
+  function copyOrder(btn) {
+    if (!lastOrder) return;
+    var L = t();
+    var done = function () {
+      btn.textContent = L.copied;
+      btn.classList.add('is-done');
+    };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(lastOrder.text).then(done, function () { legacyCopy(done); });
+    } else {
+      legacyCopy(done);
+    }
+  }
+
+  // execCommand is deprecated but still the only path on an insecure origin or
+  // an older iOS Safari, and a copy button that silently does nothing is worse.
+  function legacyCopy(done) {
+    var area = document.createElement('textarea');
+    area.value = lastOrder.text;
+    area.setAttribute('readonly', '');
+    area.style.position = 'fixed';
+    area.style.opacity = '0';
+    document.body.appendChild(area);
+    area.select();
+    try { document.execCommand('copy'); done(); } catch (e) { /* nothing to do */ }
+    document.body.removeChild(area);
+  }
+
   function submitOrder(e) {
     e.preventDefault();
     var L = t();
@@ -1453,7 +1681,9 @@
 
     var total = totals().total;
     var outside = isOutsideArea();
-    var url = 'https://wa.me/' + CFG.whatsapp.number + '?text=' + encodeURIComponent(buildMessage(data));
+    var message = buildMessage(data);
+    var url = 'https://wa.me/' + CFG.whatsapp.number + '?text=' + encodeURIComponent(message);
+    lastOrder = { url: url, text: message };
     window.open(url, '_blank', 'noopener');
 
     // Only the guest who chose to pay online gets a payment button, and only
@@ -1473,6 +1703,7 @@
           // about paying; everyone else is reminded how they chose to.
           : (outside ? '' : '<p class="cart-empty-hint">' + escapeHtml(payChosenText()) + '</p>')) +
         '<button type="button" class="cart-reset" id="cartReset">' + L.newOrder + '</button>' +
+        fallbackHtml() +
       '</div>';
 
     cart = {};
@@ -1540,6 +1771,15 @@
     document.addEventListener('submit', function (e) {
       if (e.target.id === 'cartForm') submitOrder(e);
     });
+
+    document.addEventListener('click', function (e) {
+      if (e.target.id === 'cartCopy') copyOrder(e.target);
+    });
+
+    // <details> fires toggle, not click, and only then is the QR worth drawing.
+    document.addEventListener('toggle', function (e) {
+      if (e.target.id === 'cartFallback' && e.target.open) paintQr();
+    }, true);
 
     document.addEventListener('input', function (e) {
       if (!e.target.id || DRAFT_FIELDS.indexOf(e.target.id) === -1) return;
@@ -1633,7 +1873,11 @@
 
   // Consecutive days sharing a window collapse into "Mo – Fr 11:30 – 14:30".
   function groupWindows(pick) {
-    var short = { de: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'], en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'] }[lang()];
+    var short = {
+      de: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
+      en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+      ar: ['الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد']
+    }[lang()];
     var runs = [];
     DAY_KEYS.forEach(function (key, i) {
       var day = (CFG.hours.days || {})[key];
@@ -1681,7 +1925,7 @@
   // the date carries no time of day and must not shift across a timezone.
   function longDate(date) {
     try {
-      return new Intl.DateTimeFormat(lang() === 'en' ? 'en-GB' : 'de-DE', {
+      return new Intl.DateTimeFormat(DATE_LOCALE[lang()], {
         weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC'
       }).format(date);
     } catch (e) {
@@ -1739,7 +1983,7 @@
     var rows = (CFG.delivery && CFG.delivery.zones) || [];
     if (!rows.length) { host.innerHTML = ''; return; }
 
-    var en = lang() === 'en';
+    var L = t();
     var tiers = [];
     var byMin = {};
 
@@ -1759,14 +2003,14 @@
           '<span class="area-city">' + escapeHtml(row[1]) + '</span>' +
           '<span class="area-plz">' + escapeHtml(row[0]) + '</span>' +
           '<span class="area-fee' + (fee > 0 ? '' : ' is-free') + '">' +
-            (fee > 0 ? money(fee) : (en ? 'free' : 'frei')) +
+            (fee > 0 ? money(fee) : L.areaFree) +
           '</span>' +
           '</li>';
       }).join('');
 
       return '<div class="area-tier">' +
         '<h3 class="area-tier-title">' +
-          (en ? 'Minimum order €' + min : 'Mindestbestellwert ' + min + ' €') +
+          fill(L.areaMinOrder, { min: min }) +
         '</h3>' +
         '<ul class="area-towns">' + towns + '</ul>' +
         '</div>';
@@ -1779,7 +2023,6 @@
     var host = document.querySelector('.faq-hours');
     if (!host) return;
     var L = t();
-    var en = lang() === 'en';
 
     var labelled = lunchRunning();
     var lines = DAY_KEYS.map(function (key) {
@@ -1792,12 +2035,8 @@
         : L.closed);
     });
 
-    host.textContent = (en
-      ? 'Our current opening hours are: '
-      : 'Unsere aktuellen Öffnungszeiten: ') + lines.join(' · ') + '. ' +
-      (lunchNotice() ? lunchNotice() + ' ' : '') + (en
-      ? 'The live status at the top of the contact section always shows whether we are open right now. Orders placed outside these hours reach us as a pre-order for a time you choose.'
-      : 'Der Status im Kontaktbereich zeigt jederzeit an, ob wir gerade geöffnet haben. Bestellungen außerhalb dieser Zeiten erreichen uns als Vorbestellung für Ihren Wunschtermin.');
+    host.textContent = L.faqHoursLead + lines.join(' · ') + '. ' +
+      (lunchNotice() ? lunchNotice() + ' ' : '') + L.faqHoursTail;
   }
 
   // FAQPage built from the rendered <details>, so an edited answer updates the
@@ -1820,7 +2059,8 @@
       });
     });
     if (!entities.length) return null;
-    return { '@context': 'https://schema.org', '@type': 'FAQPage', mainEntity: entities };
+    return { '@context': 'https://schema.org', '@type': 'FAQPage',
+             inLanguage: lang(), mainEntity: entities };
   }
 
   function updateFaqSchema() {
@@ -1843,18 +2083,8 @@
   // The template asks for what actually decides the order — budget and time —
   // and no longer for a head count, which told us nothing we could cook from.
   function businessTemplate(kind) {
-    if (lang() === 'en') {
-      return kind === 'business'
-        ? 'Hello KAIRO 1980, I would like a quote for a corporate order.\n\n' +
-          'Company: \nApprox. order value: \nDate & time it is needed: \n' +
-          'Delivery or pickup: \nDelivery address: \nNotes (allergies, etc.): '
-        : "Hello KAIRO 1980! I'd like to place an order.";
-    }
-    return kind === 'business'
-      ? 'Hallo KAIRO 1980, ich möchte ein Angebot für eine Firmenbestellung.\n\n' +
-        'Firma: \nUngefährer Bestellwert: \nDatum & Uhrzeit: \n' +
-        'Lieferung oder Abholung: \nLieferadresse: \nAnmerkung (Allergien o. Ä.): '
-      : 'Hallo KAIRO 1980! Ich möchte gerne bestellen.';
+    var L = t();
+    return kind === 'business' ? L.waBusiness : L.waSimple;
   }
 
   /* =========================================================================

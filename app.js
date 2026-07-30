@@ -14,52 +14,29 @@
   'use strict';
 
 
-  let currentLang = 'de';
+  // Language detection, memory, direction and the switch itself live in
+  // lang.js, which every page loads. This file only reacts to the event.
+  var currentLang = (window.KairoLang && window.KairoLang.current) || 'de';
 
-  function setLang(lang) {
-    currentLang = lang;
-    document.documentElement.lang = lang;
+  const MORE = { de: 'Mehr lesen', en: 'Read more', ar: 'اقرأ المزيد' };
+  const LESS = { de: 'Weniger lesen', en: 'Read less', ar: 'عرض أقل' };
 
-    // Update all translatable elements
-    document.querySelectorAll('.t').forEach(el => {
-      const text = el.getAttribute('data-' + lang);
-      if (text) el.textContent = text;
-      // Links may also carry a per-language target, e.g. the WhatsApp order
-      // buttons, whose prefilled message should match the visitor's language.
-      const href = el.getAttribute('data-' + lang + '-href');
-      if (href) el.setAttribute('href', href);
-    });
-
-    // The <title> element carries class="t" and both languages itself, so the
-    // loop above has already swapped it. Assigning document.title here as well
-    // replaced the keyword-bearing title with a short one the moment anybody
-    // touched the language switch.
-
-    // Update active button
-    document.getElementById('btn-de').classList.toggle('active', lang === 'de');
-    document.getElementById('btn-en').classList.toggle('active', lang === 'en');
-
-    // Opening hours, the basket and every config-driven number are rendered by
-    // order.js, which repaints itself when this fires.
-    document.dispatchEvent(new CustomEvent('kairo:lang', { detail: lang }));
-
-    // Update mehr lesen button text based on state
-    const btn = document.getElementById('mehrLesenBtn');
-    const isOpen = document.getElementById('mehrLesenContent').classList.contains('open');
-    btn.querySelector('.t').textContent = isOpen
-      ? (lang === 'de' ? 'Weniger lesen' : 'Read less')
-      : (lang === 'de' ? 'Mehr lesen' : 'Read more');
+  // A label that depends on state cannot be a fixed attribute: the button
+  // carries whichever pair applies, and lang.js paints it from those.
+  function setToggleLabels(el, labels) {
+    if (!el) return;
+    el.setAttribute('data-de', labels.de);
+    el.setAttribute('data-en', labels.en);
+    el.setAttribute('data-ar', labels.ar);
+    el.textContent = labels[currentLang] || labels.de;
   }
 
   function toggleMehrLesen() {
     const content = document.getElementById('mehrLesenContent');
     const btn = document.getElementById('mehrLesenBtn');
-    const btnText = btn.querySelector('.t');
     const isOpen = content.classList.toggle('open');
     btn.setAttribute('aria-expanded', String(isOpen));
-    btnText.textContent = isOpen
-      ? (currentLang === 'de' ? 'Weniger lesen' : 'Read less')
-      : (currentLang === 'de' ? 'Mehr lesen' : 'Read more');
+    setToggleLabels(btn.querySelector('.t'), isOpen ? LESS : MORE);
   }
 
   const observer = new IntersectionObserver((entries) => {
@@ -101,6 +78,11 @@
      German string "vor 4 Wochen" and stayed German on the English page.
   ------------------------------------------------------------------------- */
 
+  // Egypt reads Western digits day to day, and the prices on this page are
+  // German ones, so Arabic uses the Latin numbering system rather than the
+  // Arabic-Indic digits Intl would otherwise pick for ar-EG.
+  const LOCALE = { de: 'de-DE', en: 'en-GB', ar: 'ar-EG-u-nu-latn' };
+
   const RELATIVE_STEPS = [
     ['year', 31536000], ['month', 2592000], ['week', 604800],
     ['day', 86400], ['hour', 3600], ['minute', 60]
@@ -111,8 +93,7 @@
     const then = Date.parse(iso);
     if (isNaN(then)) return fallback || '';
     const seconds = (then - Date.now()) / 1000;
-    const fmt = new Intl.RelativeTimeFormat(currentLang === 'en' ? 'en-GB' : 'de-DE',
-      { numeric: 'auto' });
+    const fmt = new Intl.RelativeTimeFormat(LOCALE[currentLang] || LOCALE.de, { numeric: 'auto' });
     for (const [unit, size] of RELATIVE_STEPS) {
       if (Math.abs(seconds) >= size) return fmt.format(Math.round(seconds / size), unit);
     }
@@ -134,8 +115,15 @@
     const summary = document.getElementById('reviewsSummary');
     if (!summary || !summaryFigures) return;
     const { rating, total } = summaryFigures;
-    const en = document.documentElement.lang === 'en';
-    const locale = en ? 'en-GB' : 'de-DE';
+    const locale = LOCALE[currentLang] || LOCALE.de;
+    const OUT_OF = { de: 'von 5', en: 'out of 5', ar: 'من 5' };
+    const ON_GOOGLE = {
+      de: 'Bewertungen auf Google',
+      en: 'reviews on Google',
+      ar: 'تقييم على Google'
+    };
+    const outOf = OUT_OF[currentLang] || OUT_OF.de;
+    const onGoogle = ON_GOOGLE[currentLang] || ON_GOOGLE.de;
 
     // Each star is its own element so the last earned one can catch the sheen
     // as it arrives. Deliberately NOT drawn larger than its neighbours: an
@@ -155,17 +143,18 @@
     const count = total.toLocaleString(locale);
 
     summary.innerHTML = `
-      <div class="reviews-stars" role="img" aria-label="${score} ${en ? 'out of' : 'von'} 5">${stars}</div>
+      <div class="reviews-stars" role="img" aria-label="${score} ${outOf}">${stars}</div>
       <p class="reviews-score">
-        <span class="reviews-score-value">${score}</span><span class="reviews-score-max">${en ? 'out of 5' : 'von 5'}</span>
+        <span class="reviews-score-value">${score}</span><span class="reviews-score-max">${outOf}</span>
       </p>
-      <p class="reviews-count">${count} ${en ? 'reviews on Google' : 'Bewertungen auf Google'}</p>
+      <p class="reviews-count">${count} ${onGoogle}</p>
     `;
   }
 
   // The summary and the review dates are the site's own words about the
   // reviews, so both follow the language switch. The quoted text does not.
-  document.addEventListener('kairo:lang', () => {
+  document.addEventListener('kairo:lang', (e) => {
+    currentLang = (e && e.detail) || currentLang;
     renderSummary();
     if (!reviews.length) return;
     const showing = currentReview;
@@ -235,7 +224,8 @@
         </div>
         <button type="button" class="review-more t" data-action="review-toggle"
                 aria-expanded="false"
-                data-de="${MORE.de}" data-en="${MORE.en}" hidden>${MORE[currentLang] || MORE.de}</button>
+                data-de="${MORE.de}" data-en="${MORE.en}" data-ar="${MORE.ar}"
+                hidden>${MORE[currentLang] || MORE.de}</button>
       </div>
     `;
     }).join('');
@@ -255,9 +245,6 @@
      offer to expand. The measurement has to happen after layout, and the fonts
      land after first paint, so it is repeated once the fonts are ready.
   ------------------------------------------------------------------------- */
-
-  const MORE = { de: 'Mehr lesen', en: 'Read more' };
-  const LESS = { de: 'Weniger lesen', en: 'Read less' };
 
   function markOverflowingReviews() {
     document.querySelectorAll('.review-card').forEach(card => {
@@ -280,10 +267,7 @@
     if (!body) return;
     const open = body.classList.toggle('is-open');
     btn.setAttribute('aria-expanded', String(open));
-    const labels = open ? LESS : MORE;
-    btn.setAttribute('data-de', labels.de);
-    btn.setAttribute('data-en', labels.en);
-    btn.textContent = labels[currentLang] || labels.de;
+    setToggleLabels(btn, open ? LESS : MORE);
     // An expanded review must not be swiped away mid-sentence.
     if (open) stopAutoAdvance();
     else startAutoAdvance();
@@ -355,7 +339,11 @@
       frame.setAttribute('allowfullscreen', '');
       frame.setAttribute('loading', 'lazy');
       frame.setAttribute('referrerpolicy', 'no-referrer-when-downgrade');
-      frame.title = 'KAIRO 1980 Standort';
+      const TITLE = {
+        de: 'KAIRO 1980 Standort', en: 'KAIRO 1980 location',
+        ar: 'موقع KAIRO 1980'
+      };
+      frame.title = TITLE[currentLang] || TITLE.de;
       holder.innerHTML = '';
       holder.appendChild(frame);
     });
@@ -370,9 +358,7 @@
     if (!target) return;
     var action = target.getAttribute('data-action');
 
-    if (action === 'lang') {
-      setLang(target.getAttribute('data-lang'));
-    } else if (action === 'toggle-story') {
+    if (action === 'toggle-story') {
       toggleMehrLesen();
     } else if (action === 'reviews-prev') {
       moveReviews(-1);

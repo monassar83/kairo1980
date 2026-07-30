@@ -188,8 +188,8 @@ summary:focus-visible {
 
 /* STRIP */
 .strip { display: grid; grid-template-columns: repeat(3,1fr); border-bottom: 1px solid rgba(200,165,90,0.2); }
-.strip-item { padding: 36px 44px; border-right: 1px solid rgba(200,165,90,0.15); }
-.strip-item:last-child { border-right: none; }
+.strip-item { padding: 36px 44px; border-inline-end: 1px solid rgba(200,165,90,0.15); }
+.strip-item:last-child { border-inline-end: none; }
 .strip-num { font-family: 'Cormorant Garamond', serif; font-size: 12px; color: #b8914a; letter-spacing: 0.15em; display: block; margin-bottom: 12px; }
 .strip-title { font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #1c1409; margin-bottom: 9px; }
 .strip-text { font-size: 13px; line-height: 1.8; color: #7a6030; }
@@ -253,7 +253,7 @@ summary:focus-visible {
   display: inline-flex; align-items: center; gap: 5px;
   font-family: 'Cinzel', serif; font-size: 8.5px; font-weight: 500;
   letter-spacing: 0.16em; text-transform: uppercase;
-  padding: 4px 10px 4px 8px; border-radius: 999px;
+  padding-block: 4px; padding-inline: 8px 10px; border-radius: 999px;
   border: 1px solid transparent; white-space: nowrap;
 }
 /* Masked rather than a coloured image, so one file tints itself from the
@@ -397,7 +397,7 @@ summary:focus-visible {
   .hero-content { padding: 40px 24px; }
 
   .strip { grid-template-columns: 1fr; }
-  .strip-item { border-right: none; border-bottom: 1px solid rgba(200,165,90,0.15); padding: 28px 24px; }
+  .strip-item { border-inline-end: none; border-bottom: 1px solid rgba(200,165,90,0.15); padding: 28px 24px; }
 
   .story { padding: 60px 24px; grid-template-columns: 1fr; gap: 0; }
   .story-year { font-size: 90px; }
@@ -571,7 +571,7 @@ summary:focus-visible {
   letter-spacing: 0.12em; color: #1c1409;
 }
 .review-time { font-size: 12px; color: #9a8050; margin-top: 3px; }
-.review-stars { color: #b8914a; font-size: 16px; margin-left: auto; }
+.review-stars { color: #b8914a; font-size: 16px; margin-inline-start: auto; }
 .review-text { font-size: 14px; line-height: 1.85; color: #5a4020; margin: 0; }
 .review-text + .review-text { margin-top: 0.9em; }
 
@@ -651,6 +651,31 @@ summary:focus-visible {
   .nav-logo-img { height: 40px; }
   .nav-links { gap: 10px; }
   .nav-links a { font-size: 9px; letter-spacing: 0.06em; white-space: nowrap; }
+  /* Three languages instead of two: on a 375px phone the switcher and the
+     menu no longer both fit with the pipes between them, and the pipe is
+     decoration — the active language is marked by weight and colour. */
+  .lang-switcher { gap: 8px; }
+  .lang-sep { display: none; }
+  .lang-btn.is-ar { font-size: 11px; }
+}
+
+/* The narrowest phones still in use — an iPhone SE is 375 CSS pixels wide and
+   has to fit a five-item menu and three languages on one line. */
+@media (max-width: 430px) {
+  /* Below this the menu and three languages stop fitting on one line, and a
+     nav that clips is worse than a nav with fewer items. Firmen keeps its own
+     entry point — the announcement strip directly under the hero — and both
+     sections stay in the footer. */
+  .nav-links li[data-requires="business"] { display: none; }
+}
+
+@media (max-width: 400px) {
+  .nav { padding: 0 10px; }
+  .nav-links { gap: 8px; }
+  .nav-links a { font-size: 8.5px; }
+  .lang-switcher { gap: 6px; }
+  .lang-btn { font-size: 9px; }
+  .lang-btn.is-ar { font-size: 10px; }
   /* Five links do not fit a 390px bar. FAQ is reachable from the footer. */
   .nav-hide-sm { display: none; }
 }
@@ -692,7 +717,15 @@ summary:focus-visible {
 .legal p, .legal li {
   font-size: 14.5px; line-height: 1.85; color: #5a4020; margin: 0 0 14px;
 }
-.legal ul { margin: 0 0 14px; padding-left: 20px; }
+.legal ul { margin: 0 0 14px; padding-inline-start: 20px; }
+/* Shown only in English and Arabic: the German text is the binding one, so in
+   German this note has nothing to say and lang.js writes it empty. */
+.legal-note {
+  margin: -18px 0 34px; padding: 10px 14px;
+  background: #f5edd8; border-inline-start: 2px solid #b8914a;
+  font-size: 13px; line-height: 1.7; color: #7a6030;
+}
+.legal-note:empty { display: none; }
 .legal li { margin-bottom: 6px; }
 .legal a { color: #b8914a; }
 .legal a:hover { color: #a07838; }
@@ -785,8 +818,9 @@ summary:focus-visible {
    as a promise for midday. Gold rule rather than a coloured box: this is the
    restaurant stating a fact, not a warning. */
 .business-notice {
-  max-width: 620px; margin: -32px 0 48px; padding: 14px 0 14px 18px;
-  border-left: 2px solid #b8914a;
+  max-width: 620px; margin: -32px 0 48px;
+  padding-block: 14px; padding-inline: 18px 0;
+  border-inline-start: 2px solid #b8914a;
   font-size: 13.5px; line-height: 1.85;
   color: rgba(245,232,204,0.9);
 }
@@ -885,7 +919,7 @@ summary:focus-visible {
 }
 .faq-item summary::-webkit-details-marker { display: none; }
 .faq-item summary::after {
-  content: "+"; margin-left: auto;
+  content: "+"; margin-inline-start: auto;
   font-family: 'DM Sans', sans-serif; font-size: 20px; color: #b8914a;
   line-height: 1; flex-shrink: 0;
   transition: transform 0.25s ease;
@@ -895,7 +929,7 @@ summary:focus-visible {
 .faq-item summary:focus-visible {
   outline: 2px solid #b8914a; outline-offset: 3px;
 }
-.faq-answer { padding: 0 34px 22px 0; }
+.faq-answer { padding: 0; padding-inline-end: 34px; padding-bottom: 22px; }
 .faq-answer p {
   font-size: 14px; line-height: 1.95; color: #5a4020; margin: 0;
 }
@@ -905,7 +939,7 @@ summary:focus-visible {
   .faq { padding: 56px 24px; }
   .faq-title { font-size: 30px; }
   .faq-item summary { font-size: 18px; padding: 17px 0; }
-  .faq-answer { padding-right: 0; }
+  .faq-answer { padding-inline-end: 0; }
 }
 
 /* ===========================================================================
@@ -974,7 +1008,7 @@ summary:focus-visible {
    and a fixed column — free delivery has to be legible at a glance down the
    list, not decoded row by row. */
 .area-fee {
-  min-width: 62px; text-align: right;
+  min-width: 62px; text-align: end;
   font-variant-numeric: tabular-nums;
   font-size: 12.5px; color: #8a6828;
 }
@@ -1019,7 +1053,7 @@ summary:focus-visible {
 .hours-status .hours-dot {
   display: inline-block; vertical-align: middle;
   width: 7px; height: 7px; border-radius: 50%;
-  background: currentColor; margin-right: 8px;
+  background: currentColor; margin-inline-end: 8px;
 }
 .hours-status.is-open { color: #1f8f5f; }
 .hours-status.is-closed { color: #a07838; }
@@ -1057,7 +1091,7 @@ summary:focus-visible {
 /* Price and buy control share one row, so a one-line extra stays one line
    tall. The fixed price column keeps the whole card's prices aligned. */
 .mbuy { display: flex; align-items: center; gap: 16px; }
-.mbuy .mprice { min-width: 66px; text-align: right; padding-top: 0; font-variant-numeric: tabular-nums; }
+.mbuy .mprice { min-width: 66px; text-align: end; padding-top: 0; font-variant-numeric: tabular-nums; }
 .qty { display: flex; align-items: center; }
 .qty-add {
   width: 34px; height: 34px; border-radius: 50%;
@@ -1088,7 +1122,7 @@ body.no-cart .mbuy .qty { display: none; }
    BASKET — floating button, drawer, WhatsApp handover
    =========================================================================== */
 .cart-fab {
-  position: fixed; right: 24px; bottom: 24px; z-index: 60;
+  position: fixed; inset-inline-end: 24px; bottom: 24px; z-index: 60;
   display: flex; align-items: center; gap: 10px;
   padding: 14px 22px; border: none; border-radius: 999px;
   background: #1c1409; color: #f5e8cc; cursor: pointer;
@@ -1158,11 +1192,11 @@ body.no-cart .mbuy .qty { display: none; }
 body.cart-open { overflow: hidden; }
 
 .cart-panel {
-  position: fixed; top: 0; right: 0; bottom: 0; z-index: 70;
+  position: fixed; top: 0; inset-inline-end: 0; bottom: 0; z-index: 70;
   width: min(430px, 100vw);
   display: flex; flex-direction: column;
   background: #fcf9f4;
-  border-left: 1px solid rgba(200,165,90,0.25);
+  border-inline-start: 1px solid rgba(200,165,90,0.25);
   box-shadow: -18px 0 48px rgba(28,20,9,0.18);
 }
 .cart-head {
@@ -1209,7 +1243,7 @@ body.cart-open { overflow: hidden; }
 .cart-line-qty { flex-shrink: 0; }
 .cart-line-price {
   font-family: 'Cormorant Garamond', serif; font-size: 16px; color: #a07838;
-  min-width: 74px; text-align: right; font-variant-numeric: tabular-nums;
+  min-width: 74px; text-align: end; font-variant-numeric: tabular-nums;
 }
 
 .cart-sums { margin-bottom: 22px; }
@@ -1307,7 +1341,7 @@ body.cart-open { overflow: hidden; }
 .cart-zone.is-below-min { color: #a07838; }
 .cart-zone.is-unknown {
   color: #7a6030; padding: 10px 12px;
-  background: #f5edd8; border-left: 2px solid #b8914a;
+  background: #f5edd8; border-inline-start: 2px solid #b8914a;
 }
 
 .cart-check {
@@ -1318,7 +1352,7 @@ body.cart-open { overflow: hidden; }
 .cart-note {
   margin: 0 0 14px; padding: 10px 12px;
   font-size: 12.5px; line-height: 1.7; color: #7a6030;
-  background: #f5edd8; border-left: 2px solid #b8914a;
+  background: #f5edd8; border-inline-start: 2px solid #b8914a;
 }
 
 .cart-send {
@@ -1374,7 +1408,7 @@ body.cart-open { overflow: hidden; }
   }
   .cart-panel {
     top: auto; left: 0; right: 0; bottom: 0;
-    width: 100%; border-left: none;
+    width: 100%; border-inline-start: none;
     /* dvh follows Safari's collapsing toolbar; vh does not, and the bottom of
        the sheet ended up behind it. */
     max-height: 92vh; max-height: 92dvh;
@@ -1399,3 +1433,190 @@ body.cart-open { overflow: hidden; }
   .cart-type { padding: 15px 8px; }
   .cart-close { padding: 4px 10px; font-size: 30px; }
 }
+
+/* ===========================================================================
+   ARABIC / RTL
+   ===========================================================================
+   The layout itself needs no mirroring: every rule above is written in logical
+   properties, so `dir="rtl"` on <html> flips the whole page on its own. What
+   remains here is what direction alone cannot fix — the script, and the two
+   glyphs that carry a direction of their own.
+
+   Typography. Arabic is cursive: letters join, so the letter-spacing and the
+   small-caps treatment that give the Latin labels their character would break
+   words apart, and text-transform does nothing at all. Both are switched off
+   wherever Arabic is rendered. Line height goes up instead, because Arabic
+   ascenders and descenders need more room than Latin at the same size, and
+   font-size follows: at an identical px value Arabic reads smaller.
+
+   Amiri carries the display voice of Cormorant Garamond, Cairo the interface
+   voice of DM Sans. Both are declared before the Latin faces so a mixed line —
+   "KAIRO 1980 في هوكنهايم" — still renders the brand in the brand's own type,
+   because the Latin faces have no Arabic glyphs and the Arabic faces are not
+   asked for Latin ones.
+   ------------------------------------------------------------------------- */
+
+:root[lang="ar"] body,
+:root[lang="ar"] .cart-panel {
+  font-family: 'Cairo', 'DM Sans', sans-serif;
+  line-height: 1.85;
+}
+
+:root[lang="ar"] h1,
+:root[lang="ar"] h2,
+:root[lang="ar"] h3,
+:root[lang="ar"] .hero-title,
+:root[lang="ar"] .story-year,
+:root[lang="ar"] .menu-title,
+:root[lang="ar"] .business-title,
+:root[lang="ar"] .faq-title,
+:root[lang="ar"] .areas-title,
+:root[lang="ar"] .contact-title,
+:root[lang="ar"] .reviews-title,
+:root[lang="ar"] .cart-heading,
+:root[lang="ar"] .mname,
+:root[lang="ar"] .cat-name,
+:root[lang="ar"] .bfact-num {
+  font-family: 'Amiri', 'Cormorant Garamond', serif;
+}
+
+/* Cursive script: no tracking, no uppercasing, anywhere. */
+:root[lang="ar"] * {
+  letter-spacing: normal;
+  text-transform: none;
+}
+
+/* Every Latin small-caps label on this page is set between 8px and 11.5px,
+   which works because uppercase Latin at that size is still legible and the
+   tracking gives it rhythm. Arabic has neither an uppercase nor tracking to
+   spend, and its glyphs carry more detail, so the same label needs real size
+   and weight instead. One rule, listing the label classes rather than a blunt
+   `font-size: inherit` on everything, so the visual hierarchy survives. */
+:root[lang="ar"] .nav-links a,
+:root[lang="ar"] .nav-reserve,
+:root[lang="ar"] .btn-primary,
+:root[lang="ar"] .btn-ghost,
+:root[lang="ar"] .btn-line,
+:root[lang="ar"] .hero-offer-text,
+:root[lang="ar"] .hero-title-place,
+:root[lang="ar"] .strip-title,
+:root[lang="ar"] .story-eyebrow,
+:root[lang="ar"] .mehr-lesen-btn,
+:root[lang="ar"] .menu-eyebrow,
+:root[lang="ar"] .cat-name,
+:root[lang="ar"] .tag,
+:root[lang="ar"] .info-eyebrow,
+:root[lang="ar"] .order-btn,
+:root[lang="ar"] .order-alt-label,
+:root[lang="ar"] .review-link,
+:root[lang="ar"] .reviews-score-max,
+:root[lang="ar"] .review-author,
+:root[lang="ar"] .review-more,
+:root[lang="ar"] .reviews-cta,
+:root[lang="ar"] .legal-back a,
+:root[lang="ar"] .map-consent-btn,
+:root[lang="ar"] .announce-tag,
+:root[lang="ar"] .bcard-title,
+:root[lang="ar"] .area-tier-title,
+:root[lang="ar"] .area-fee.is-free,
+:root[lang="ar"] .hrow .day em,
+:root[lang="ar"] .hslot-label,
+:root[lang="ar"] .hslot-note,
+:root[lang="ar"] .cart-type,
+:root[lang="ar"] .cart-label,
+:root[lang="ar"] .cart-send,
+:root[lang="ar"] .cart-paypal,
+:root[lang="ar"] .cart-reset,
+:root[lang="ar"] .whatsapp-btn,
+:root[lang="ar"] .footer-links a,
+:root[lang="ar"] .footer-instagram,
+:root[lang="ar"] .bfact-unit {
+  font-family: 'Cairo', 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+/* The two that carry a heading's weight rather than a label's. */
+:root[lang="ar"] .bcard-title { font-size: 16px; }
+:root[lang="ar"] .hero-title-place { font-size: 15px; opacity: 0.85; }
+/* The language switch shows each language in its own script, so the Arabic
+   button is set in Arabic type whatever the current language is. */
+.lang-btn.is-ar { font-family: 'Cairo', 'DM Sans', sans-serif; letter-spacing: 0; font-size: 12px; }
+
+/* A price is an LTR object inside an RTL sentence: "11,00 €" must keep its
+   euro sign after the number, and 18:00 – 23:00 must not reverse into
+   23:00 – 18:00. Isolating them is not enough — the run needs its own
+   direction. text-align follows, so each figure still hugs the outer edge of
+   its column exactly as it does in the German layout, only mirrored. */
+:root[dir="rtl"] .mprice,
+:root[dir="rtl"] .area-plz,
+:root[dir="rtl"] .area-fee,
+:root[dir="rtl"] .hslot-time,
+:root[dir="rtl"] .cart-line-price,
+:root[dir="rtl"] .cart-sum span:last-child,
+:root[dir="rtl"] .cart-fab-total,
+:root[dir="rtl"] .reviews-score-value,
+:root[dir="rtl"] .hours-status-sub,
+:root[dir="rtl"] .info-phone,
+:root[dir="rtl"] .bfact-num {
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: start;
+}
+
+/* The way out when WhatsApp is not on this computer. Collapsed by default:
+   most guests never need it, and the ones who do need it badly. */
+.cart-fallback { margin-top: 22px; border-top: 1px solid rgba(200,165,90,0.25); padding-top: 14px; }
+.cart-fallback summary {
+  cursor: pointer; list-style: none; font-size: 13px; color: #7a6030;
+  padding: 6px 0; text-decoration: underline; text-underline-offset: 3px;
+}
+.cart-fallback summary::-webkit-details-marker { display: none; }
+.cart-fallback-body { padding-top: 12px; }
+.cart-qr { display: flex; justify-content: center; }
+.cart-qr svg { border: 1px solid rgba(200,165,90,0.3); border-radius: 2px; }
+.cart-qr-hint {
+  margin: 12px 0 16px; font-size: 12.5px; line-height: 1.7;
+  color: #7a6030; text-align: center;
+}
+.cart-fallback-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.cart-alt {
+  display: block; padding: 11px 8px; text-align: center; text-decoration: none;
+  background: none; border: 1px solid rgba(184,145,74,0.45); cursor: pointer;
+  font-family: 'Cinzel', serif; font-size: 9.5px;
+  letter-spacing: 0.14em; text-transform: uppercase; color: #a07838;
+  transition: background 0.2s, color 0.2s;
+}
+.cart-alt:hover { background: #1c1409; border-color: #1c1409; color: #f5e8cc; }
+.cart-alt.is-done { color: #1f8f5f; border-color: #1f8f5f; }
+:root[lang="ar"] .cart-alt,
+:root[lang="ar"] .cart-fallback summary {
+  font-family: 'Cairo', 'DM Sans', sans-serif; font-weight: 600; font-size: 13px;
+}
+
+/* A telephone number, an e-mail address or a URL is an LTR object quoted
+   inside an RTL sentence. Without isolation the bidi algorithm reorders
+   "+49 176 79906621" into "79906621 176 49+", which is not a phone number. */
+:root[dir="rtl"] a[href^="tel:"],
+:root[dir="rtl"] a[href^="mailto:"],
+:root[dir="rtl"] .legal a[href^="http"],
+:root[dir="rtl"] .info-val,
+:root[dir="rtl"] .footer-links a[href^="http"],
+:root[dir="rtl"] .footer-links a[href^="tel:"],
+:root[dir="rtl"] .footer-links a[href^="mailto:"] {
+  direction: ltr;
+  unicode-bidi: isolate;
+  text-align: start;
+}
+
+/* Two glyphs mean "forward", and forward is leftward in Arabic. Everything
+   else on the page is direction-neutral. */
+:root[dir="rtl"] .announce-arrow,
+:root[dir="rtl"] .reviews-nav {
+  transform: scaleX(-1);
+}
+
+/* A drop shadow has a direction and no logical form, so the one the drawer
+   casts onto the page is mirrored by hand. */
+:root[dir="rtl"] .cart-panel { box-shadow: 18px 0 48px rgba(28,20,9,0.18); }

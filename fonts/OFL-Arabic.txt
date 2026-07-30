@@ -1,0 +1,10 @@
+Amiri (c) 2010-2023, Khaled Hosny <khaledhosny@eglug.org>
+Cairo  (c) 2016-2023, The Cairo Project Authors
+   https://github.com/googlefonts/cairo
+
+Both families are licensed under the SIL Open Font License, Version 1.1,
+which permits self-hosting and redistribution with the software.
+Full licence text: https://openfontlicense.org
+
+Only the Arabic subset of each family is bundled here; the Latin glyphs are
+served by the site's existing Cinzel / Cormorant Garamond / DM Sans faces.
