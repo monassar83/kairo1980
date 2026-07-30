@@ -80,7 +80,7 @@
   "@type": "Restaurant",
   "name": "KAIRO 1980",
   "description": "Authentische moderne ägyptische Küche in Hockenheim. Frisch zubereitet, handgemacht – inspiriert von den Aromen Kairos.",
-  "url": "https://kairo1980.de",
+  "url": "https://kairo1980.de/",
   "logo": "https://kairo1980.de/images/logo-mark.png",
   "image": [
     "https://kairo1980.de/images/hero.jpg",
@@ -118,7 +118,10 @@
   "areaServed": ["Hockenheim","Reilingen","Neulußheim","Altlußheim","Ketsch","Edingen-Neckarhausen","Ladenburg","Walldorf","St. Leon-Rot","Sandhausen","Schwetzingen","Plankstadt","Brühl","Waghäusel","Oberhausen-Rheinhausen","Eppelheim","Wiesloch","Philippsburg","Rauenberg","Heidelberg","Schifferstadt","Mannheim"],
   "keywords": "Koshary, Hummus, Hawawshy, Baba Ghanough, ägyptisches Restaurant, Lieferservice Hockenheim",
   "priceRange": "€€",
-  "hasMap": "https://maps.google.com/?q=Rostocker+Stra%C3%9Fe+20a,+68766+Hockenheim",
+  "hasMap": [
+    "https://maps.google.com/?q=Rostocker+Stra%C3%9Fe+20a,+68766+Hockenheim",
+    "https://maps.apple.com/?q=KAIRO%201980&ll=49.3298953,8.5472743&address=Rostocker%20Stra%C3%9Fe%2020a,%2068766%20Hockenheim"
+  ],
   "hasMenu": "https://kairo1980.de/#speisekarte",
   "sameAs": [
     "https://www.lieferando.de/speisekarte/kairo-1980",
@@ -130,7 +133,29 @@
   "paymentAccepted": "Bargeld, EC-/Girocard, Kreditkarte, Rechnung (Firmenkunden)",
   "acceptsReservations": "False",
   "hasDeliveryMethod": ["http://purl.org/goodrelations/v1#DeliveryModeOwnFleet", "http://purl.org/goodrelations/v1#DeliveryModePickUp"],
+  "potentialAction": {
+    "@type": "OrderAction",
+    "target": {
+      "@type": "EntryPoint",
+      "urlTemplate": "https://kairo1980.de/#speisekarte",
+      "actionPlatform": [
+        "http://schema.org/DesktopWebPlatform",
+        "http://schema.org/IOSPlatform",
+        "http://schema.org/AndroidPlatform"
+      ]
+    },
+    "deliveryMethod": [
+      "http://purl.org/goodrelations/v1#DeliveryModeOwnFleet",
+      "http://purl.org/goodrelations/v1#DeliveryModePickUp"
+    ],
+    "priceSpecification": {
+      "@type": "DeliveryChargeSpecification",
+      "appliesToDeliveryMethod": "http://purl.org/goodrelations/v1#DeliveryModeOwnFleet",
+      "priceCurrency": "EUR"
+    }
+  },
   "orderAction": [
+    {"@type": "OrderAction", "target": "https://kairo1980.de/#speisekarte"},
     {"@type": "OrderAction", "target": "https://www.lieferando.de/speisekarte/kairo-1980"},
     {"@type": "OrderAction", "target": "https://www.ubereats.com/de/store/kairo-1980/3a9t8nwzXfm3iAkRVtCemA"}
   ],
@@ -621,6 +646,16 @@
       <div>
         <span class="info-eyebrow t" data-de="Adresse" data-en="Address" data-ar="العنوان">Adresse</span>
         <div class="info-val"><bdi>Rostocker Straße 20a</bdi><br><bdi>68766 Hockenheim</bdi></div>
+        <!-- Directions are the most-used action on a restaurant listing, and
+             half of Germany carries an iPhone: handing every visitor a Google
+             Maps URL sends iOS users out of the app their place card lives in.
+             Both are plain links — nothing loads until one is tapped. -->
+        <span class="info-eyebrow t" data-de="Anfahrt" data-en="Directions" data-ar="الوصول لينا">Anfahrt</span>
+        <div class="info-val map-links">
+          <a href="https://maps.apple.com/?q=KAIRO%201980&ll=49.3298953,8.5472743&address=Rostocker%20Stra%C3%9Fe%2020a,%2068766%20Hockenheim" target="_blank" rel="noopener" class="t" data-de="Apple Karten" data-en="Apple Maps" data-ar="خرائط Apple">Apple Karten</a>
+          <span class="map-links-dot" aria-hidden="true">·</span>
+          <a href="https://maps.google.com/?q=Rostocker+Stra%C3%9Fe+20a,+68766+Hockenheim" target="_blank" rel="noopener">Google Maps</a>
+        </div>
         <span class="info-eyebrow">E-Mail</span>
         <div class="info-val"><a href="mailto:info@kairo1980.de">info@kairo1980.de</a></div>
 

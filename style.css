@@ -278,6 +278,8 @@ summary:focus-visible {
 .info-val { font-size: 14px; line-height: 1.9; color: #4a3010; margin-bottom: 28px; }
 .info-val a { color: #8a6828; text-decoration: none; }
 /* Replaced inline style attributes so the CSP can forbid inline styles. */
+.map-links { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.map-links-dot { color: #b8914a; }
 .info-phone { display: block; margin-bottom: 8px; }
 .contact-order { margin-top: 36px; }
 .hrow { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid rgba(200,165,90,0.2); font-size: 14px; color: #4a3010; }

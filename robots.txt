@@ -1,3 +1,13 @@
 User-agent: *
 Allow: /
+
+# Applebot feeds Siri, Spotlight and the Apple Maps place card. It is covered
+# by the wildcard above; named explicitly so it survives a future edit.
+User-agent: Applebot
+Allow: /
+
+# Bingbot also feeds Bing Places and, through it, several in-car systems.
+User-agent: Bingbot
+Allow: /
+
 Sitemap: https://kairo1980.de/sitemap.xml
