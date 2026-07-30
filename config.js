@@ -30,11 +30,13 @@ window.KAIRO_CONFIG = {
     // Set to 0 to remove it everywhere.
     directDiscountPercent: 10,
 
-    // Better rate for company orders that are collected in person: no driver,
-    // no vehicle, so the saving is shared. Applies only when the
-    // "Firmenbestellung" box is ticked AND pickup is selected; every other
-    // combination gets directDiscountPercent above.
-    businessPickupDiscountPercent: 15,
+    // Optional better rate for company orders that are collected in person.
+    // Currently OFF: one rate, 10 %, for every order placed through this site —
+    // delivery or pickup, company or private. Nothing on the page promises a
+    // second percentage, so this stays null unless the copy is revisited.
+    //   null -> everyone gets directDiscountPercent above (the current rule)
+    //   15   -> "Firmenbestellung" ticked AND pickup selected earns 15 %
+    businessPickupDiscountPercent: null,
 
     // How long a basket survives after the last change, in minutes.
     // A basket is a short-lived intention, not a saved document: it must
@@ -102,7 +104,34 @@ window.KAIRO_CONFIG = {
     // Your PayPal.Me handle WITHOUT the domain, e.g. 'kairo1980' for
     // https://paypal.me/kairo1980. Leave empty ('') and every PayPal
     // element stays hidden — nothing breaks, the option simply disappears.
+    //
+    // Create the handle once while logged into the PayPal BUSINESS account at
+    // https://www.paypal.com/paypalme/grab — then paste the part after the
+    // last slash here. That handle is public by design; it is a link, not a
+    // credential. No API key, secret or password belongs in this file: the
+    // site never touches money itself, it only opens paypal.com with the
+    // amount prefilled, so no card or account data ever reaches kairo1980.de.
+    //
+    // The amount in that link is a suggestion the payer can edit, and PayPal
+    // does not tell this site whether it was paid. Always check the amount
+    // received against the WhatsApp order before the food goes out.
     paypalMe: '',
+
+    // Offer paying online with PayPal while ordering. Both this AND a handle
+    // above are needed before a single PayPal word appears on the site, so the
+    // option can be switched off in a second without losing the handle.
+    prepayOnline: true,
+
+    // What can be paid in person, per order type. The FAQ, the basket, the
+    // confirmation screen and the payment methods Google indexes are all
+    // written from these two lists — nothing is typed twice.
+    //   'cash' -> Bargeld       'giro' -> EC-/Girocard       'card' -> Kreditkarte
+    // Delivery is cash only because the card terminal stands in the shop; add
+    // 'giro' / 'card' to the delivery line the day a driver carries one.
+    onSite: {
+      pickup: ['cash', 'giro', 'card'],
+      delivery: ['cash']
+    },
 
     // Offer companies payment by invoice.
     invoiceForBusiness: true
@@ -111,11 +140,35 @@ window.KAIRO_CONFIG = {
   /* --- Opening hours ----------------------------------------------------- */
   hours: {
 
-    // Lunch service is still being trialled, so it ships switched OFF.
-    // Set `enabled: true` to publish it. Individual days can be left without
-    // a lunch window by setting their `lunch` to null.
+    /* --- The lunch service (Mittagsservice) -------------------------------
+       Three lines decide everything the site says about lunch. Change one,
+       save, push — no build step, nothing to restart, and config.js is served
+       with `must-revalidate`, so the change is live for every visitor at once.
+
+       enabled    false -> lunch does not exist anywhere on the site.
+                  true  -> lunch is published (see startsOn).
+
+       startsOn   'YYYY-MM-DD' — the first day the service actually runs.
+                  BEFORE that date the site advertises it ("New from
+                  Wednesday, 5 August: …") but nothing can be ordered into a
+                  lunch slot: the opening-hours table, the "open now" badge,
+                  the hours Google indexes and the basket all still end with
+                  the evening service. ON that date it becomes an ordinary
+                  service window by itself — nobody has to touch anything.
+                  Set to '' when it is running and the notice is no longer
+                  needed.
+
+       delivery   false -> lunch is COLLECTION ONLY. There is no driver at
+                          midday, so the basket does not offer delivery for a
+                          lunch slot, and every place that mentions lunch says
+                          so. Evening delivery is unaffected.
+                  true  -> lunch delivers exactly like the evening. This is
+                          the one word to change once a midday driver exists.
+    --------------------------------------------------------------------- */
     lunch: {
-      enabled: false
+      enabled: true,
+      startsOn: '2026-08-05',
+      delivery: false
     },
 
     // One entry per weekday. Times are "HH:MM" in 24h format.
@@ -128,11 +181,11 @@ window.KAIRO_CONFIG = {
     days: {
       mon: { closed: true,  lunch: null,               evening: null },
       tue: { closed: true,  lunch: null,               evening: null },
-      wed: { closed: false, lunch: ['11:30', '14:30'], evening: ['18:00', '23:00'] },
-      thu: { closed: false, lunch: ['11:30', '14:30'], evening: ['18:00', '23:00'] },
-      fri: { closed: false, lunch: ['11:30', '14:30'], evening: ['18:00', '23:00'] },
-      sat: { closed: false, lunch: null,               evening: ['18:00', '23:00'] },
-      sun: { closed: false, lunch: null,               evening: ['18:00', '23:00'] }
+      wed: { closed: false, lunch: ['11:00', '14:30'], evening: ['18:00', '23:00'] },
+      thu: { closed: false, lunch: ['11:00', '14:30'], evening: ['18:00', '23:00'] },
+      fri: { closed: false, lunch: ['11:00', '14:30'], evening: ['18:00', '23:00'] },
+      sat: { closed: false, lunch: ['11:00', '14:30'], evening: ['18:00', '23:00'] },
+      sun: { closed: false, lunch: ['11:00', '14:30'], evening: ['18:00', '23:00'] }
     }
   }
 };

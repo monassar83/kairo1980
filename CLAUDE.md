@@ -37,7 +37,8 @@ into a second file, stop — that is the bug this architecture exists to prevent
 
 | Fact | Single source |
 | --- | --- |
-| Hours, lunch flag | `config.js` → `hours` |
+| Hours, lunch start date, lunch delivery | `config.js` → `hours` |
+| Payment methods, PayPal | `config.js` → `payment` |
 | Postcodes, fees, minimums | `data/delivery_zones.xlsx` → `zones.js` |
 | Discounts, thresholds, lead time, basket lifetime | `config.js` → `order`, `business` |
 | Dishes, prices, diet tags | `index.html` `.mitem[data-item][data-price]` |
@@ -69,6 +70,39 @@ are only the no-JavaScript fallback — update both or neither.
 - **The basket hands over to WhatsApp.** No backend, no database; nothing
   leaves the browser until the guest presses send. That is also what keeps the
   site GDPR-clean.
+- **A service that has not started yet is advertised, not opened.**
+  `hours.lunch.startsOn` publishes the lunch service as marketing copy while
+  keeping it out of the opening-hours table, the "open now" badge, the indexed
+  `openingHoursSpecification` and every orderable slot. On that date it becomes
+  an ordinary window by itself — launch day needs no edit and no deploy. The
+  announced day is the first day at or after `startsOn` that actually has a
+  lunch window, so it can never name one of the closed days.
+- **Lunch delivery is one word, and one word only.**
+  `hours.lunch.delivery: false` makes midday collection-only. It disables the
+  delivery button for a lunch slot, corrects `form.type`, and rewrites the
+  business section, the hours rows, the delivery area, the FAQ and the corporate
+  answer from the same sentence (`lunchNotice()`). Never write the restriction
+  into copy by hand — that is how the site ends up promising delivery in one
+  paragraph and refusing it in the next. The public wording states the fact
+  only; the reason is nobody's business but ours.
+- **The delivery button is dimmed, never removed.** It is the one place
+  validation withholds anything, and it withholds an option, not an order: a
+  missing button reads as a broken page, so it stays visible with the note that
+  names pickup and the evening alternative.
+- **Payment is chosen before the order is sent.** The method travels in the
+  WhatsApp message, because whoever answers the chat has to know whether to
+  watch for a PayPal payment, take the terminal to the counter or send the
+  driver for cash. What is offered comes from `payment.onSite` per order type —
+  the terminal stands in the shop, so a delivery is cash only until a driver
+  carries one.
+- **PayPal is a link, not an integration.** `paypalMe` + `prepayOnline` produce
+  a paypal.com URL carrying the exact amount. No SDK, no cookie, no
+  third-party request, so the strict CSP and the consent-free privacy policy
+  both survive. What it cannot do is confirm payment: the amount in a
+  PayPal.Me link is editable by the payer and nothing reports back to the page,
+  so the received total must be checked in PayPal against the order. Anything
+  better than that needs a Worker with `main` and PayPal REST credentials —
+  which is a backend, and therefore a decision, not a refactor.
 - **The basket expires.** `order.cartLifetimeMinutes` (120) is a sliding
   window: long enough to survive a reload, short enough that a guest returning
   tomorrow does not meet a stale order at last week's prices.

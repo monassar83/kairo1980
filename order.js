@@ -37,6 +37,16 @@
     de: {
       days: { mon: 'Montag', tue: 'Dienstag', wed: 'Mittwoch', thu: 'Donnerstag', fri: 'Freitag', sat: 'Samstag', sun: 'Sonntag' },
       lunch: 'Mittag', evening: 'Abend', closed: 'Geschlossen',
+      pickupOnly: 'nur Abholung',
+      lunchSoon: 'Neu ab {date}: Mittagsservice {windows}.',
+      lunchNow: 'Mittagsservice: {windows}.',
+      lunchPickupOnly: 'Mittags ausschließlich zur Abholung — Lieferungen ab {evening} Uhr.',
+      lunchWithDelivery: 'Mittags liefern wir und Sie können abholen.',
+      lunchClause: 'Bitte beachten: Mittags ist nur Abholung möglich, Lieferungen ab {evening} Uhr.',
+      lunchByArrangement: 'Firmenbestellungen zu anderen Zeiten nach Absprache.',
+      businessByArrangement: 'Liefertermine für Firmenbestellungen nach Absprache — sagen Sie uns einfach, wann Sie es brauchen.',
+      cartLunchPickup: 'Mittags ({windows}) bieten wir ausschließlich Abholung an. Für eine Lieferung wählen Sie unter „Wunschtermin" bitte eine Zeit ab {evening} Uhr.',
+      warnLunchSoon: 'Der Mittagsservice startet erst am {date}. Bis dahin sind wir abends ab {evening} Uhr für Sie da — senden Sie die Bestellung gern trotzdem, wir antworten im Chat.',
       openNow: 'Jetzt geöffnet', closedNow: 'Zurzeit geschlossen',
       until: 'bis', opensAgain: 'öffnet wieder',
       today: 'Heute',
@@ -74,7 +84,22 @@
       required: 'Bitte ausfüllen.',
       sentTitle: 'WhatsApp geöffnet',
       sentText: 'Bitte senden Sie die vorbereitete Nachricht ab — wir bestätigen Ihre Bestellung direkt im Chat.',
-      payNow: 'Jetzt per PayPal bezahlen', payHint: 'Optional — Sie können auch bei Lieferung bezahlen.',
+      payNow: 'Jetzt per PayPal bezahlen', payHint: 'Optional — Sie können auch vor Ort bezahlen.',
+      or: 'oder',
+      pay: { cash: 'Bargeld', giro: 'EC-/Girocard', card: 'Kreditkarte' },
+      payOnSite: 'Zahlung bei {type}: {methods}.',
+      payOnline: 'Oder direkt online per PayPal — den Zahlungslink erhalten Sie sofort nach dem Absenden der Bestellung.',
+      payInvoice: 'Rechnung (Firmenkunden)',
+      // Lower case in English, where "Payment on Pickup" reads like a title.
+      // German keeps the capitals: they are nouns.
+      atPickup: 'Abholung', atDelivery: 'Lieferung',
+      payMethod: 'Zahlungsart',
+      payOptionOnline: 'Online per PayPal',
+      payOptionOnSite: 'Bei Erhalt bezahlen',
+      payOnlineHint: 'Direkt nach dem Absenden öffnet sich PayPal mit dem exakten Betrag von {total}. Verbindlich wird Ihre Bestellung, sobald wir im Chat bestätigen — Sie können auch erst danach bezahlen.',
+      mPayment: 'Zahlung',
+      mPayOnline: 'Online per PayPal (bitte Zahlungseingang prüfen)',
+      mPayOnSite: 'Vor Ort bei {type} ({methods})',
       newOrder: 'Neue Bestellung', close: 'Schließen',
       msgTitle: 'Neue Bestellung über kairo1980.de',
       msgBusiness: 'FIRMENBESTELLUNG',
@@ -91,6 +116,16 @@
     en: {
       days: { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' },
       lunch: 'Lunch', evening: 'Evening', closed: 'Closed',
+      pickupOnly: 'pickup only',
+      lunchSoon: 'New from {date}: lunch service {windows}.',
+      lunchNow: 'Lunch service: {windows}.',
+      lunchPickupOnly: 'Lunch is for pickup only — deliveries from {evening}.',
+      lunchWithDelivery: 'At lunchtime we deliver and you can collect.',
+      lunchClause: 'Please note: lunchtime is pickup only, deliveries from {evening}.',
+      lunchByArrangement: 'Corporate orders outside these times by arrangement.',
+      businessByArrangement: 'Delivery times for corporate orders by arrangement — just tell us when you need it.',
+      cartLunchPickup: 'At lunchtime ({windows}) we offer pickup only. For a delivery, pick a time from {evening} under "Preferred time".',
+      warnLunchSoon: 'The lunch service only starts on {date}. Until then we are open in the evening from {evening} — do send the order anyway and we will reply in the chat.',
       openNow: 'Open now', closedNow: 'Currently closed',
       until: 'until', opensAgain: 'opens again',
       today: 'Today',
@@ -128,7 +163,20 @@
       required: 'Please fill this in.',
       sentTitle: 'WhatsApp opened',
       sentText: 'Please send the prepared message — we confirm your order right in the chat.',
-      payNow: 'Pay now with PayPal', payHint: 'Optional — you can also pay on delivery.',
+      payNow: 'Pay now with PayPal', payHint: 'Optional — you can also pay in person.',
+      or: 'or',
+      pay: { cash: 'cash', giro: 'girocard', card: 'credit card' },
+      payOnSite: 'Payment on {type}: {methods}.',
+      payOnline: 'Or pay online with PayPal — you receive the payment link the moment you send the order.',
+      payInvoice: 'Invoice (business customers)',
+      atPickup: 'pickup', atDelivery: 'delivery',
+      payMethod: 'Payment',
+      payOptionOnline: 'Online with PayPal',
+      payOptionOnSite: 'Pay on arrival',
+      payOnlineHint: 'Right after you send, PayPal opens with the exact amount of {total}. Your order becomes binding when we confirm it in the chat — you can also pay after that.',
+      mPayment: 'Payment',
+      mPayOnline: 'Online via PayPal (please check it arrived)',
+      mPayOnSite: 'In person on {type} ({methods})',
       newOrder: 'New order', close: 'Close',
       msgTitle: 'New order via kairo1980.de',
       msgBusiness: 'CORPORATE ORDER',
@@ -192,18 +240,73 @@
     }
   }
 
+  /* --- the lunch service --------------------------------------------------
+     Three questions, always in this order, because each only matters if the
+     one before it is true:
+
+       lunchPublished()  is lunch mentioned on the site at all?
+       lunchRunning()    has its start date arrived — can it be ordered yet?
+       lunchDelivers()   does it deliver, or is it collection only?
+
+     A service that is advertised but has not started is deliberately NOT an
+     opening hour: it is absent from the hours table, from the "open now" badge
+     and from the hours Google indexes, while the marketing copy names the day
+     it begins. Nobody has to flip anything on launch day — the date does it.
+  ------------------------------------------------------------------------- */
+
+  function lunchCfg() {
+    return (CFG.hours && CFG.hours.lunch) || {};
+  }
+  function lunchPublished() {
+    return !!lunchCfg().enabled;
+  }
+  function lunchStartsOn() {
+    var iso = String(lunchCfg().startsOn || '').trim();
+    return /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso : '';
+  }
+  // Berlin's date, with the device's own as a fallback: a start date is only
+  // ever compared against a calendar day, never against a clock time.
+  function todayISO() {
+    var now = berlinNow();
+    if (now) return now.iso;
+    var d = new Date();
+    var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+  }
+  function lunchRunning() {
+    if (!lunchPublished()) return false;
+    var starts = lunchStartsOn();
+    return !starts || todayISO() >= starts;   // ISO dates compare as strings
+  }
+  function lunchDelivers() {
+    return lunchCfg().delivery === true;
+  }
+
   // Every service window of one day, lunch first, honouring the master switch.
   function slotsFor(dayKey) {
     var day = (CFG.hours.days || {})[dayKey];
     if (!day || day.closed) return [];
     var out = [];
-    if (CFG.hours.lunch && CFG.hours.lunch.enabled && day.lunch) {
-      out.push({ kind: 'lunch', from: day.lunch[0], to: day.lunch[1] });
+    if (lunchRunning() && day.lunch) {
+      out.push({ kind: 'lunch', from: day.lunch[0], to: day.lunch[1],
+                 pickupOnly: !lunchDelivers() });
     }
     if (day.evening) {
       out.push({ kind: 'evening', from: day.evening[0], to: day.evening[1] });
     }
     return out;
+  }
+
+  // The evening opening every open day shares — the time copy points a guest
+  // to when they wanted a lunch delivery. The earliest one wins if they differ.
+  function eveningStart() {
+    var best = null;
+    DAY_KEYS.forEach(function (key) {
+      var day = (CFG.hours.days || {})[key];
+      if (!day || day.closed || !day.evening) return;
+      if (best === null || hhmm(day.evening[0]) < hhmm(best)) best = day.evening[0];
+    });
+    return best;
   }
 
   /* --- scheduling ---------------------------------------------------------
@@ -227,12 +330,30 @@
     return Date.UTC(+p[0], +p[1] - 1, +p[2]) / 60000 + minutes;
   }
 
-  function openAt(iso, minutes) {
+  // The service window covering a moment, or null. Which window it is decides
+  // more than "are we open": a lunch window may be collection only.
+  function slotAt(iso, minutes) {
     var key = dayKeyFromISO(iso);
-    if (!key) return false;
-    return slotsFor(key).some(function (s) {
-      return minutes >= hhmm(s.from) && minutes <= hhmm(s.to);
+    if (!key) return null;
+    var hit = null;
+    slotsFor(key).forEach(function (s) {
+      if (minutes >= hhmm(s.from) && minutes <= hhmm(s.to)) hit = s;
     });
+    return hit;
+  }
+
+  function openAt(iso, minutes) {
+    return !!slotAt(iso, minutes);
+  }
+
+  // A lunch time chosen before the service starts. Not the same as "we are
+  // closed": the service exists, it just has not begun — so say when it does.
+  function pendingLunchAt(iso, minutes) {
+    if (!lunchPublished() || lunchRunning()) return false;
+    var key = dayKeyFromISO(iso);
+    var day = key && (CFG.hours.days || {})[key];
+    if (!day || day.closed || !day.lunch) return false;
+    return minutes >= hhmm(day.lunch[0]) && minutes <= hhmm(day.lunch[1]);
   }
 
   function isOpenNow() {
@@ -250,7 +371,7 @@
       var slots = slotsFor(key);
       for (var j = 0; j < slots.length; j++) {
         if (i > 0 || hhmm(slots[j].from) > now.minutes) {
-          return { day: key, from: slots[j].from, sameDay: i === 0,
+          return { day: key, from: slots[j].from, sameDay: i === 0, slot: slots[j],
                    label: (i === 0 ? '' : L.days[key] + ' ') + slots[j].from };
         }
       }
@@ -264,7 +385,7 @@
 
     var L = t();
     var now = berlinNow();
-    var labelled = !!(CFG.hours.lunch && CFG.hours.lunch.enabled);
+    var labelled = lunchRunning();
     var html = '';
 
     DAY_KEYS.forEach(function (key) {
@@ -279,6 +400,9 @@
           return '<span class="hslot">' +
             (labelled ? '<span class="hslot-label">' + L[s.kind] + '</span>' : '') +
             '<span class="hslot-time">' + s.from + ' – ' + s.to + '</span>' +
+            // A window we are open for but do not drive out of has to say so
+            // where the times are read, not only in the notice below them.
+            (s.pickupOnly ? '<span class="hslot-note">' + L.pickupOnly + '</span>' : '') +
             '</span>';
         }).join('') + '</span>';
       }
@@ -372,6 +496,11 @@
       // The menu, read from the page so it cannot drift from what guests see.
       var menu = buildMenuSchema();
       if (menu) data.hasMenu = menu;
+
+      // Payment methods from config rather than from this file's own literal:
+      // PayPal must not appear here before it appears in the basket.
+      var accepted = paymentAccepted();
+      if (accepted) data.paymentAccepted = accepted;
 
       // Only ever the real Google figures, and only while they are on screen.
       if (schemaRating && schemaRating.count > 0) {
@@ -756,7 +885,45 @@
   // `when` starts as 'asap', but the panel switches it to 'scheduled' the
   // first time it opens while the kitchen is closed — a 2 a.m. "as soon as
   // possible" is never what the guest means.
-  var form = { type: 'delivery', business: false, when: 'asap' };
+  // `pay` starts at 'onsite': cash is the one method that is always possible,
+  // so a guest who ignores the choice cannot end up with an order that expects
+  // a payment they never made.
+  var form = { type: 'delivery', business: false, when: 'asap', pay: 'onsite' };
+
+  /* --- delivery or pickup -------------------------------------------------
+     The window an order will actually be served in decides whether delivery
+     is on offer at all. Midday is collection only while there is no driver
+     (config.js -> hours.lunch.delivery), so the basket has to know which
+     window the guest has aimed at, not merely that we are open then.
+  ----------------------------------------------------------------------- */
+
+  // The window this order lands in, or null when it cannot be known — a time
+  // outside every window is settled in the chat, and nothing is assumed here.
+  function targetSlot() {
+    if (form.when === 'scheduled') {
+      if (!draft.fDate || !draft.fTime) return null;
+      return slotAt(draft.fDate, hhmm(draft.fTime));
+    }
+    // "As soon as possible" means now if we are open, and the next opening if
+    // we are not — the same promise warnClosedAsap makes to the guest.
+    var now = berlinNow();
+    if (!now) return null;
+    var open = slotAt(now.iso, now.minutes);
+    if (open) return open;
+    var next = nextOpening();
+    return next ? next.slot : null;
+  }
+
+  // The single exception to "validation never blocks": it withholds an OPTION,
+  // never the order. Pickup at midday and delivery in the evening are both one
+  // tap away, and the note under the buttons says which — nobody is left
+  // guessing why the button is dim, and nobody can order a driver we cannot
+  // send. Promising a lunchtime delivery we then have to cancel by phone costs
+  // far more than a clearly labelled disabled button.
+  function deliveryBlocked() {
+    var slot = targetSlot();
+    return !!(slot && slot.kind === 'lunch' && slot.pickupOnly);
+  }
 
   function fill(template, values) {
     return String(template).replace(/\{(\w+)\}/g, function (whole, key) {
@@ -816,7 +983,14 @@
       return out;
     }
     if (!openAt(iso, minutes)) {
-      out.push({ kind: 'hours', text: L.warnOutsideHours });
+      // A lunch time picked before the service starts is not "we are closed";
+      // the guest has seen it advertised, so name the day it begins instead.
+      out.push({ kind: 'hours', text: pendingLunchAt(iso, minutes)
+        ? fill(L.warnLunchSoon, {
+            date: firstLunchDate() ? longDate(firstLunchDate()) : lunchStartsOn(),
+            evening: eveningStart() || '18:00'
+          })
+        : L.warnOutsideHours });
     }
     var lead = (CFG.business && CFG.business.leadTimeHours) || 0;
     if (form.business && lead && target - current < lead * 60) {
@@ -914,6 +1088,106 @@
     paintZone();
   }
 
+  // A form still saying "delivery" while delivery is impossible would put the
+  // wrong word in the WhatsApp message and a delivery fee in the total, so the
+  // choice is corrected in one place, before anything is calculated from it.
+  function syncType() {
+    if (form.type === 'delivery' && deliveryBlocked()) form.type = 'pickup';
+  }
+
+  function typesHtml() {
+    var L = t();
+    syncType();
+    var blocked = deliveryBlocked();
+
+    return '<div class="cart-types" role="group" aria-label="' + L.type + '">' +
+      '<button type="button" class="cart-type' +
+        (form.type === 'delivery' ? ' active' : '') + (blocked ? ' is-off' : '') + '"' +
+        (blocked ? ' disabled aria-describedby="cartTypeNote"' : '') +
+        ' data-type="delivery">' + L.delivery + '</button>' +
+      '<button type="button" class="cart-type' + (form.type === 'pickup' ? ' active' : '') +
+        '" data-type="pickup">' + L.pickup + '</button>' +
+      '</div>' +
+      '<p class="cart-note is-pickup-only" id="cartTypeNote"' + (blocked ? '' : ' hidden') + '>' +
+        (blocked ? escapeHtml(fill(L.cartLunchPickup, {
+          windows: lunchWindows(), evening: eveningStart() || '18:00'
+        })) : '') +
+      '</p>' +
+      payHtml();
+  }
+
+  /* --- paying -------------------------------------------------------------
+     The choice is made in the basket, not after it: "can I pay by card?"
+     decides whether a guest orders at all, and the answer has to travel with
+     the order so the kitchen knows whether to expect a PayPal payment, get the
+     terminal ready, or send the driver out for cash.
+
+     PayPal is a link to paypal.com carrying the exact amount — no card data,
+     no third-party script and no cookie ever touches this site, which is what
+     keeps the strict CSP and the consent-free privacy policy intact. What it
+     cannot do is tell the page whether the money arrived: the amount in a
+     PayPal.Me link is editable by the payer, so the total received must be
+     checked in the PayPal app against the WhatsApp order before the food goes
+     out. That check is the reason the confirmation screen calls the payment
+     optional rather than final.
+  ------------------------------------------------------------------------- */
+
+  // There are exactly two decisions a guest can make on this website: pay now,
+  // online, or pay when they get the food. Card and girocard are NOT on this
+  // list — they are what the terminal in the shop accepts, not something this
+  // page can offer, so they are stated as information under the buttons. A
+  // button for a method the website cannot process would be a promise made by
+  // the wrong party.
+  function payChoosable() {
+    return !!paypalHandle();
+  }
+
+  // Only 'paypal' is ever stored; anything else means "in person".
+  function syncPay() {
+    if (form.pay === 'paypal' && !paypalHandle()) form.pay = 'onsite';
+  }
+
+  function payChosenText() {
+    var L = t();
+    if (form.pay === 'paypal') {
+      return fill(L.payOnlineHint, { total: money(totals().total) });
+    }
+    return payOnSiteText(form.type);
+  }
+
+  function payHtml() {
+    var L = t();
+    syncPay();
+
+    // Without PayPal there is no choice to make, only a fact to state.
+    if (!payChoosable()) {
+      return '<p class="cart-pay">' + escapeHtml(payOnSiteText(form.type)) + '</p>';
+    }
+
+    return '<fieldset class="cart-pay-pick">' +
+      '<legend class="cart-label">' + L.payMethod + '</legend>' +
+      '<div class="cart-types" role="group" aria-label="' + L.payMethod + '">' +
+        '<button type="button" class="cart-type' + (form.pay === 'paypal' ? ' active' : '') +
+          '" data-pay="paypal">' + L.payOptionOnline + '</button>' +
+        '<button type="button" class="cart-type' + (form.pay === 'paypal' ? '' : ' active') +
+          '" data-pay="onsite">' + L.payOptionOnSite + '</button>' +
+      '</div>' +
+      '<p class="cart-pay">' + escapeHtml(payChosenText()) + '</p>' +
+      '</fieldset>';
+  }
+
+  // Repaints only the delivery/pickup control. The chosen time turns delivery
+  // on and off, and a full repaint while the guest is inside the time picker
+  // would take the focus with it.
+  function paintTypes() {
+    var box = document.getElementById('cartTypeBox');
+    if (!box) return;
+    box.innerHTML = typesHtml();
+    var addr = document.getElementById('fAddressWrap');
+    if (addr) addr.hidden = form.type !== 'delivery';
+    paintSums();
+  }
+
   function paintPanel() {
     if (!els.body || els.panel.hidden) return;
     var L = t();
@@ -927,6 +1201,7 @@
       return;
     }
 
+    syncType();
     var sums = totals();
     var lines = ids.map(function (id) {
       return '<li class="cart-line">' +
@@ -949,12 +1224,7 @@
       (isOpenNow() ? '' : '<p class="cart-note is-closed">' + L.closedNote + '</p>') +
       '<ul class="cart-lines">' + lines + '</ul>' +
       '<div class="cart-sums" id="cartSums">' + sumsHtml(sums) + '</div>' +
-      '<div class="cart-types" role="group" aria-label="' + L.type + '">' +
-        '<button type="button" class="cart-type' + (form.type === 'delivery' ? ' active' : '') +
-          '" data-type="delivery">' + L.delivery + '</button>' +
-        '<button type="button" class="cart-type' + (form.type === 'pickup' ? ' active' : '') +
-          '" data-type="pickup">' + L.pickup + '</button>' +
-      '</div>' +
+      '<div id="cartTypeBox">' + typesHtml() + '</div>' +
       '<form class="cart-form" id="cartForm" novalidate>' +
         field('fName', L.name, 'text', '', true) +
         field('fPhone', L.phone, 'tel', '', true) +
@@ -1021,14 +1291,76 @@
     if (els.panel && !els.panel.hidden) { rememberForm(); paintPanel(); }
   }
 
-  /* --- WhatsApp handover -------------------------------------------------- */
+  /* --- how the guest pays -------------------------------------------------
+     Two ways, and the site says both in every place it says either: online
+     with PayPal while ordering, or in person on collection or delivery. Which
+     methods exist in person comes from config.payment.onSite, so the FAQ, the
+     basket, the confirmation screen and the methods Google indexes cannot
+     drift apart — and cannot outlive a card terminal.
+  ------------------------------------------------------------------------- */
+
+  // PayPal needs a handle AND the switch: either one missing and no PayPal
+  // word, link or paragraph appears anywhere.
+  function paypalHandle() {
+    var p = CFG.payment || {};
+    if (!p.prepayOnline) return '';
+    return String(p.paypalMe || '').replace(/^@/, '').trim();
+  }
 
   function paypalLink(amount) {
-    var handle = (CFG.payment && CFG.payment.paypalMe || '').replace(/^@/, '').trim();
+    var handle = paypalHandle();
     if (!handle) return '';
     return 'https://www.paypal.com/paypalme/' + encodeURIComponent(handle) + '/' +
       amount.toFixed(2) + 'EUR';
   }
+
+  function joinList(parts) {
+    if (parts.length < 2) return parts.join('');
+    return parts.slice(0, -1).join(', ') + ' ' + t().or + ' ' + parts[parts.length - 1];
+  }
+
+  function onSiteMethods(type) {
+    var L = t();
+    var keys = ((CFG.payment && CFG.payment.onSite) || {})[type] || [];
+    return keys.map(function (key) { return L.pay[key]; }).filter(Boolean);
+  }
+
+  function payOnSiteText(type) {
+    var L = t();
+    var list = onSiteMethods(type);
+    if (!list.length) return '';
+    return fill(L.payOnSite, {
+      type: type === 'pickup' ? L.atPickup : L.atDelivery,
+      methods: joinList(list)
+    });
+  }
+
+  // Both order types plus PayPal and the invoice, for schema.org. Only ever
+  // what is actually on offer: a payment method Google shows and the shop does
+  // not take is a wasted trip for the guest.
+  function paymentAccepted() {
+    var L = t();
+    var seen = {};
+    var out = [];
+    ['pickup', 'delivery'].forEach(function (type) {
+      onSiteMethods(type).forEach(function (label) {
+        if (!seen[label]) { seen[label] = true; out.push(label); }
+      });
+    });
+    if (paypalHandle()) out.push('PayPal');
+    if (CFG.payment && CFG.payment.invoiceForBusiness) out.push(L.payInvoice);
+    return out.join(', ');
+  }
+
+  function renderPaymentNote() {
+    var text = [payOnSiteText('pickup'), payOnSiteText('delivery')];
+    if (paypalHandle()) text.push(t().payOnline);
+    [].forEach.call(document.querySelectorAll('.payment-note'), function (el) {
+      el.textContent = text.filter(Boolean).join(' ');
+    });
+  }
+
+  /* --- WhatsApp handover -------------------------------------------------- */
 
   function buildMessage(data) {
     var L = t();
@@ -1054,6 +1386,14 @@
     out.push('*' + L.mTotal + ': ' + money(sums.total) + '*');
     out.push('');
     out.push(L.mType + ': ' + (data.type === 'delivery' ? L.delivery : L.pickup));
+    // Whoever answers the chat has to know whether to watch for a PayPal
+    // payment, take the terminal to the counter or send the driver for cash.
+    out.push(L.mPayment + ': ' + (data.pay === 'paypal'
+      ? L.mPayOnline
+      : fill(L.mPayOnSite, {
+          methods: joinList(onSiteMethods(data.type)),
+          type: data.type === 'pickup' ? L.atPickup : L.atDelivery
+        })));
     out.push(L.mName + ': ' + data.name);
     out.push(L.mPhone + ': ' + data.phone);
     if (data.type === 'delivery') {
@@ -1089,8 +1429,11 @@
   function submitOrder(e) {
     e.preventDefault();
     var L = t();
+    syncType();
+    syncPay();
     var data = {
       type: form.type,
+      pay: form.pay,
       business: !!document.getElementById('fBusiness') && document.getElementById('fBusiness').checked,
       name: val('fName'), phone: val('fPhone'), address: val('fAddress'),
       plz: val('fPlz'), time: whenText(), company: val('fCompany'), notes: val('fNotes')
@@ -1113,9 +1456,10 @@
     var url = 'https://wa.me/' + CFG.whatsapp.number + '?text=' + encodeURIComponent(buildMessage(data));
     window.open(url, '_blank', 'noopener');
 
-    // Nothing is payable until we have accepted an out-of-area enquiry, so the
-    // PayPal button is withheld on that path.
-    var pay = outside ? '' : paypalLink(total);
+    // Only the guest who chose to pay online gets a payment button, and only
+    // once there is something to pay for: nothing is payable until we have
+    // accepted an out-of-area enquiry, so that path never shows it.
+    var pay = (outside || data.pay !== 'paypal') ? '' : paypalLink(total);
     els.body.innerHTML =
       '<div class="cart-sent' + (outside ? ' is-request' : '') + '">' +
         '<div class="cart-sent-mark" aria-hidden="true">' + (outside ? '!' : '✓') + '</div>' +
@@ -1123,8 +1467,11 @@
         '<p>' + (outside ? L.sentTextRequest : L.sentText) + '</p>' +
         (pay
           ? '<a class="cart-paypal" href="' + pay + '" target="_blank" rel="noopener">' + L.payNow +
-            ' · ' + money(total) + '</a><p class="cart-empty-hint">' + L.payHint + '</p>'
-          : '') +
+            ' · ' + money(total) + '</a><p class="cart-empty-hint">' + L.payHint + ' ' +
+            escapeHtml(payOnSiteText(data.type)) + '</p>'
+          // An out-of-area enquiry has no agreed price yet, so it says nothing
+          // about paying; everyone else is reminded how they chose to.
+          : (outside ? '' : '<p class="cart-empty-hint">' + escapeHtml(payChosenText()) + '</p>')) +
         '<button type="button" class="cart-reset" id="cartReset">' + L.newOrder + '</button>' +
       '</div>';
 
@@ -1157,6 +1504,14 @@
       var type = e.target.closest('[data-type]');
       if (type) {
         form.type = type.getAttribute('data-type');
+        rememberForm();
+        paintPanel();
+        return;
+      }
+
+      var pay = e.target.closest('[data-pay]');
+      if (pay) {
+        form.pay = pay.getAttribute('data-pay');
         rememberForm();
         paintPanel();
         return;
@@ -1195,7 +1550,9 @@
       // The postcode changes the fee and therefore the total, so the summary
       // is repainted in place — a full repaint would steal the caret.
       if (e.target.id === 'fPlz') paintSums();
-      if (e.target.id === 'fDate' || e.target.id === 'fTime') paintWhen();
+      // A new time can move the order into or out of the collection-only lunch
+      // window, so the delivery/pickup control is repainted with the hint.
+      if (e.target.id === 'fDate' || e.target.id === 'fTime') { paintWhen(); paintTypes(); }
     });
 
     // Deep link used by the business section and the "order now" buttons.
@@ -1224,7 +1581,14 @@
       freeDeliveryFrom: b.freeDeliveryFrom,
       leadTimeHours: b.leadTimeHours,
       discount: CFG.order.directDiscountPercent,
-      businessPickupDiscount: CFG.order.businessPickupDiscountPercent
+      businessPickupDiscount: CFG.order.businessPickupDiscountPercent,
+      // Empty while lunch delivers or has not started, so copy that promises
+      // delivery can carry the midday exception without ever inventing one.
+      // Filled here rather than left to the pass below: a value substituted
+      // into copy is not rescanned for placeholders of its own.
+      lunchClause: (lunchRunning() && !lunchDelivers())
+        ? fill(t().lunchClause, { evening: eveningStart() || '18:00' })
+        : ''
     };
 
     [].forEach.call(document.querySelectorAll('[data-cfg]'), function (el) {
@@ -1243,6 +1607,8 @@
       });
     });
 
+    renderLunchNotice();
+    renderPaymentNote();
     renderBusinessHours();
     renderAreas();
     renderFaqHours();
@@ -1254,8 +1620,8 @@
         encodeURIComponent(businessTemplate(el.getAttribute('data-wa-template'))));
     });
 
-    // PayPal is only advertised once a handle exists.
-    var hasPaypal = !!(CFG.payment && CFG.payment.paypalMe);
+    // PayPal is only advertised once a handle exists and the switch is on.
+    var hasPaypal = !!paypalHandle();
     [].forEach.call(document.querySelectorAll('[data-requires="paypal"]'), function (el) {
       el.hidden = !hasPaypal;
     });
@@ -1279,6 +1645,78 @@
     });
     return runs.filter(function (r) { return r.text; }).map(function (r) {
       return (r.from === r.to ? short[r.from] : short[r.from] + ' – ' + short[r.to]) + ' ' + r.text;
+    });
+  }
+
+  /* --- what the page says about lunch -------------------------------------
+     One sentence, built from config, printed everywhere lunch is mentioned:
+     the corporate section, under the opening hours, in the delivery area and
+     in the FAQ. Three places that each described the service in their own
+     words is how a site ends up promising delivery in one paragraph and
+     collection in the next.
+  ------------------------------------------------------------------------- */
+
+  function lunchWindows() {
+    return groupWindows(function (d) { return d.lunch; }).join(' · ');
+  }
+
+  // The first day lunch actually happens: the start date, or the next day
+  // after it that has a lunch window. Announcing "from Monday" when Monday is
+  // one of our closed days is exactly the kind of small lie a guest notices.
+  function firstLunchDate() {
+    var starts = lunchStartsOn();
+    if (!starts) return null;
+    var p = starts.split('-');
+    var d = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2]));
+    if (isNaN(d.getTime())) return null;
+    for (var i = 0; i < 14; i++) {
+      var day = (CFG.hours.days || {})[DAY_KEYS[(d.getUTCDay() + 6) % 7]];
+      if (day && !day.closed && day.lunch) return d;
+      d.setUTCDate(d.getUTCDate() + 1);
+    }
+    return null;
+  }
+
+  // "Mittwoch, 5. August" / "Wednesday, 5 August" — formatted in UTC because
+  // the date carries no time of day and must not shift across a timezone.
+  function longDate(date) {
+    try {
+      return new Intl.DateTimeFormat(lang() === 'en' ? 'en-GB' : 'de-DE', {
+        weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC'
+      }).format(date);
+    } catch (e) {
+      return date.toISOString().slice(0, 10);
+    }
+  }
+
+  function lunchNotice() {
+    if (!lunchPublished()) return '';
+    var L = t();
+    var windows = lunchWindows();
+    if (!windows) return '';
+    var evening = eveningStart() || '18:00';
+    var head = lunchRunning()
+      ? fill(L.lunchNow, { windows: windows })
+      : fill(L.lunchSoon, {
+          windows: windows,
+          date: firstLunchDate() ? longDate(firstLunchDate()) : lunchStartsOn()
+        });
+    return head + ' ' + (lunchDelivers()
+      ? L.lunchWithDelivery
+      : fill(L.lunchPickupOnly, { evening: evening }));
+  }
+
+  // `.lunch-note` carries the sentence; `[data-requires="lunch"]` is the
+  // container that disappears entirely when there is nothing to say — an FAQ
+  // entry with an empty answer would otherwise sit there looking broken, and
+  // would be picked up by the FAQ structured data.
+  function renderLunchNotice() {
+    var text = lunchNotice();
+    [].forEach.call(document.querySelectorAll('.lunch-note'), function (el) {
+      el.textContent = text;
+    });
+    [].forEach.call(document.querySelectorAll('[data-requires="lunch"]'), function (el) {
+      el.hidden = !text;
     });
   }
 
@@ -1343,19 +1781,21 @@
     var L = t();
     var en = lang() === 'en';
 
+    var labelled = lunchRunning();
     var lines = DAY_KEYS.map(function (key) {
       var slots = slotsFor(key);
       return L.days[key] + ': ' + (slots.length
         ? slots.map(function (s) {
-            return (CFG.hours.lunch && CFG.hours.lunch.enabled ? L[s.kind] + ' ' : '') +
-              s.from + '–' + s.to;
+            return (labelled ? L[s.kind] + ' ' : '') + s.from + '–' + s.to +
+              (s.pickupOnly ? ' (' + L.pickupOnly + ')' : '');
           }).join(', ')
         : L.closed);
     });
 
     host.textContent = (en
       ? 'Our current opening hours are: '
-      : 'Unsere aktuellen Öffnungszeiten: ') + lines.join(' · ') + '. ' + (en
+      : 'Unsere aktuellen Öffnungszeiten: ') + lines.join(' · ') + '. ' +
+      (lunchNotice() ? lunchNotice() + ' ' : '') + (en
       ? 'The live status at the top of the contact section always shows whether we are open right now. Orders placed outside these hours reach us as a pre-order for a time you choose.'
       : 'Der Status im Kontaktbereich zeigt jederzeit an, ob wir gerade geöffnet haben. Bestellungen außerhalb dieser Zeiten erreichen uns als Vorbestellung für Ihren Wunschtermin.');
   }
@@ -1390,22 +1830,14 @@
     node.textContent = data ? JSON.stringify(data, null, 2) : '';
   }
 
+  // The lunch windows themselves are stated by the notice at the top of the
+  // section, so this line only adds what the notice does not: that anything
+  // outside those windows is still possible, by arrangement.
   function renderBusinessHours() {
     var host = document.getElementById('businessHours');
     if (!host) return;
-    var lunchOn = !!(CFG.hours.lunch && CFG.hours.lunch.enabled);
-    var windows = lunchOn ? groupWindows(function (d) { return d.lunch; }) : [];
-
-    if (windows.length) {
-      host.textContent = (lang() === 'en' ? 'Lunch service: ' : 'Mittagsservice: ') +
-        windows.join(' · ') + (lang() === 'en'
-          ? '. Corporate orders outside these times by arrangement.'
-          : '. Firmenbestellungen zu anderen Zeiten nach Absprache.');
-    } else {
-      host.textContent = lang() === 'en'
-        ? 'Delivery times for corporate orders by arrangement — just tell us when you need it.'
-        : 'Liefertermine für Firmenbestellungen nach Absprache — sagen Sie uns einfach, wann Sie es brauchen.';
-    }
+    var L = t();
+    host.textContent = lunchNotice() ? L.lunchByArrangement : L.businessByArrangement;
   }
 
   // The template asks for what actually decides the order — budget and time —

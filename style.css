@@ -779,6 +779,19 @@ summary:focus-visible {
   color: rgba(240,220,170,0.72);
   max-width: 620px; margin: 0 0 52px;
 }
+/* The lunch service in one sentence: when it starts, when it runs, and that it
+   is collection only. It sits above the four cards because it qualifies all of
+   them — the first card promises free delivery, and a guest must not read that
+   as a promise for midday. Gold rule rather than a coloured box: this is the
+   restaurant stating a fact, not a warning. */
+.business-notice {
+  max-width: 620px; margin: -32px 0 48px; padding: 14px 0 14px 18px;
+  border-left: 2px solid #b8914a;
+  font-size: 13.5px; line-height: 1.85;
+  color: rgba(245,232,204,0.9);
+}
+.business-notice:empty { display: none; }
+
 /* The two numbers that decide a corporate order, given the weight the head
    count used to take up in the copy. Set in the display serif so they read as
    figures on a menu rather than as a pricing table. */
@@ -845,6 +858,9 @@ summary:focus-visible {
   .business { padding: 60px 24px; }
   .business-title { font-size: 32px; }
   .business-lead { margin-bottom: 32px; }
+  /* Follows the lead's smaller bottom margin, so the gap above the notice
+     stays the same 20px it has on the desktop layout. */
+  .business-notice { margin: -20px 0 32px; }
   .business-facts { gap: 22px 40px; margin-bottom: 36px; }
   .bfact-num { font-size: 38px; }
 }
@@ -1020,7 +1036,20 @@ summary:focus-visible {
   letter-spacing: 0.16em; text-transform: uppercase; color: #b8914a;
 }
 .hslot-time { font-variant-numeric: tabular-nums; }
+/* A window we are open for but do not drive out of. It sits with the times
+   rather than under the table, because "11:00 – 14:30" on its own is a promise
+   of delivery to anyone who has read the rest of the page. */
+.hslot-note {
+  font-family: 'Cinzel', serif; font-size: 8px;
+  letter-spacing: 0.14em; text-transform: uppercase; color: #a07838;
+  white-space: nowrap;
+}
 .hclosed { color: #9a8050; }
+
+.hours-note {
+  margin: 12px 0 0; font-size: 12.5px; line-height: 1.7; color: #7a6030;
+}
+.hours-note:empty { display: none; }
 
 /* ===========================================================================
    MENU — add to basket
@@ -1245,6 +1274,29 @@ body.cart-open { overflow: hidden; }
 .cart-when-fields input { min-width: 0; }
 
 .cart-note.is-closed { background: #f0e4cc; }
+/* Midday is collection only, so the delivery button is dimmed rather than
+   removed: a guest who came for delivery has to see that it exists and read
+   why it is unavailable, otherwise the missing button reads as a broken page.
+   The note below it carries the reason and the evening alternative. */
+.cart-type[disabled] { opacity: 0.4; cursor: not-allowed; }
+.cart-note.is-pickup-only { background: #f0e4cc; border-left-color: #a07838; }
+
+/* How this order will be paid, chosen before it is sent rather than after:
+   the answer travels in the WhatsApp message, so the kitchen knows whether to
+   watch for a PayPal payment or take the terminal to the counter. */
+.cart-pay-pick { border: 0; padding: 0; margin: 0 0 18px; min-width: 0; }
+.cart-pay-pick legend { padding: 0; margin-bottom: 6px; }
+/* Two methods for a delivery, four for a pickup. Sized so the pickup case
+   settles into a 2 × 2 block rather than a row of three with a hole in it. */
+.cart-pay-pick .cart-types {
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  margin-bottom: 10px;
+}
+.cart-pay {
+  margin: -6px 0 18px; font-size: 12.5px; line-height: 1.7; color: #7a6030;
+}
+.cart-pay-pick .cart-pay { margin: 0; }
+.cart-pay:empty { display: none; }
 
 .cart-zone {
   margin: -4px 0 14px; font-size: 12.5px; line-height: 1.65;

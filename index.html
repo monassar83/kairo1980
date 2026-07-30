@@ -86,7 +86,7 @@
     "https://www.instagram.com/_kairo1980_/"
   ],
   "currenciesAccepted": "EUR",
-  "paymentAccepted": "Bargeld, Rechnung (Firmenkunden)",
+  "paymentAccepted": "Bargeld, EC-/Girocard, Kreditkarte, Rechnung (Firmenkunden)",
   "acceptsReservations": "False",
   "hasDeliveryMethod": ["http://purl.org/goodrelations/v1#DeliveryModeOwnFleet", "http://purl.org/goodrelations/v1#DeliveryModePickUp"],
   "orderAction": [
@@ -433,8 +433,15 @@
          the notice we get, so those are the only two numbers stated — and both
          come from config.js rather than being typed into the copy. -->
     <p class="business-lead t"
-       data-de="Ägyptische Küche für Meetings, Team-Lunches und Firmenfeiern — frisch gekocht, warm geliefert und so verpackt, dass jeder am Tisch nehmen kann, was er möchte. Zwei Zahlen genügen uns: Ihr Bestellwert und Ihre Wunschzeit."
-       data-en="Egyptian food for meetings, team lunches and company celebrations — freshly cooked, delivered warm and packed so everyone at the table can help themselves. Two numbers are all we need: your order value and the time you want it.">Ägyptische Küche für Meetings, Team-Lunches und Firmenfeiern — frisch gekocht, warm geliefert und so verpackt, dass jeder am Tisch nehmen kann, was er möchte. Zwei Zahlen genügen uns: Ihr Bestellwert und Ihre Wunschzeit.</p>
+       data-de="Ägyptische Küche für Meetings, Team-Lunches und Firmenfeiern — frisch gekocht, warm geliefert oder abholbereit verpackt, sodass jeder am Tisch nehmen kann, was er möchte. Zwei Zahlen genügen uns: Ihr Bestellwert und Ihre Wunschzeit."
+       data-en="Egyptian food for meetings, team lunches and company celebrations — freshly cooked, delivered warm or packed ready for collection, so everyone at the table can help themselves. Two numbers are all we need: your order value and the time you want it.">Ägyptische Küche für Meetings, Team-Lunches und Firmenfeiern — frisch gekocht, warm geliefert oder abholbereit verpackt, sodass jeder am Tisch nehmen kann, was er möchte. Zwei Zahlen genügen uns: Ihr Bestellwert und Ihre Wunschzeit.</p>
+
+    <!-- The lunch service, in one sentence written by order.js from
+         config.js -> hours.lunch: the day it starts while it is still ahead of
+         us, its windows, and whether it delivers. Empty and hidden when there
+         is nothing to announce, so this paragraph can never contradict the
+         opening-hours table, the delivery area or the basket. -->
+    <p class="business-notice lunch-note" data-requires="lunch" hidden></p>
 
     <!-- The two facts that decide a corporate order, stated once, large. -->
     <div class="business-facts">
@@ -452,7 +459,7 @@
       <div class="bcard">
         <span class="bcard-num">01</span>
         <h3 class="bcard-title t" data-de="Lieferung frei ab {freeDeliveryFrom} €" data-en="Free delivery from €{freeDeliveryFrom}">Lieferung frei ab 100 €</h3>
-        <p class="bcard-text t" data-de="Bei Firmen- und Büro-Bestellungen ab {freeDeliveryFrom} € Bestellwert übernehmen wir die Liefergebühr — im gesamten Liefergebiet rund um Hockenheim. Darunter gilt die Gebühr Ihrer Postleitzahl, wie unten im Liefergebiet aufgeführt." data-en="For corporate and office orders of €{freeDeliveryFrom} or more we cover the delivery fee — anywhere in our delivery area around Hockenheim. Below that, the fee for your postcode applies, as listed in the delivery area below.">Bei Firmen- und Büro-Bestellungen ab 100 € Bestellwert übernehmen wir die Liefergebühr — im gesamten Liefergebiet rund um Hockenheim. Darunter gilt die Gebühr Ihrer Postleitzahl, wie unten im Liefergebiet aufgeführt.</p>
+        <p class="bcard-text t" data-de="Bei Firmen- und Büro-Bestellungen ab {freeDeliveryFrom} € Bestellwert übernehmen wir die Liefergebühr — im gesamten Liefergebiet rund um Hockenheim. Darunter gilt die Gebühr Ihrer Postleitzahl, wie unten im Liefergebiet aufgeführt. {lunchClause}" data-en="For corporate and office orders of €{freeDeliveryFrom} or more we cover the delivery fee — anywhere in our delivery area around Hockenheim. Below that, the fee for your postcode applies, as listed in the delivery area below. {lunchClause}">Bei Firmen- und Büro-Bestellungen ab 100 € Bestellwert übernehmen wir die Liefergebühr — im gesamten Liefergebiet rund um Hockenheim. Darunter gilt die Gebühr Ihrer Postleitzahl, wie unten im Liefergebiet aufgeführt.</p>
       </div>
       <div class="bcard">
         <span class="bcard-num">02</span>
@@ -461,8 +468,8 @@
       </div>
       <div class="bcard">
         <span class="bcard-num">03</span>
-        <h3 class="bcard-title t" data-de="{businessPickupDiscount} % Rabatt bei Abholung" data-en="{businessPickupDiscount}% off on pickup">15 % Rabatt bei Abholung</h3>
-        <p class="bcard-text t" data-de="Firmenbestellungen, die Sie selbst bei uns abholen, erhalten {businessPickupDiscount} % statt {discount} % Rabatt. Alles steht abholbereit zur vereinbarten Zeit." data-en="Corporate orders you collect yourself get {businessPickupDiscount}% instead of {discount}%. Everything is packed and ready at the agreed time.">Firmenbestellungen, die Sie selbst bei uns abholen, erhalten 15 % statt 10 % Rabatt. Alles steht abholbereit zur vereinbarten Zeit.</p>
+        <h3 class="bcard-title t" data-de="{discount} % auf jede Bestellung" data-en="{discount}% off every order">10 % auf jede Bestellung</h3>
+        <p class="bcard-text t" data-de="Ob Lieferung oder Abholung, Firma oder privat: Jede Bestellung über diese Seite erhält {discount} % Rabatt — ohne Aktionscode und ohne Mindestmenge. Abholbestellungen stehen zur vereinbarten Zeit fertig verpackt bereit." data-en="Delivery or pickup, company or private: every order placed through this site gets {discount}% off — no promo code, no minimum quantity. Collection orders are packed and waiting at the agreed time.">Ob Lieferung oder Abholung, Firma oder privat: Jede Bestellung über diese Seite erhält 10 % Rabatt — ohne Aktionscode und ohne Mindestmenge. Abholbestellungen stehen zur vereinbarten Zeit fertig verpackt bereit.</p>
       </div>
       <div class="bcard">
         <span class="bcard-num">04</span>
@@ -499,7 +506,7 @@
 
       <details class="faq-item">
         <summary class="t" data-de="Wohin liefern Sie und was kostet die Lieferung?" data-en="Where do you deliver and what does delivery cost?">Wohin liefern Sie und was kostet die Lieferung?</summary>
-        <div class="faq-answer"><p class="t" data-de="Wir liefern in über 30 Orte rund um Hockenheim, unter anderem Reilingen, Ketsch, Schwetzingen, Walldorf, Wiesloch, Heidelberg, Mannheim, Speyer und Schifferstadt. Die vollständige Liste mit Postleitzahl, Mindestbestellwert und Liefergebühr finden Sie im Abschnitt Liefergebiet. Dieselbe Gebühr zeigt der Warenkorb an, sobald Sie Ihre Postleitzahl eingeben — es gibt keine versteckten Kosten. Ist Ihr Ort nicht dabei, können Sie uns trotzdem unverbindlich anfragen." data-en="We deliver to more than 30 towns around Hockenheim, including Reilingen, Ketsch, Schwetzingen, Walldorf, Wiesloch, Heidelberg, Mannheim, Speyer and Schifferstadt. The full list with postcode, minimum order value and delivery fee is in the delivery area section. The basket shows the very same fee as soon as you enter your postcode — there are no hidden costs. If your town is not listed you can still send us a non-binding enquiry.">Wir liefern in über 30 Orte rund um Hockenheim, unter anderem Reilingen, Ketsch, Schwetzingen, Walldorf, Wiesloch, Heidelberg, Mannheim, Speyer und Schifferstadt. Die vollständige Liste mit Postleitzahl, Mindestbestellwert und Liefergebühr finden Sie im Abschnitt Liefergebiet. Dieselbe Gebühr zeigt der Warenkorb an, sobald Sie Ihre Postleitzahl eingeben — es gibt keine versteckten Kosten. Ist Ihr Ort nicht dabei, können Sie uns trotzdem unverbindlich anfragen.</p></div>
+        <div class="faq-answer"><p class="t" data-de="Wir liefern in über 30 Orte rund um Hockenheim, unter anderem Reilingen, Ketsch, Schwetzingen, Walldorf, Wiesloch, Heidelberg, Mannheim, Speyer und Schifferstadt. Die vollständige Liste mit Postleitzahl, Mindestbestellwert und Liefergebühr finden Sie im Abschnitt Liefergebiet. Dieselbe Gebühr zeigt der Warenkorb an, sobald Sie Ihre Postleitzahl eingeben — es gibt keine versteckten Kosten. Ist Ihr Ort nicht dabei, können Sie uns trotzdem unverbindlich anfragen. {lunchClause}" data-en="We deliver to more than 30 towns around Hockenheim, including Reilingen, Ketsch, Schwetzingen, Walldorf, Wiesloch, Heidelberg, Mannheim, Speyer and Schifferstadt. The full list with postcode, minimum order value and delivery fee is in the delivery area section. The basket shows the very same fee as soon as you enter your postcode — there are no hidden costs. If your town is not listed you can still send us a non-binding enquiry. {lunchClause}">Wir liefern in über 30 Orte rund um Hockenheim, unter anderem Reilingen, Ketsch, Schwetzingen, Walldorf, Wiesloch, Heidelberg, Mannheim, Speyer und Schifferstadt. Die vollständige Liste mit Postleitzahl, Mindestbestellwert und Liefergebühr finden Sie im Abschnitt Liefergebiet. Dieselbe Gebühr zeigt der Warenkorb an, sobald Sie Ihre Postleitzahl eingeben — es gibt keine versteckten Kosten. Ist Ihr Ort nicht dabei, können Sie uns trotzdem unverbindlich anfragen.</p></div>
       </details>
 
       <details class="faq-item">
@@ -507,9 +514,22 @@
         <div class="faq-answer"><p class="t" data-de="Ja. Wählen Sie im Warenkorb einfach „Abholung" statt „Lieferung". Dann entfallen Liefergebühr und Mindestbestellwert. Sie finden uns in der Rostocker Straße 20a, 68766 Hockenheim. Wir sagen Ihnen im Chat, ab wann Ihre Bestellung abholbereit ist." data-en="Yes. Simply choose &quot;Pickup&quot; instead of &quot;Delivery&quot; in the basket — the delivery fee and the minimum order value then no longer apply. You will find us at Rostocker Straße 20a, 68766 Hockenheim, and we tell you in the chat when your order is ready.">Ja. Wählen Sie im Warenkorb einfach „Abholung" statt „Lieferung". Dann entfallen Liefergebühr und Mindestbestellwert. Sie finden uns in der Rostocker Straße 20a, 68766 Hockenheim. Wir sagen Ihnen im Chat, ab wann Ihre Bestellung abholbereit ist.</p></div>
       </details>
 
+      <!-- The answer's first paragraph is written from config.js, so the day
+           the lunch service starts and whether it delivers are stated here in
+           the same words as everywhere else — and the whole entry disappears
+           from the page and from the FAQ structured data when there is no
+           lunch service to describe. -->
+      <details class="faq-item" data-requires="lunch" hidden>
+        <summary class="t" data-de="Gibt es bei Ihnen einen Mittagstisch?" data-en="Do you have a lunch service?">Gibt es bei Ihnen einen Mittagstisch?</summary>
+        <div class="faq-answer">
+          <p class="lunch-note"></p>
+          <p class="t" data-de="Bestellen können Sie wie immer über den Warenkorb auf dieser Seite: Gerichte auswählen, unter „Wunschtermin" die Uhrzeit angeben und die Bestellung per WhatsApp absenden. Für Büros und Teams empfehlen wir mindestens {leadTimeHours} Stunden Vorlauf, dann steht alles pünktlich abholbereit." data-en="You order the way you always do, through the basket on this page: pick your dishes, set the time under &quot;Preferred time&quot; and send the order via WhatsApp. For offices and teams we recommend at least {leadTimeHours} hours' notice, then everything is packed and ready on time.">Bestellen können Sie wie immer über den Warenkorb auf dieser Seite: Gerichte auswählen, unter „Wunschtermin" die Uhrzeit angeben und die Bestellung per WhatsApp absenden. Für Büros und Teams empfehlen wir mindestens 2 Stunden Vorlauf, dann steht alles pünktlich abholbereit.</p>
+        </div>
+      </details>
+
       <details class="faq-item" data-requires="business">
         <summary class="t" data-de="Liefern Sie auch für Firmen und Büros?" data-en="Do you cater for companies and offices?">Liefern Sie auch für Firmen und Büros?</summary>
-        <div class="faq-answer"><p class="faq-cfg t" data-de="Ja, das ist einer unserer Schwerpunkte. Wir beliefern Meetings, Team-Lunches und Firmenfeiern im gesamten Liefergebiet — unabhängig von der Personenzahl. Entscheidend sind für uns nur der Bestellwert und Ihre Wunschzeit: Firmenbestellungen ab {freeDeliveryFrom} € Bestellwert liefern wir ohne Liefergebühr, und für Firmenbestellungen, die Sie selbst abholen, erhalten Sie {businessPickupDiscount} % statt {discount} % Rabatt. Bitte planen Sie mindestens {leadTimeHours} Stunden Vorlauf ein. Am schnellsten geht es per WhatsApp." data-en="Yes, it is one of our specialities. We cater meetings, team lunches and company celebrations across our whole delivery area — whatever the head count. Only two things matter to us: the order value and the time you need it. Corporate orders of €{freeDeliveryFrom} or more are delivered without a delivery fee, and corporate orders you collect yourself get {businessPickupDiscount}% instead of {discount}% off. Please allow at least {leadTimeHours} hours lead time. WhatsApp is the fastest way to reach us.">Ja, das ist einer unserer Schwerpunkte. Wir beliefern Meetings, Team-Lunches und Firmenfeiern im gesamten Liefergebiet — unabhängig von der Personenzahl. Entscheidend sind für uns nur der Bestellwert und Ihre Wunschzeit: Firmenbestellungen ab 100 € Bestellwert liefern wir ohne Liefergebühr, und für Firmenbestellungen, die Sie selbst abholen, erhalten Sie 15 % statt 10 % Rabatt. Bitte planen Sie mindestens 2 Stunden Vorlauf ein. Am schnellsten geht es per WhatsApp.</p></div>
+        <div class="faq-answer"><p class="faq-cfg t" data-de="Ja, das ist einer unserer Schwerpunkte. Wir beliefern Meetings, Team-Lunches und Firmenfeiern im gesamten Liefergebiet — unabhängig von der Personenzahl. Entscheidend sind für uns nur der Bestellwert und Ihre Wunschzeit: Firmenbestellungen ab {freeDeliveryFrom} € Bestellwert liefern wir ohne Liefergebühr, und auf jede Bestellung über diese Seite — Lieferung wie Abholung — erhalten Sie {discount} % Rabatt. Bitte planen Sie mindestens {leadTimeHours} Stunden Vorlauf ein. Am schnellsten geht es per WhatsApp. {lunchClause}" data-en="Yes, it is one of our specialities. We cater meetings, team lunches and company celebrations across our whole delivery area — whatever the head count. Only two things matter to us: the order value and the time you need it. Corporate orders of €{freeDeliveryFrom} or more are delivered without a delivery fee, and every order placed through this site — delivery or pickup — gets {discount}% off. Please allow at least {leadTimeHours} hours lead time. WhatsApp is the fastest way to reach us. {lunchClause}">Ja, das ist einer unserer Schwerpunkte. Wir beliefern Meetings, Team-Lunches und Firmenfeiern im gesamten Liefergebiet — unabhängig von der Personenzahl. Entscheidend sind für uns nur der Bestellwert und Ihre Wunschzeit: Firmenbestellungen ab 100 € Bestellwert liefern wir ohne Liefergebühr, und auf jede Bestellung über diese Seite — Lieferung wie Abholung — erhalten Sie 10 % Rabatt. Bitte planen Sie mindestens 2 Stunden Vorlauf ein. Am schnellsten geht es per WhatsApp.</p></div>
       </details>
 
       <details class="faq-item">
@@ -519,7 +539,12 @@
 
       <details class="faq-item">
         <summary class="t" data-de="Wie kann ich bezahlen?" data-en="How can I pay?">Wie kann ich bezahlen?</summary>
-        <div class="faq-answer"><p class="t" data-de="Bei Lieferung und Abholung bezahlen Sie bequem vor Ort in bar. Firmenkunden stellen wir auf Wunsch eine Rechnung mit ausgewiesener Mehrwertsteuer aus. Wir speichern keine Zahlungsdaten auf dieser Website." data-en="For delivery and pickup you simply pay in cash on the spot. For business customers we issue an invoice showing VAT separately on request. We store no payment data on this website.">Bei Lieferung und Abholung bezahlen Sie bequem vor Ort in bar. Firmenkunden stellen wir auf Wunsch eine Rechnung mit ausgewiesener Mehrwertsteuer aus. Wir speichern keine Zahlungsdaten auf dieser Website.</p>
+        <div class="faq-answer">
+        <!-- Written by order.js from config.payment: which methods are taken
+             in person, per order type, plus PayPal once it is switched on. The
+             sentence below is the part that is true regardless. -->
+        <p class="payment-note">Bei Abholung bezahlen Sie bar, mit EC-/Girocard oder Kreditkarte, bei Lieferung in bar.</p>
+        <p class="t" data-de="Firmenkunden stellen wir auf Wunsch eine Rechnung mit ausgewiesener Mehrwertsteuer aus. Zahlungsdaten werden auf dieser Website weder erhoben noch gespeichert: eine Kartenzahlung findet am Terminal im Laden statt, eine PayPal-Zahlung vollständig bei PayPal." data-en="For business customers we issue an invoice showing VAT separately on request. No payment data is collected or stored on this website: card payments happen at the terminal in the shop, PayPal payments entirely at PayPal.">Firmenkunden stellen wir auf Wunsch eine Rechnung mit ausgewiesener Mehrwertsteuer aus. Zahlungsdaten werden auf dieser Website weder erhoben noch gespeichert: eine Kartenzahlung findet am Terminal im Laden statt, eine PayPal-Zahlung vollständig bei PayPal.</p>
         <p class="t" data-requires="paypal" data-de="Zusätzlich können Sie Ihre Bestellung bequem per PayPal begleichen — den Zahlungslink über den exakten Betrag erhalten Sie direkt nach dem Absenden der Bestellung." data-en="You can also settle your order conveniently via PayPal — you receive a payment link for the exact amount right after sending your order." hidden>Zusätzlich können Sie Ihre Bestellung bequem per PayPal begleichen — den Zahlungslink über den exakten Betrag erhalten Sie direkt nach dem Absenden der Bestellung.</p></div>
       </details>
 
@@ -570,6 +595,7 @@
           <div class="hrow"><span class="day t" data-de="Montag & Dienstag" data-en="Monday & Tuesday">Montag &amp; Dienstag</span><span class="hclosed t" data-de="Geschlossen" data-en="Closed">Geschlossen</span></div>
           <div class="hrow"><span class="day t" data-de="Mittwoch – Sonntag" data-en="Wednesday – Sunday">Mittwoch – Sonntag</span><span class="t" data-de="18:00 – 23:00 Uhr" data-en="6:00 PM – 11:00 PM">18:00 – 23:00 Uhr</span></div>
         </div>
+        <p class="hours-note lunch-note" data-requires="lunch" hidden></p>
         <!-- One primary way to order, and the platforms named honestly as an
              alternative rather than as four equal buttons. The "direct via
              WhatsApp" button was removed: it produced the same chat as the
@@ -635,6 +661,9 @@
        data-de="Ägyptisches Essen aus Hockenheim — geliefert in die folgenden Orte im Rhein-Neckar-Kreis und der Vorderpfalz. Zu jedem Ort stehen Postleitzahl und Liefergebühr; der Mindestbestellwert gilt für die ganze Gruppe. Genau diese Werte rechnet auch der Warenkorb."
        data-en="Egyptian food from Hockenheim — delivered to the following towns in the Rhein-Neckar district and the Vorderpfalz. Each town shows its postcode and delivery fee; the minimum order value applies to the whole group. These are the very figures the basket calculates with.">Ägyptisches Essen aus Hockenheim — geliefert in die folgenden Orte im Rhein-Neckar-Kreis und der Vorderpfalz. Zu jedem Ort stehen Postleitzahl und Liefergebühr; der Mindestbestellwert gilt für die ganze Gruppe. Genau diese Werte rechnet auch der Warenkorb.</p>
     <div class="areas-list" id="areasList"></div>
+    <!-- The fees above are evening fees while lunch is collection only. A
+         section about delivery is exactly where that has to be said. -->
+    <p class="areas-note lunch-note" data-requires="lunch" hidden></p>
     <p class="areas-note t"
        data-de="Ihr Ort ist nicht dabei? Schreiben Sie uns — bei größeren Bestellungen liefern wir auch darüber hinaus."
        data-en="Your town is not listed? Message us — for larger orders we deliver beyond this area too.">Ihr Ort ist nicht dabei? Schreiben Sie uns — bei größeren Bestellungen liefern wir auch darüber hinaus.</p>
