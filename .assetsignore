@@ -27,3 +27,7 @@ docs
 # images/logo-nav.*, but ~4 MB that no page ever requests.
 images/Logo.png
 images/logo-hero.png
+
+# Artwork for the business profiles (Apple, Google, Bing, Instagram). Kept in
+# git so the exports are reproducible, but no page ever requests them.
+brand
