@@ -45,9 +45,15 @@
 /style.css
   Cache-Control: public, max-age=300, must-revalidate
 
-# Fonts are versioned by name and never change in place.
+# The font files are versioned by name and never change in place.
 /fonts/*
   Cache-Control: public, max-age=31536000, immutable
+
+# The manifest that lists them is not immutable: adding a script — Arabic, say —
+# changes this file, and a visitor holding last year's copy would never load the
+# new faces. It is 6 kB and revalidates.
+/fonts/fonts.css
+  Cache-Control: public, max-age=300, must-revalidate
 
 /images/*
   Cache-Control: public, max-age=604800
