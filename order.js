@@ -100,7 +100,12 @@
       paySecure: 'Verschlüsselte Zahlung — Kartendaten erreichen kairo1980.de zu keinem Zeitpunkt.',
       payTitle: 'Bezahlen', payAmountLabel: 'Zu zahlen', payRef: 'Bestellnummer',
       payPaidTitle: 'Zahlung erfolgreich',
-      payPaidText: 'Vielen Dank! Wir öffnen jetzt WhatsApp — bitte senden Sie die Nachricht ab, damit wir Ihre Bestellung bestätigen können.',
+      payPaidText: 'Vielen Dank! Ihre Zahlung ist eingegangen.',
+      // The single most important sentence on the site: the money is ours, the
+      // order is not yet. Said plainly, above the button that fixes it.
+      mustSend: 'Bitte senden Sie Ihre Bestellung jetzt ab — erst dann erreicht sie unsere Küche.',
+      sendOrderNow: 'Bestellung jetzt senden',
+      popupBlocked: 'Ihr Browser hat das WhatsApp-Fenster blockiert. Bitte tippen Sie auf den Knopf.',
       payCancelTitle: 'Zahlung abgebrochen',
       payCancelText: 'Es wurde nichts abgebucht. Versuchen Sie es erneut oder bezahlen Sie einfach bei Erhalt.',
       payFailTitle: 'Zahlung fehlgeschlagen',
@@ -209,7 +214,10 @@
       paySecure: 'Encrypted payment — card details never reach kairo1980.de.',
       payTitle: 'Payment', payAmountLabel: 'To pay', payRef: 'Order number',
       payPaidTitle: 'Payment successful',
-      payPaidText: 'Thank you! We are opening WhatsApp now — please send the message so we can confirm your order.',
+      payPaidText: 'Thank you! Your payment has gone through.',
+      mustSend: 'Please send your order now — it only reaches our kitchen once you do.',
+      sendOrderNow: 'Send order now',
+      popupBlocked: 'Your browser blocked the WhatsApp window. Please tap the button.',
       payCancelTitle: 'Payment cancelled',
       payCancelText: 'Nothing was charged. Try again, or simply pay on arrival.',
       payFailTitle: 'Payment failed',
@@ -318,7 +326,10 @@
       paySecure: 'الدفع مشفّر — بيانات الكارت عمرها ما بتوصل لـ kairo1980.de.',
       payTitle: 'الدفع', payAmountLabel: 'المطلوب دفعه', payRef: 'رقم الطلب',
       payPaidTitle: 'تم الدفع بنجاح',
-      payPaidText: 'شكراً! بنفتحلك واتساب دلوقتي — من فضلك ابعت الرسالة عشان نأكدلك الطلب.',
+      payPaidText: 'شكراً! الدفع وصل بنجاح.',
+      mustSend: 'من فضلك ابعت طلبك دلوقتي — من غير كده الطلب مش هيوصل للمطبخ.',
+      sendOrderNow: 'ابعت الطلب دلوقتي',
+      popupBlocked: 'المتصفح منع نافذة واتساب. من فضلك دوس على الزرار.',
       payCancelTitle: 'تم إلغاء الدفع',
       payCancelText: 'مفيش أي مبلغ اتخصم. جرّب تاني أو ادفع عند الاستلام عادي.',
       payFailTitle: 'الدفع ما تمّش',
@@ -1958,7 +1969,21 @@
     var message = buildMessage(data, payment);
     var url = 'https://wa.me/' + CFG.whatsapp.number + '?text=' + encodeURIComponent(message);
     lastOrder = { url: url, text: message };
-    window.open(url, '_blank', 'noopener');
+
+    /* Opening WhatsApp is a convenience, never the mechanism.
+
+       After an online payment this runs from a promise, long after the click
+       that started it, so the browser has no user gesture to attribute the
+       popup to and blocks it. That happened in production: money taken, and
+       the order never reached the kitchen, while the screen cheerfully said
+       WhatsApp had opened.
+
+       So the link below is always drawn, as a link. A tap on it IS a gesture
+       and cannot be blocked. The automatic open is attempted anyway, and if it
+       fails the guest is told plainly rather than reassured. */
+    var opened = null;
+    try { opened = window.open(url, '_blank', 'noopener'); } catch (e) { opened = null; }
+    var blocked = !opened;
 
     var title = outside ? L.sentTitleRequest : (paid ? L.payPaidTitle : L.sentTitle);
     var text = outside ? L.sentTextRequest : (paid ? L.payPaidText : L.sentText);
@@ -1977,6 +2002,13 @@
           ? '<p class="cart-pay-ref">' + escapeHtml(L.payRef) + ': <strong>' +
             escapeHtml(payment.reference) + '</strong></p>'
           : '') +
+        // The order has not been placed until this is tapped. It is the
+        // loudest thing on the screen, and it is here whether the popup was
+        // blocked or not — a guest who dismissed the new tab needs it too.
+        '<p class="cart-must-send">' + escapeHtml(L.mustSend) + '</p>' +
+        (blocked ? '<p class="cart-blocked">' + escapeHtml(L.popupBlocked) + '</p>' : '') +
+        '<a class="cart-send cart-send-wa" href="' + escapeHtml(url) + '" target="_blank" rel="noopener">' +
+          escapeHtml(L.sendOrderNow) + '</a>' +
         (note ? '<p class="cart-empty-hint">' + escapeHtml(note) + '</p>' : '') +
         '<button type="button" class="cart-reset" id="cartReset">' + L.newOrder + '</button>' +
         fallbackHtml() +

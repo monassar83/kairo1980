@@ -78,6 +78,46 @@ test('paying successfully tells the restaurant the order is already paid', async
   await expect(page.locator('#cartFab')).toBeHidden();
 });
 
+test('a paid order can still be sent when the browser blocks the popup', async ({ page }) => {
+  // This happened in production with real money. window.open runs from a
+  // promise after the capture, so there is no user gesture left and the
+  // browser blocks it — the guest paid and the order never reached the
+  // kitchen, while the screen said WhatsApp had opened.
+  //
+  // Simulate the block: window.open returns null, exactly as Chrome does.
+  await page.addInitScript(() => { window.open = () => null; });
+  await stubPayments(page);
+  await reachPaymentStep(page);
+  await page.locator('.fake-pay-button').first().click();
+
+  await expect(page.locator('.cart-sent.is-paid')).toBeVisible();
+
+  // A real link, so tapping it is a gesture the browser cannot refuse.
+  const send = page.locator('a.cart-send-wa');
+  await expect(send).toBeVisible();
+  await expect(send).toHaveAttribute('target', '_blank');
+  const href = await send.getAttribute('href');
+  expect(href).toContain('wa.me/');
+  expect(decodeURIComponent(href)).toMatch(/ONLINE BEZAHLT|PAID ONLINE/);
+
+  // And the guest is told the truth rather than reassured.
+  await expect(page.locator('.cart-blocked')).toBeVisible();
+  await expect(page.locator('.cart-must-send')).toBeVisible();
+});
+
+test('the send link is offered even when the popup was NOT blocked', async ({ page }) => {
+  // A guest who closes the new tab by reflex still needs a way back.
+  // A truthy return is what a browser gives when it allows the popup.
+  await page.addInitScript(() => { window.open = () => ({ closed: false }); });
+  await stubPayments(page);
+  await reachPaymentStep(page);
+  await page.locator('.fake-pay-button').first().click();
+
+  await expect(page.locator('a.cart-send-wa')).toBeVisible();
+  await expect(page.locator('.cart-must-send')).toBeVisible();
+  await expect(page.locator('.cart-blocked')).toHaveCount(0);
+});
+
 test('a cancelled payment charges nothing and keeps the order alive', async ({ page }) => {
   await stubPayments(page, { outcome: 'cancel' });
   await reachPaymentStep(page);

@@ -253,7 +253,26 @@ async function applyCaptureResult(env, payment, result, source) {
     payload: { status: result.status, captureStatus: result.captureStatus }
   };
 
-  if (result.captureStatus === 'COMPLETED' || result.status === 'COMPLETED') {
+  /* The CAPTURE decides whether money moved. The order does not.
+
+     A PayPal order reads COMPLETED as soon as the capture call succeeds, even
+     when the capture inside it is PENDING with reason PENDING_REVIEW — PayPal
+     is holding the funds for a risk review that can still end in a decline.
+     Accepting either as proof told the kitchen "PAID ONLINE" for money that
+     had not arrived, which is how a restaurant cooks for free.
+
+     So PENDING is examined first and can never be overridden by the order. */
+  if (result.captureStatus === 'PENDING') {
+    await store.settle(env.DB, payment.id, 'pending', {
+      ...common,
+      failureCode: result.captureReason || 'PENDING_REVIEW'
+    });
+    return store.get(env.DB, payment.id);
+  }
+
+  // Order-level COMPLETED counts only when there is no capture to ask.
+  if (result.captureStatus === 'COMPLETED' ||
+      (!result.captureStatus && result.status === 'COMPLETED')) {
     // The one check that makes the money real: PayPal must have taken the
     // amount this server computed, not the amount anybody asked for.
     if (result.amount != null && result.amount !== payment.amount) {
@@ -266,11 +285,6 @@ async function applyCaptureResult(env, payment, result, source) {
       return store.get(env.DB, payment.id);
     }
     await store.settle(env.DB, payment.id, 'captured', common);
-    return store.get(env.DB, payment.id);
-  }
-
-  if (result.captureStatus === 'PENDING') {
-    await store.settle(env.DB, payment.id, 'pending', common);
     return store.get(env.DB, payment.id);
   }
 

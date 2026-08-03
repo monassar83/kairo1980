@@ -27,11 +27,15 @@ abbreviate "Straße", do not add a second address line.
 | Website | `https://kairo1980.de` |
 | Latitude / Longitude | `49.3298953`, `8.5472743` |
 
-**Opening hours** (current — lunch service is not published yet):
+**Opening hours.** These are a second copy of `config.js` → `hours`, and the
+only ones on this page that a directory cannot derive for itself. Read them out
+of `config.js`, never from memory.
+
+Until **4 August 2026** (evening service only):
 
 ```
 Monday        closed
-Tuesday       18:00–23:00
+Tuesday       closed
 Wednesday     18:00–23:00
 Thursday      18:00–23:00
 Friday        18:00–23:00
@@ -39,8 +43,33 @@ Saturday      18:00–23:00
 Sunday        18:00–23:00
 ```
 
-> When you enable lunch service in `config.js`, update every platform below in
-> the same session. The website changes automatically; the directories do not.
+From **5 August 2026**, when `hours.lunch.startsOn` falls due — two windows a
+day, entered as two intervals on the same weekday wherever the platform allows
+it (Apple, Google and Bing all do):
+
+```
+Monday        closed
+Tuesday       closed
+Wednesday     11:00–14:30, 18:00–23:00
+Thursday      11:00–14:30, 18:00–23:00
+Friday        11:00–14:30, 18:00–23:00
+Saturday      11:00–14:30, 18:00–23:00
+Sunday        11:00–14:30, 18:00–23:00
+```
+
+> The website switches itself on that date. **The directories do not** — put
+> the two intervals into every platform on 5 August, in one sitting.
+>
+> On the same day, add the lunch window to the static `openingHoursSpecification`
+> block in `index.html`. `order.js` rewrites that JSON-LD from `config.js` for
+> anything that runs scripts, but the block in the markup is the fallback for
+> anything that does not — and a fallback that says "18:00–23:00" is a crawler
+> telling Siri we are closed at noon.
+>
+> Midday is **collection only** (`hours.lunch.delivery: false`). No directory
+> has a field for that, so it belongs in the description or a Showcase, never
+> in the hours: the shop *is* open at midday. Do not let a platform's delivery
+> hours claim otherwise where they can be set separately.
 
 ---
 
@@ -163,13 +192,14 @@ minutes of work once the Google listing is complete.
    `https://kairo1980.de/168e760065044f7d27e17028d7ef2c88a1e8c5a1b83da9f1.txt`.
    Nothing to configure there.
 
-### Apple Business Connect — powers Apple Maps and Siri
-<https://businessconnect.apple.com>
+### Apple Business — powers Apple Maps, Siri and Spotlight
+<https://business.apple.com> (Apple Business Connect was folded into
+"Apple Business" in April 2026; claimed locations and place cards carried over,
+the old URL redirects)
 
 Frequently neglected, and a meaningful share of German phone users never touch
-Google Maps. Sign in with an Apple ID, claim the place, paste the same data,
-upload logo and cover, set the hours. Apple also supports a "Showcase" card —
-use the medium description.
+Google Maps. It has its own section below — the place card has fields no other
+platform has.
 
 ### Also worth claiming
 - **Apple/Yelp**: Yelp feeds several downstream directories.
@@ -180,7 +210,140 @@ use the medium description.
 
 ---
 
-## 7. What only you can do
+## 7. Apple Business, field by field
+
+The place card feeds Apple Maps, Siri, Spotlight, the Apple Intelligence
+answers on iOS and every car running CarPlay. Paste exactly this.
+
+### Identity
+
+| Field | Value |
+| --- | --- |
+| Business name | `KAIRO 1980` — nothing appended. "KAIRO 1980 Ägyptisches Restaurant" is keyword stuffing and is a documented rejection reason |
+| Primary category | Restaurant → **Egyptian** (`Ägyptisch`). If the cuisine list has no Egyptian entry, use Middle Eastern and say Egyptian in the description |
+| Secondary categories | Middle Eastern · Delivery · Caterer · Vegetarian (as far as the tree allows) |
+| Phone | `+49 176 79906621` |
+| Website | `https://kairo1980.de` |
+| Address | `Rostocker Straße 20a`, `68766 Hockenheim`, Deutschland |
+| Pin | `49.3298953, 8.5472743` — then drag the pin to the actual entrance and set the arrival point, so directions end at the door and not on the through road |
+
+### About / description
+
+The field takes 500 characters and one text per language. Apple shows the
+visitor's own language and falls back to German, so every version has to stand
+on its own — these are not translations of a sentence order, they are the same
+facts written natively. Nothing dated goes in here: a launch date belongs in a
+Showcase, which expires by itself.
+
+German (493 characters):
+```
+KAIRO 1980 kocht moderne ägyptische Küche in Hockenheim: Koshary, das Nationalgericht aus Linsen, Reis und Pasta, cremiges Hummus, rauchiges Baba Ghanough und Hawawshy aus dem Ofen. Jedes Gericht wird erst nach Ihrer Bestellung frisch zubereitet, mit hausgemachten Saucen und ohne Fertigprodukte. Ein großer Teil der Karte ist vegan oder vegetarisch. Wir liefern in über 30 Orte im Rhein-Neckar-Kreis, von Schwetzingen und Ketsch bis Heidelberg und Mannheim. Abholung und Büro-Catering ebenso.
+```
+
+English (481 characters):
+```
+KAIRO 1980 cooks modern Egyptian food in Hockenheim: Koshary, the national dish of lentils, rice and pasta, creamy hummus, smoky baba ghanough and oven-baked hawawshy. Every dish is prepared fresh after you order, with homemade sauces and no ready-made products. A large part of the menu is vegan or vegetarian. We deliver to more than 30 towns across the Rhein-Neckar area, from Schwetzingen and Ketsch to Heidelberg and Mannheim. Pickup at the restaurant and office catering too.
+```
+
+Egyptian Arabic, if the account offers it — the site carries all three, and the
+place card should not be the one surface that drops one (353 characters):
+```
+مطعم KAIRO 1980 بيقدّم أكل مصري عصري في هوكنهايم: كشري بعدس ورز ومكرونة، وحمص كريمي، وبابا غنوج مدخّن، وحواوشي من الفرن. كل طبق بيتعمل طازة بعد الطلب، بصوصات بيتي ومن غير أي منتجات جاهزة. جزء كبير من المنيو نباتي أو فيجن. بنوصّل لأكتر من 30 مدينة في منطقة راين-نيكار، من شفتسينجن وكيتش لحد هايدلبرج ومانهايم، وفيه كمان استلام من المطعم وكاترينج للمكاتب.
+```
+
+Dish names stay in Latin script in German and English and in Arabic script only
+in the Arabic text, exactly as on the website. `KAIRO 1980` is the brand and is
+never transliterated.
+
+Do not put the opening hours, the phone number or the delivery fee in the
+description. They are structured fields; repeating them is how a listing starts
+contradicting itself.
+
+### Attributes
+
+Tick: delivery, takeout/pickup, catering, vegetarian options, vegan options,
+online ordering, cash, EC-/Girocard and credit card. Tick halal and
+wheelchair-accessible **only if true of the premises** — an attribute that is
+wrong in person is worse than an attribute that is missing.
+
+Leave reservations off: `acceptsReservations` is `False` in the site's
+structured data and the two must agree.
+
+### Actions
+
+Actions are the buttons on the card, and they are the only part of a listing
+that is worth money. Every one of them points at our own basket — a platform
+button on the place card hands away a commission on an order Apple already
+delivered to us for nothing.
+
+| Button | URL |
+| --- | --- |
+| Order / Bestellen | `https://kairo1980.de/#speisekarte` |
+| Menu / Speisekarte | `https://kairo1980.de/#speisekarte` |
+| Website | `https://kairo1980.de` |
+| Call | `+49 176 79906621` |
+
+If a partner-integration picker offers Lieferando or Uber Eats, decline it.
+They are labelled as alternatives on the site for the same reason, and the
+site's own route carries the 10 % direct discount.
+
+### Showcases
+
+Photo, headline (**38 characters**), description (**58 characters is the safe
+figure** — Apple's own guidance is quoted as both 58 and 100 in different
+places, so write to 58 and nothing gets clipped), an action, and a run of up to
+365 days. Keep two or three live and rotate them; a card that never changes is
+a card Apple stops trusting.
+
+**1 — Lunch launch.** Run from now to roughly mid-September.
+```
+Neu: Mittagstisch ab 5. August
+Mi–So 11:00–14:30 Uhr. Abholung im Restaurant.
+```
+Action → `https://kairo1980.de/#speisekarte`. Note "Abholung" — this is the one
+place the collection-only rule has to be said out loud on Apple.
+
+**2 — The direct-order discount.** Permanent.
+```
+10 % Rabatt bei Direktbestellung
+Direkt bestellen statt über Portale: 10 % Rabatt.
+```
+Action → `https://kairo1980.de/#speisekarte`
+
+**3 — Corporate catering.** Permanent, and the highest-value one.
+```
+Büro-Catering aus Ägypten
+Meetings & Team-Lunch. Ab 100 € liefern wir kostenlos.
+```
+Action → `https://kairo1980.de/#firmen`
+
+Both figures come from `config.js` (`order.directDiscountPercent`,
+`business.freeDeliveryFrom`). Change either one there and these two Showcases
+are stale the same day.
+
+### Photos
+
+| Slot | File |
+| --- | --- |
+| Logo | `brand/apple-logo-mark-1024.png` |
+| Cover | `brand/apple-cover-1920x1280.jpg` |
+
+Read `brand/README.md` before uploading the cover: Apple requires an unedited
+photograph of the actual business, so `hero.jpg` qualifies only if it is our
+own photograph of our own food. Apple Maps crops the cover to about 2.5:1 —
+`brand/preview-maps-crop-2.5to1.jpg` shows what survives.
+
+### Ratings on the Apple card
+
+Apple Maps in Germany shows its own thumbs-up ratings plus material from Yelp,
+Foursquare and Tripadvisor. Google reviews never appear there. Two consequences:
+
+- Claiming the **Yelp** and **Foursquare** pages is Apple work, not Yelp work —
+  it is how photos and a rating reach the place card at all.
+- Guests on an iPhone can rate directly in Apple Maps. Worth asking for in the
+  shop; there is no shareable review link the way `g.page/r/…` works for Google.
+
+## 8. What only you can do
 
 - Log in and prove ownership on each platform
 - Receive and enter verification codes

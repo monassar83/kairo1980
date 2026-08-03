@@ -1370,6 +1370,25 @@ body.cart-open { overflow: hidden; }
   transition: background 0.2s;
 }
 .cart-send:hover { background: #176e49; }
+
+/* The confirmation screen's send button. It is an <a>, not a <button>, because
+   a tap on a link is a user gesture the browser will not block — and after an
+   online payment there is no gesture left to open a popup with. Styled as the
+   same green button so nothing about it reads as secondary: until it is
+   tapped, the money has moved and the order has not. */
+a.cart-send-wa {
+  display: block; box-sizing: border-box; margin-top: 12px;
+  text-align: center; text-decoration: none;
+}
+.cart-must-send {
+  margin: 18px 0 0; font-size: 14px; line-height: 1.7;
+  font-weight: 600; color: #1c1409;
+}
+.cart-blocked {
+  margin: 8px 0 0; padding: 10px 12px;
+  background: #f5e2c8; border-inline-start: 3px solid #a07838;
+  font-size: 13px; line-height: 1.65; color: #6b4f1e;
+}
 /* Out of the delivery area the button sends an enquiry, not an order, and
    says so — the colour change stops it reading as a completed checkout. */
 .cart-send.is-request { background: #7a6030; }

@@ -198,6 +198,76 @@ test('a declined card fails cleanly and says nothing was charged', async (t) => 
   assert.equal(row.failure_code, 'INSTRUMENT_DECLINED');
 });
 
+test('a capture PayPal is holding for review is not reported as paid', async (t) => {
+  // This happened with real money. A PayPal ORDER reads COMPLETED as soon as
+  // the capture call succeeds, even when the capture inside it is PENDING with
+  // reason PENDING_REVIEW and PayPal is still holding the funds. Believing the
+  // order told the kitchen "PAID ONLINE" for money that had not arrived.
+  const env = workerEnv(MENU);
+  const c = ctx();
+  let payment;
+
+  const paypal = fakePayPal({
+    '/v2/checkout/orders': () => orderResponse({ id: 'PP-ORDER-1' }),
+    '/v2/checkout/orders/PP-ORDER-1/capture': () => {
+      const order = orderResponse({
+        id: 'PP-ORDER-1', status: 'COMPLETED', captureId: 'CAP-1',
+        captureStatus: 'PENDING', amount: BASKET_TOTAL,
+        paymentId: payment.id, reference: payment.reference
+      });
+      order.purchase_units[0].payments.captures[0].status_details = { reason: 'PENDING_REVIEW' };
+      return order;
+    }
+  });
+  t.after(() => paypal.restore());
+
+  payment = await createPayment(env, c);
+  const res = await worker.fetch(post(`/api/payments/${payment.id}/capture`), env, c);
+  const body = await res.json();
+
+  assert.equal(body.payment.status, 'pending', 'the order says COMPLETED; the capture does not');
+  assert.notEqual(body.payment.status, 'captured');
+
+  const row = await env.DB.prepare('SELECT * FROM payments WHERE id = ?1').bind(payment.id).first();
+  assert.equal(row.status, 'pending');
+  assert.equal(row.captured_at, null, 'nothing was captured, so nothing is stamped');
+  assert.equal(row.failure_code, 'PENDING_REVIEW', 'why it is held is worth keeping');
+
+  // And it must not appear in the money actually taken.
+  const settled = await env.DB.prepare('SELECT * FROM payments_settled').all();
+  assert.equal(settled.results.length, 0, 'a held payment is not revenue');
+});
+
+test('a review that clears later settles the payment', async (t) => {
+  const env = workerEnv(MENU);
+  const c = ctx();
+  let payment;
+
+  const paypal = fakePayPal({
+    '/v2/checkout/orders': () => orderResponse({ id: 'PP-ORDER-1' }),
+    '/v1/notifications/verify-webhook-signature': () => ({ verification_status: 'SUCCESS' })
+  });
+  t.after(() => paypal.restore());
+
+  payment = await createPayment(env, c);
+  await store_settle_pending(env, payment.id);
+
+  const event = webhookEvent({
+    id: 'WH-CLEARED', paymentId: payment.id, reference: payment.reference,
+    amount: BASKET_TOTAL, orderId: 'PP-ORDER-1'
+  });
+  await worker.fetch(post('/api/webhooks/paypal', event, webhookHeaders()), env, c);
+  await c.settled();
+
+  const row = await env.DB.prepare('SELECT * FROM payments WHERE id = ?1').bind(payment.id).first();
+  assert.equal(row.status, 'captured', 'PayPal released it; the books follow');
+});
+
+async function store_settle_pending(env, id) {
+  const store = await import('../../worker/payments/store.js');
+  await store.settle(env.DB, id, 'pending', { failureCode: 'PENDING_REVIEW' });
+}
+
 test('a payment for the wrong amount is refused even if PayPal accepted it', async (t) => {
   const env = workerEnv(MENU);
   const c = ctx();

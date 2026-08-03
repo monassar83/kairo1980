@@ -194,6 +194,8 @@ function readOrder(order) {
     status: order.status,                       // CREATED|APPROVED|COMPLETED|VOIDED|PAYER_ACTION_REQUIRED
     captureId: capture?.id || null,
     captureStatus: capture?.status || null,     // COMPLETED|PENDING|DECLINED
+    // Why it is pending: PENDING_REVIEW means PayPal is holding the money.
+    captureReason: capture?.status_details?.reason || null,
     authorizationId: authorization?.id || null,
     amount: capture ? Math.round(parseFloat(capture.amount.value) * 100) : null,
     currency: capture?.amount?.currency_code || null,
@@ -273,6 +275,8 @@ export async function verifyEvent(env, request, rawBody) {
 export function meaningOf(eventType) {
   switch (eventType) {
     case 'CHECKOUT.ORDER.APPROVED': return 'approved';
+    // PayPal has put the capture under review. It is not money yet.
+    case 'PAYMENT.CAPTURE.PENDING': return 'pending';
     case 'PAYMENT.CAPTURE.COMPLETED': return 'captured';
     case 'PAYMENT.CAPTURE.DENIED':
     case 'PAYMENT.CAPTURE.REVERSED': return 'failed';
@@ -304,6 +308,9 @@ export function identifyEvent(event) {
 
 export const WEBHOOK_EVENTS = [
   'CHECKOUT.ORDER.APPROVED',
+  // Sent when a capture goes under review, so a payment that PayPal is
+  // holding is never left looking settled.
+  'PAYMENT.CAPTURE.PENDING',
   'PAYMENT.CAPTURE.COMPLETED',
   'PAYMENT.CAPTURE.DENIED',
   'PAYMENT.CAPTURE.REFUNDED',
