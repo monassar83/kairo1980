@@ -36,7 +36,18 @@ const raw = readFileSync(FILE, 'utf8');
 const env = parse(raw);
 const updates = {};
 
-console.log(`\nSetting up payments for ${baseUrl}\n`);
+console.log(`\nSetting up payments for ${baseUrl}`);
+console.log(`PayPal environment: ${env.PAYPAL_ENV.toUpperCase()}${env.PAYPAL_ENV === 'live' ? '  — REAL MONEY' : ''}\n`);
+
+// Going live is a decision, so it has to be stated twice: once in .dev.vars
+// and once here. Registering a live webhook and pushing live credentials is
+// not something anyone should do by running a command they ran yesterday.
+if (env.PAYPAL_ENV === 'live' && !process.argv.includes('--i-mean-it')) {
+  console.log('  This registers a webhook on the REAL PayPal account, and the');
+  console.log('  next deploy can then take real payments from real customers.');
+  console.log('  Re-run with --i-mean-it if that is what you intend.\n');
+  process.exit(1);
+}
 
 /* --- PayPal --------------------------------------------------------------- */
 
@@ -81,7 +92,11 @@ function parse(text) {
   }
   // PayPal's sandbox and live hosts are chosen by this, and the setup script
   // must talk to the same one the Worker will.
-  out.PAYPAL_ENV = out.PAYPAL_ENV || (out.PAYPAL_CLIENT_ID?.startsWith('A') && out.PAYPAL_LIVE === 'true' ? 'live' : 'sandbox');
+  // Never guessed. Sandbox and live are different PayPal accounts with
+  // different webhooks, and guessing wrong registers the webhook against the
+  // wrong one — which fails silently, as events that never arrive. It must be
+  // written down, and it defaults to the harmless one.
+  out.PAYPAL_ENV = out.PAYPAL_ENV === 'live' ? 'live' : 'sandbox';
   return out;
 }
 

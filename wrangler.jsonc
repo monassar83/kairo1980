@@ -44,9 +44,14 @@
   // Non-secret switches. The credentials themselves are secrets and are set
   // with `wrangler secret put` — never here, and never in a file that ships.
   "vars": {
-    // 'sandbox' while testing, 'live' once the PayPal account is approved.
-    // Stripe needs no equivalent: its key itself says which mode it is
-    // (sk_test_… / sk_live_…), so the two can never disagree.
-    "PAYPAL_ENV": "sandbox"
+    // 'sandbox' or 'live'. This is the switch that decides whether real money
+    // can move: the Worker withholds online payment entirely on kairo1980.de
+    // unless this says 'live' (see sandboxOnProduction in worker/index.js), so
+    // sandbox credentials can never reach a real guest.
+    //
+    // It must agree with the credentials in Cloudflare's secrets. They are
+    // different PayPal accounts, and a mismatch fails as "the checkout does
+    // not work" rather than as anything that names the cause.
+    "PAYPAL_ENV": "live"
   }
 }
