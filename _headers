@@ -69,3 +69,11 @@
 # Must stay fetchable for the IndexNow proof-of-ownership check.
 /*.txt
   Cache-Control: public, max-age=3600
+
+# Apple fetches this to prove we control the domain, and it has no extension,
+# so nothing infers a type and it was served with none at all. Harmless in all
+# likelihood, but a verification that fails here fails opaquely — Apple does
+# not say why — so the guesswork is removed rather than reasoned about.
+/.well-known/apple-developer-merchantid-domain-association
+  Content-Type: text/plain; charset=utf-8
+  Cache-Control: public, max-age=300, must-revalidate
