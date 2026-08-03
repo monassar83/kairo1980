@@ -8,3 +8,6 @@ test-results/
 
 # Scratch: upstream CSS used to generate fonts/fonts.css
 fonts/google.css
+
+# Scratch: a pasted API token, for tools/check-token.mjs. Never committed.
+token.txt
