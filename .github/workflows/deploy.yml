@@ -74,9 +74,33 @@ jobs:
           fi
           echo "ok: d1 database id is set"
 
+      # Applying migrations needs D1 permission on the API token, which a
+      # Workers-only token does not have. It is also a privileged schema
+      # operation, and running one on every price change is asking for
+      # trouble — so it runs only when a migration actually changed.
+      #
+      # When that cannot be determined (a manual run, a first push), it runs
+      # anyway: a migration silently skipped is far worse than one applied
+      # twice, and applying is idempotent.
+      - name: Did the schema change?
+        id: schema
+        run: |
+          before="${{ github.event.before }}"
+          if [ -z "$before" ] || [ "$before" = "0000000000000000000000000000000000000000" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "no previous commit to compare against — running migrations"
+          elif git diff --name-only "$before" "${{ github.sha }}" | grep -q '^migrations/'; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "migrations/ changed — will apply"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "no schema change — skipping"
+          fi
+
       # The schema has to exist before the Worker that writes to it goes live.
       # Applying migrations is idempotent: already-applied ones are skipped.
       - name: Apply database migrations
+        if: steps.schema.outputs.changed == 'true'
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
