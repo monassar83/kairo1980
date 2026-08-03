@@ -348,9 +348,17 @@
     var funding = method === 'card' ? paypal.FUNDING.CARD : paypal.FUNDING.PAYPAL;
     if (!funding) return Promise.resolve(false);
 
-    var sources = paypal.getFundingSources ? paypal.getFundingSources() : [];
-    if (sources.indexOf(funding) === -1) return Promise.resolve(false);
-    if (paypal.isFundingEligible && !paypal.isFundingEligible(funding)) return Promise.resolve(false);
+    // Ask only what the SDK can actually answer. getFundingSources is not
+    // present on every build, and treating a missing API as "not eligible"
+    // silently suppressed BOTH buttons — the guest reached the payment step
+    // and found nothing there to pay with. A check that is unavailable means
+    // "do not know", never "no"; Buttons.isEligible() below is the authority.
+    if (paypal.getFundingSources && paypal.getFundingSources().indexOf(funding) === -1) {
+      return Promise.resolve(false);
+    }
+    if (paypal.isFundingEligible && !paypal.isFundingEligible(funding)) {
+      return Promise.resolve(false);
+    }
 
     var host = slot(spec, method);
     var payment = null;

@@ -126,8 +126,10 @@ function fakeSdk(outcome) {
   return `
     window.paypal = {
       FUNDING: { PAYPAL: 'paypal', CARD: 'card' },
-      getFundingSources: () => ['card', 'paypal'],
-      isFundingEligible: () => true,
+      // Deliberately NOT providing getFundingSources or isFundingEligible.
+      // The real SDK does not always expose them, and a stub more capable than
+      // the real thing hid a bug that suppressed every button on the payment
+      // step. A fake must never be more able than what it stands in for.
       // Apple Pay and Google Pay go through their own components, and both
       // report themselves ineligible here — which is the truth in a Chromium
       // test browser with no wallet and no Advanced Checkout. The page must
