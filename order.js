@@ -2355,7 +2355,13 @@
       // delivery can carry the midday exception without ever inventing one.
       // Filled here rather than left to the pass below: a value substituted
       // into copy is not rescanned for placeholders of its own.
-      lunchClause: (lunchRunning() && !lunchDelivers())
+      // PUBLISHED, not running. The moment the site starts advertising a lunch
+      // service it also starts promising free delivery over the threshold in
+      // the same section — and until the service begins, nothing connected the
+      // two. A guest read "new lunch service from Wednesday" next to "free
+      // delivery from 100 €" and had no way to know the first excludes the
+      // second. The caveat now appears as soon as lunch is mentioned at all.
+      lunchClause: (lunchPublished() && !lunchDelivers())
         ? fill(t().lunchClause, { evening: eveningStart() || '18:00' })
         : ''
     };
