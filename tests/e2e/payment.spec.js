@@ -37,6 +37,31 @@ test('nothing is loaded from PayPal unless the guest chooses to pay online', asy
   expect(external, 'a guest reading the menu must reach no third party').toEqual([]);
 });
 
+test('the button says what pressing it obliges you to (§ 312j Abs. 3 BGB)', async ({ page }) => {
+  // Where a consumer contract concluded electronically obliges payment, the
+  // button must say so in the statute's own words. That is true of the online
+  // payment flow, where money moves on this page before anyone confirms
+  // anything. It is not true of the WhatsApp flow, which prepares a message
+  // and nothing else — the contract forms when the restaurant answers.
+  await stubPayments(page);
+  await page.goto('/?lang=de');
+  await addItem(page, 'hummus', 1);
+  await openBasket(page);
+
+  const button = page.locator('#cartSend');
+
+  await page.locator('[data-pay="onsite"]').click();
+  await expect(button).toHaveText('Per WhatsApp senden');
+
+  await page.locator('[data-pay="online"]').click();
+  await expect(button).toHaveText('Zahlungspflichtig bestellen');
+
+  // An enquiry with no agreed price obliges nobody, whatever was chosen.
+  await page.locator('[data-type="delivery"]').click();
+  await page.locator('#fPlz').fill('10115');
+  await expect(button).toHaveText('Unverbindliche Anfrage senden');
+});
+
 test('the guest is shown the amount before being asked to pay it', async ({ page }) => {
   await stubPayments(page);
   await reachPaymentStep(page);

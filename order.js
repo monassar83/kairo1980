@@ -75,6 +75,8 @@
       company: 'Firma / Rechnungsadresse',
       isBusiness: 'Firmenbestellung',
       leadTime: 'Größere Bestellungen bitte mindestens {h} Std. im Voraus.',
+      // Wortlaut nach § 312j Abs. 3 BGB.
+      orderLiable: 'Zahlungspflichtig bestellen',
       send: 'Per WhatsApp senden', sendRequest: 'Unverbindliche Anfrage senden',
       sending: 'WhatsApp wird geöffnet …',
       sentTitleRequest: 'Anfrage vorbereitet',
@@ -203,6 +205,7 @@
       company: 'Company / billing address',
       isBusiness: 'Corporate order',
       leadTime: 'Please place larger orders at least {h} hours in advance.',
+      orderLiable: 'Order with obligation to pay',
       send: 'Send via WhatsApp', sendRequest: 'Send a non-binding enquiry',
       sending: 'Opening WhatsApp …',
       sentTitleRequest: 'Enquiry prepared',
@@ -325,6 +328,7 @@
       company: 'الشركة / عنوان الفاتورة',
       isBusiness: 'طلب شركة',
       leadTime: 'الطلبات الكبيرة يا ريت قبلها بـ {h} ساعات على الأقل.',
+      orderLiable: 'اطلب مع الالتزام بالدفع',
       send: 'ابعت على واتساب', sendRequest: 'ابعت استفسار من غير التزام',
       sending: 'بنفتح واتساب …',
       sentTitleRequest: 'الاستفسار جاهز',
@@ -1391,8 +1395,24 @@
   function paintSendButton() {
     var btn = document.getElementById('cartSend');
     if (!btn) return;
+    var L = t();
     var outside = isOutsideArea();
-    btn.textContent = outside ? t().sendRequest : t().send;
+
+    /* § 312j Abs. 3 BGB: where an electronically concluded consumer contract
+       obliges payment, the button must say so unambiguously — the wording the
+       statute names is "zahlungspflichtig bestellen".
+
+       It applies to one of the two routes out of this form. Paying on arrival
+       prepares a WhatsApp message and nothing more; the contract forms when we
+       answer in the chat, and the button says what it does. Paying online
+       moves money on this page, before anyone has confirmed anything — so
+       there the obligation is entered here, and the button has to say that.
+
+       An out-of-area enquiry has no agreed price and obliges nobody, so it
+       keeps its own wording whatever was chosen. */
+    var obliges = !outside && form.pay === 'online' && onlinePayEnabled();
+
+    btn.textContent = outside ? L.sendRequest : (obliges ? L.orderLiable : L.send);
     btn.classList.toggle('is-request', outside);
   }
 
@@ -1595,7 +1615,10 @@
           : '') +
         field('fNotes', L.notes, 'textarea', L.notesPh, false) +
         leadNote +
-        '<button type="submit" class="cart-send" id="cartSend">' + L.send + '</button>' +
+        // Label left empty on purpose: paintSendButton() below is the single
+        // place that decides the wording, because the wording is a legal
+        // statement about what pressing it does. Two places would drift.
+        '<button type="submit" class="cart-send" id="cartSend"></button>' +
         '<p class="cart-privacy">' + L.privacy + '</p>' +
       '</form>';
 
