@@ -105,6 +105,29 @@ test('the order that reaches the restaurant carries the items, total and contact
   expect(message).toMatch(/Bargeld|EC-|Kreditkarte/);
 });
 
+test('warnings survive the trip to WhatsApp intact', async ({ page }) => {
+  // The warning sign U+26A0 was the obvious marker and the wrong one: wa.me
+  // redirects through api.whatsapp.com, and that redirect replaces it with
+  // U+FFFD, so the kitchen read a broken character on the line that matters
+  // most. A check mark and an em dash survive the same trip; this one does
+  // not. Nothing above ASCII goes in a flag.
+  const whatsapp = await captureWhatsApp(page);
+  await page.goto('/');
+  await addItem(page, 'hummus', 1);
+  await openBasket(page);
+  await page.locator('[data-type="delivery"]').click();
+  await fillContact(page, { address: 'Teststr. 1', postcode: '10115' });   // Berlin — outside the area
+  await page.locator('#cartSend').click();
+
+  const message = decodeURIComponent((await whatsapp()).split('?text=')[1]);
+  const flags = message.split(/\r?\n/).filter((line) => line.startsWith('*!'));
+  expect(flags.length, 'an out-of-area order must be flagged').toBeGreaterThan(0);
+  for (const line of flags) expect(line.slice(0, 3)).toBe('*! ');
+
+  expect(message, 'no replacement character').not.toContain('�');
+  expect(message, 'no glyph WhatsApp mangles').not.toContain('⚠');
+});
+
 test('the confirmation screen appears and the basket is emptied afterwards', async ({ page }) => {
   await captureWhatsApp(page);
   await page.goto('/');

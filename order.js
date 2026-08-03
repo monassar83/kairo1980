@@ -1609,6 +1609,16 @@
     });
   }
 
+  /* A flag the restaurant must not miss, written so nothing downstream can
+     eat it. The warning sign U+26A0 was the obvious choice and the wrong one:
+     wa.me redirects through api.whatsapp.com, and that redirect replaces it
+     with U+FFFD — so the kitchen read "� PRE-ORDER". A check mark and an
+     em dash survive the same trip; this one does not. Plain ASCII, bolded by
+     WhatsApp's own asterisks, is louder anyway. */
+  function warn(text) {
+    return '*! ' + text + '*';
+  }
+
   function buildMessage(data, payment) {
     var L = t();
     var sums = totals();
@@ -1644,9 +1654,9 @@
         (sums.zone ? ' ' + sums.zone.city : ''));
 
       // Flags the restaurant acts on. Neither one blocked the guest.
-      if (!sums.zone) out.push('⚠ ' + L.mOutsideArea);
+      if (!sums.zone) out.push(warn(L.mOutsideArea));
       else if (sums.subtotal < sums.zone.minOrder) {
-        out.push('⚠ ' + fill(L.mUnderMin, { min: sums.zone.minOrder }));
+        out.push(warn(fill(L.mUnderMin, { min: sums.zone.minOrder })));
       }
     }
     out.push(L.mTime + ': ' + data.time);
@@ -1659,12 +1669,12 @@
     // Anything the guest was warned about is repeated here, so the same facts
     // reach whoever answers the chat.
     whenWarnings().forEach(function (warning) {
-      if (warning.kind === 'hours' || warning.kind === 'past') out.push('⚠ ' + L.mCheckTime);
+      if (warning.kind === 'hours' || warning.kind === 'past') out.push(warn(L.mCheckTime));
       if (warning.kind === 'lead') {
-        out.push('⚠ ' + fill(L.mCheckLead, { h: CFG.business.leadTimeHours }));
+        out.push(warn(fill(L.mCheckLead, { h: CFG.business.leadTimeHours })));
       }
     });
-    if (!isOpenNow()) out.push('⚠ ' + L.mPreorder);
+    if (!isOpenNow()) out.push(warn(L.mPreorder));
 
     return out.join('\n');
   }
