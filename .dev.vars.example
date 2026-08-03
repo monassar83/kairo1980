@@ -1,0 +1,37 @@
+# Local secrets for `wrangler dev`. Copy to `.dev.vars` and fill in.
+# `.dev.vars` is gitignored and must never be committed.
+#
+# In production these are Cloudflare secrets, not a file. `npm run secrets:push`
+# copies them across, piping each value on stdin so none of them ever appears
+# in your shell history.
+#
+# ---------------------------------------------------------------------------
+# PAYPAL — carries all four payment methods.
+#
+# Three of the four need no PayPal account from the guest: Apple Pay, Google
+# Pay and "Debit or Credit Card" are all guest checkout. Only the PayPal button
+# asks anyone to sign in.
+#
+#   https://developer.paypal.com/dashboard/applications
+#
+# Take these from the BUSINESS account, not a personal profile — the developer
+# dashboard has no profile switcher, it simply shows whichever account you
+# signed in with. Sandbox first; live once you are ready to take real money.
+# ---------------------------------------------------------------------------
+
+PAYPAL_CLIENT_ID=
+PAYPAL_CLIENT_SECRET=
+
+# Leave EMPTY. `npm run setup:payments` registers the webhook with PayPal and
+# writes the id back here, so nobody has to copy it out of a dashboard by hand.
+#
+# Webhooks belong to a PayPal ACCOUNT: if you ever change the client id and
+# secret, clear this line and run the setup again, or every incoming event will
+# be verified against the wrong account and refused.
+PAYPAL_WEBHOOK_ID=
+
+# ---------------------------------------------------------------------------
+# Any long random string. Guards /api/reports/settlement.
+# Leave EMPTY and the setup script generates one.
+# ---------------------------------------------------------------------------
+REPORT_TOKEN=

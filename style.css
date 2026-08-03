@@ -1334,11 +1334,16 @@ body.cart-open { overflow: hidden; }
 .cart-pay-pick .cart-pay { margin: 0; }
 .cart-pay:empty { display: none; }
 
-.cart-zone {
+/* The delivery-zone hint and the opening-hours warning look alike and read
+   alike, but they say different things — so they share the styling and keep
+   their own names. */
+.cart-zone,
+.cart-warn {
   margin: -4px 0 14px; font-size: 12.5px; line-height: 1.65;
   color: #7a6030;
 }
-.cart-zone:empty { display: none; }
+.cart-zone:empty, .cart-warn:empty { display: none; }
+.cart-warn.is-active { color: #a07838; }
 .cart-zone.is-ok { color: #1f8f5f; }
 .cart-zone.is-below-min { color: #a07838; }
 .cart-zone.is-unknown {
@@ -1385,13 +1390,61 @@ body.cart-open { overflow: hidden; }
   font-weight: 300; color: #1c1409; margin: 0 0 10px;
 }
 .cart-sent p { font-size: 13.5px; line-height: 1.8; color: #5a4020; margin: 0; }
-.cart-paypal {
-  display: block; margin: 22px 0 0; padding: 15px;
-  background: #003087; color: #fff; text-decoration: none;
-  font-family: 'Cinzel', serif; font-size: 10px;
-  letter-spacing: 0.16em; text-transform: uppercase;
+/* --- the payment step ------------------------------------------------------
+   Built for a thumb first. The amount is the largest thing on the screen —
+   at the moment of paying, the one fact a guest checks is what they are about
+   to be charged — and the provider's own buttons are given a fixed minimum
+   height so the panel cannot jump as each method finishes drawing. */
+.cart-pay-step { padding: 4px 0 8px; }
+.cart-pay-step h3 {
+  font-family: 'Cormorant Garamond', serif; font-size: 24px;
+  font-weight: 300; color: #1c1409; margin: 0 0 14px;
 }
-.cart-paypal:hover { background: #001f5c; }
+.cart-pay-amount {
+  display: flex; align-items: baseline; justify-content: space-between;
+  gap: 12px; margin: 0 0 18px; padding-bottom: 14px;
+  border-bottom: 1px solid rgba(184,145,74,0.28);
+}
+.cart-pay-amount span {
+  font-family: 'Cinzel', serif; font-size: 9.5px;
+  letter-spacing: 0.2em; text-transform: uppercase; color: #7a6030;
+}
+.cart-pay-amount strong {
+  font-family: 'Cormorant Garamond', serif; font-size: 30px;
+  font-weight: 500; color: #1c1409;
+}
+/* Room for the tallest realistic stack of methods, so the layout is settled
+   before the SDK has drawn anything into it. */
+.cart-pay-methods { min-height: 96px; }
+.pay-method + .pay-method { margin-top: 10px; }
+
+/* Apple Pay draws its own button: Safari renders it from this appearance
+   value, and Apple's guidelines forbid restyling it beyond size and corner.
+   It therefore gets height and width and nothing else — no brand colour, no
+   font, no letter-spacing. On any browser that is not Safari the appearance is
+   unknown, but the button is never created there in the first place. */
+.pay-native-apple {
+  display: block; width: 100%; height: 48px;
+  padding: 0; border: 0; cursor: pointer;
+  -webkit-appearance: -apple-pay-button;
+  appearance: -apple-pay-button;
+  -apple-pay-button-type: pay;
+  -apple-pay-button-style: black;
+}
+
+/* Google draws its own button too, into this box. */
+.pay-method-googlepay > div { width: 100%; }
+.pay-method-googlepay iframe,
+.pay-method-googlepay button { width: 100% !important; height: 48px !important; }
+.cart-pay-trust {
+  margin: 14px 0 18px; font-size: 12px; line-height: 1.7; color: #7a6030;
+}
+.cart-pay-ref {
+  margin: 14px 0 0; font-size: 13px; line-height: 1.7; color: #5a4020;
+}
+.cart-pay-ref strong {
+  font-family: 'Cinzel', serif; letter-spacing: 0.12em; color: #1c1409;
+}
 .cart-reset {
   margin-top: 24px; background: none; border: none;
   border-bottom: 1px solid rgba(184,145,74,0.4);
@@ -1527,7 +1580,8 @@ body.cart-open { overflow: hidden; }
 :root[lang="ar"] .cart-type,
 :root[lang="ar"] .cart-label,
 :root[lang="ar"] .cart-send,
-:root[lang="ar"] .cart-paypal,
+:root[lang="ar"] .cart-alt,
+:root[lang="ar"] .cart-pay-amount span,
 :root[lang="ar"] .cart-reset,
 :root[lang="ar"] .whatsapp-btn,
 :root[lang="ar"] .footer-links a,

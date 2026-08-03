@@ -1,0 +1,23 @@
+{
+  "name": "kairo1980",
+  "private": true,
+  "type": "module",
+  "description": "Static site for KAIRO 1980 plus the payments Worker that serves it.",
+  "scripts": {
+    "dev": "wrangler dev --persist-to ../.kairo1980-dev-state",
+    "test": "node --test \"tests/unit/*.test.js\" \"tests/integration/*.test.js\"",
+    "test:e2e": "playwright test",
+    "migrate:local": "wrangler d1 migrations apply kairo1980-payments --local",
+    "migrate:remote": "wrangler d1 migrations apply kairo1980-payments --remote",
+    "setup:payments": "node tools/setup-payments.mjs",
+    "secrets:push": "node tools/push-secrets.mjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "wrangler": "^4.114.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true,
+    "workerd@1.20260730.1": true
+  }
+}

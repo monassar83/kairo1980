@@ -1,0 +1,182 @@
+/* Paying, from the guest's side.
+
+   Every test here is a moment where a real customer either completes an order
+   or gives up: the choice of method, the amount they are asked to confirm,
+   what happens when the card is refused, and whether the restaurant is told
+   the truth about it afterwards. */
+
+import { test, expect } from '@playwright/test';
+import {
+  addItem, openBasket, fillContact, captureWhatsApp, stubPayments, choosePickup
+} from './helpers.js';
+
+/** Basket → contact filled → "pay online" chosen → submitted. */
+async function reachPaymentStep(page) {
+  await page.goto('/');
+  await addItem(page, 'hummus', 2);           // 19.00 − 10 % = 17.10
+  await openBasket(page);
+  await choosePickup(page);
+  await fillContact(page, {});
+  await page.locator('[data-pay="online"]').click();
+  await page.locator('#cartSend').click();
+  await expect(page.locator('.cart-pay-step')).toBeVisible();
+}
+
+test('nothing is loaded from PayPal unless the guest chooses to pay online', async ({ page }) => {
+  const external = [];
+  page.on('request', (req) => {
+    const host = new URL(req.url()).host;
+    if (!host.includes('127.0.0.1') && !host.includes('localhost')) external.push(req.url());
+  });
+
+  await stubPayments(page);
+  await page.goto('/');
+  await addItem(page, 'hummus', 1);
+  await openBasket(page);
+
+  expect(external, 'a guest reading the menu must reach no third party').toEqual([]);
+});
+
+test('the guest is shown the amount before being asked to pay it', async ({ page }) => {
+  await stubPayments(page);
+  await reachPaymentStep(page);
+
+  await expect(page.locator('.cart-pay-amount strong')).toContainText('17,10');
+  await expect(page.locator('.cart-pay-trust')).toBeVisible();
+});
+
+test('only the methods that actually work are drawn', async ({ page }) => {
+  // The server offers all four. This browser has no Apple Pay and no Google
+  // Pay, so exactly two must appear — a wallet button that cannot complete is
+  // a dead end at the payment step, which is where orders get abandoned.
+  await stubPayments(page, { methods: ['applepay', 'googlepay', 'card', 'paypal'] });
+  await reachPaymentStep(page);
+
+  const buttons = page.locator('.fake-pay-button');
+  await expect(buttons).toHaveCount(2);
+  await expect(page.locator('.pay-method-applepay')).toHaveCount(0);
+  await expect(page.locator('.pay-method-googlepay')).toHaveCount(0);
+  // Card first: it needs no PayPal account, so it comes before the one that does.
+  await expect(buttons.first()).toHaveAttribute('data-funding', 'card');
+});
+
+test('paying successfully tells the restaurant the order is already paid', async ({ page }) => {
+  const whatsapp = await captureWhatsApp(page);
+  await stubPayments(page);
+  await reachPaymentStep(page);
+
+  await page.locator('.fake-pay-button').first().click();
+
+  await expect(page.locator('.cart-sent.is-paid')).toBeVisible();
+  await expect(page.locator('.cart-pay-ref')).toContainText('K7F3QA');
+
+  const message = decodeURIComponent((await whatsapp()).split('?text=')[1]);
+  expect(message).toContain('K7F3QA');
+  expect(message).toMatch(/ONLINE BEZAHLT|PAID ONLINE/);
+  expect(message).toContain('17,10');
+  // The basket is emptied only once the order has actually gone.
+  await expect(page.locator('#cartFab')).toBeHidden();
+});
+
+test('a cancelled payment charges nothing and keeps the order alive', async ({ page }) => {
+  await stubPayments(page, { outcome: 'cancel' });
+  await reachPaymentStep(page);
+
+  await page.locator('.fake-pay-button').first().click();
+
+  await expect(page.locator('.cart-pay-step')).toContainText('abgebrochen');
+  // Both ways forward are offered — this is the moment an order is lost.
+  await expect(page.locator('[data-payact="retry"]')).toBeVisible();
+  await expect(page.locator('[data-payact="onsite"]')).toBeVisible();
+});
+
+test('a declined card says nothing was charged, and offers to pay on arrival', async ({ page }) => {
+  await stubPayments(page, { outcome: 'decline' });
+  await reachPaymentStep(page);
+
+  await page.locator('.fake-pay-button').first().click();
+
+  const step = page.locator('.cart-pay-step');
+  await expect(step).toContainText('fehlgeschlagen');
+  await expect(step).toContainText('abgebucht');   // "nothing was charged"
+  await expect(page.locator('[data-payact="onsite"]')).toBeVisible();
+});
+
+test('after a failed payment the order can still be sent, and says pay on arrival', async ({ page }) => {
+  const whatsapp = await captureWhatsApp(page);
+  await stubPayments(page, { outcome: 'decline' });
+  await reachPaymentStep(page);
+
+  await page.locator('.fake-pay-button').first().click();
+  await page.locator('[data-payact="onsite"]').click();
+
+  await expect(page.locator('.cart-sent')).toBeVisible();
+  const message = decodeURIComponent((await whatsapp()).split('?text=')[1]);
+  // It must NOT claim to be paid.
+  expect(message).not.toMatch(/ONLINE BEZAHLT|PAID ONLINE/);
+  expect(message).toMatch(/Bargeld|EC-|Kreditkarte/);
+});
+
+test('a payment still being checked is handed over as pending, not as paid', async ({ page }) => {
+  const whatsapp = await captureWhatsApp(page);
+  await stubPayments(page, { outcome: 'pending' });
+  await reachPaymentStep(page);
+
+  await page.locator('.fake-pay-button').first().click();
+
+  const message = decodeURIComponent((await whatsapp()).split('?text=')[1]);
+  expect(message).toMatch(/Prüfung|review|مراجعة/);
+  expect(message).not.toMatch(/ONLINE BEZAHLT|PAID ONLINE/);
+});
+
+test('the guest can back out of paying before starting, without losing the order', async ({ page }) => {
+  const whatsapp = await captureWhatsApp(page);
+  await stubPayments(page);
+  await reachPaymentStep(page);
+
+  await page.locator('[data-payact="onsite"]').click();
+
+  await expect(page.locator('.cart-sent')).toBeVisible();
+  const message = decodeURIComponent((await whatsapp()).split('?text=')[1]);
+  expect(message).toContain('Hummus');
+  expect(message).not.toMatch(/ONLINE BEZAHLT|PAID ONLINE/);
+});
+
+test('when the provider cannot be reached the guest is not stranded', async ({ page }) => {
+  await stubPayments(page);
+  // The SDK never loads — a train, a blocked host, an outage.
+  await page.route('**/sdk/js*', (route) => route.abort());
+  await reachPaymentStep(page);
+
+  await expect(page.locator('.cart-pay-step')).toContainText('nicht verfügbar');
+  await expect(page.locator('[data-payact="onsite"]')).toBeVisible();
+});
+
+test('online payment is never offered when the server says it is off', async ({ page }) => {
+  await page.route('**/api/payments/config', (route) =>
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ online: false, methods: [] })
+    }));
+
+  await page.goto('/');
+  await addItem(page, 'hummus', 1);
+  await openBasket(page);
+
+  await expect(page.locator('[data-pay="online"]')).toHaveCount(0);
+  await expect(page.locator('#cartSend')).toBeEnabled();
+});
+
+test('a refresh after paying does not ask the guest to pay again', async ({ page }) => {
+  await stubPayments(page);
+  await reachPaymentStep(page);
+  await page.locator('.fake-pay-button').first().click();
+  await expect(page.locator('.cart-sent.is-paid')).toBeVisible();
+
+  await page.reload();
+
+  // The payment is finished and forgotten; the guest meets a clean site.
+  await expect(page.locator('#cartFab')).toBeHidden();
+  const stored = await page.evaluate(() => localStorage.getItem('kairo.payment.v1'));
+  expect(stored).toBeNull();
+});

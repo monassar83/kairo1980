@@ -18,6 +18,12 @@
   # from being repointed if a script were ever injected.
   Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src 'self'; frame-src https://www.google.com; form-action 'self'; base-uri 'self'; frame-ancestors 'self'; object-src 'none'; upgrade-insecure-requests
 
+# The ordering page needs a wider policy than this so the checkout SDK can
+# load, but a per-path rule here does NOT override the /* rule above — it
+# loses to it. So that one exception is set by the Worker on the way out
+# (see CHECKOUT_CSP in worker/index.js). Everything else keeps the policy
+# above, including impressum and datenschutz.
+
 # Opening hours, delivery prices and the menu live here. A visitor holding a
 # stale copy would be shown wrong prices or wrong hours, so these always
 # revalidate — they are a few kB and the 304 is cheap.
@@ -39,6 +45,8 @@
 /order.js
   Cache-Control: public, max-age=300, must-revalidate
 /qr.js
+  Cache-Control: public, max-age=300, must-revalidate
+/pay.js
   Cache-Control: public, max-age=300, must-revalidate
 /app.js
   Cache-Control: public, max-age=300, must-revalidate

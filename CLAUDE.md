@@ -5,11 +5,19 @@ before touching anything; it is the context that is expensive to rediscover.
 
 ## What this is
 
-No build step, no framework, no bundler, no dependencies. Cloudflare Workers
-serves the repo directory as it sits. A change to opening hours is a one-line
-edit and a push, not a release. **Do not introduce a build step, a framework or
-an npm dependency** — the whole design of the site is that the restaurant can
-change a price without a developer.
+No build step, no framework, no bundler. Cloudflare Workers serves the repo
+directory as it sits. A change to opening hours is a one-line edit and a push,
+not a release. **Do not introduce a build step, a framework, or an npm
+dependency the browser loads** — the whole design of the site is that the
+restaurant can change a price without a developer.
+
+There is one server, and it exists for one reason. `worker/` answers `/api/`
+so that payments can be taken: deciding what an order costs, telling a provider
+to take the money, and being told afterwards whether it worked cannot be done
+in a browser without trusting the guest's own arithmetic. Everything that is
+not `/api/` still falls through to the static files untouched. The npm
+dependencies are wrangler and Playwright — build and test tooling only; nothing
+is bundled into a page. See `docs/payments.md`.
 
 Push to `main` deploys automatically. `.github/workflows/deploy.yml` checks
 that every browser script parses and that `zones.js` still matches the
@@ -25,12 +33,20 @@ zones.js     GENERATED from data/delivery_zones.xlsx — never hand-edit
 order.js     hours, basket, WhatsApp handover, structured data
 app.js       page chrome: scroll reveal, reviews carousel, map consent
 qr.js        QR encoder, loaded on demand by the WhatsApp fallback only
+pay.js       the payment step, loaded on demand when a guest pays online
 style.css    all styles
 _headers     cache policy + CSP
+
+worker/      the /api/ routes: pricing, payments, webhooks, settlement
+migrations/  the payments schema (D1)
+tests/       unit + integration (node --test) and e2e (Playwright)
 ```
 
 Load order is `lang.js` → `zones.js` → `config.js` → `order.js` → `app.js`,
-all `defer`. `qr.js` is fetched at runtime, never on page load.
+all `defer`. `qr.js` and `pay.js` are fetched at runtime, never on page load.
+That order is load-bearing in the Worker too: `worker/site-data.js` imports the
+very same `zones.js` and `config.js`, in the same order, rather than keeping a
+second copy of a price or a postcode on the server.
 
 ## The one rule
 
@@ -41,7 +57,8 @@ into a second file, stop — that is the bug this architecture exists to prevent
 | Fact | Single source |
 | --- | --- |
 | Hours, lunch start date, lunch delivery | `config.js` → `hours` |
-| Payment methods, PayPal | `config.js` → `payment` |
+| Payment on arrival, the online switch | `config.js` → `payment` |
+| PayPal credentials, which online methods are live | Cloudflare secrets + `wrangler.jsonc` vars, served by `/api/payments/config` |
 | Postcodes, fees, minimums | `data/delivery_zones.xlsx` → `zones.js` |
 | Discounts, thresholds, lead time, basket lifetime | `config.js` → `order`, `business` |
 | Dishes, prices, diet tags | `index.html` `.mitem[data-item][data-price]` |
@@ -54,8 +71,15 @@ are only the no-JavaScript fallback — update both or neither.
 
 ## Hard constraints
 
-- **Strict CSP, no `unsafe-inline`.** No `<script>`, no `style="…"` and no
-  `onclick=` in the markup. Event wiring goes through the delegated
+- **Strict CSP.** No `<script>`, no `style="…"` and no
+  `onclick=` in the markup. There is exactly one exception and it is narrow:
+  the ordering page (`/` only) allows the named PayPal hosts, and `style-src`
+  there gains `'unsafe-inline'` because the checkout SDK styles what it
+  injects. `script-src` stays strict everywhere, and impressum and datenschutz
+  keep the untouched policy. That one policy is set by the Worker
+  (`CHECKOUT_CSP` in `worker/index.js`), **not** in `_headers` — a per-path
+  rule there does not override the `/*` rule, it loses to it, which is why
+  `run_worker_first` names `/`. Event wiring goes through the delegated
   `[data-action]` / `[data-act]` handlers. Setting `el.style.x` from JS is
   fine (CSSOM, not an inline attribute); parsing a style attribute is not.
 - **Trilingual: German, English, Egyptian Arabic.** Every visible string needs
@@ -89,9 +113,10 @@ are only the no-JavaScript fallback — update both or neither.
 
 ## Things that are the way they are on purpose
 
-- **The basket hands over to WhatsApp.** No backend, no database; nothing
-  leaves the browser until the guest presses send. That is also what keeps the
-  site GDPR-clean.
+- **The basket hands over to WhatsApp.** The order itself still goes nowhere
+  but the guest's own chat: no name, address or phone number is ever sent to
+  our server, and the payment API receives only the basket and the postcode.
+  What ties a payment to an order is the short reference printed in both.
 - **A service that has not started yet is advertised, not opened.**
   `hours.lunch.startsOn` publishes the lunch service as marketing copy while
   keeping it out of the opening-hours table, the "open now" badge, the indexed
@@ -111,20 +136,45 @@ are only the no-JavaScript fallback — update both or neither.
   validation withholds anything, and it withholds an option, not an order: a
   missing button reads as a broken page, so it stays visible with the note that
   names pickup and the evening alternative.
-- **Payment is chosen before the order is sent.** The method travels in the
-  WhatsApp message, because whoever answers the chat has to know whether to
-  watch for a PayPal payment, take the terminal to the counter or send the
-  driver for cash. What is offered comes from `payment.onSite` per order type —
+- **Payment is chosen before the order is sent.** The outcome travels in the
+  WhatsApp message, because whoever answers the chat has to know whether the
+  money is already in — and under which reference — or whether to take the
+  terminal to the counter or send the driver for cash. What is offered comes from `payment.onSite` per order type —
   the terminal stands in the shop, so a delivery is cash only until a driver
   carries one.
-- **PayPal is a link, not an integration.** `paypalMe` + `prepayOnline` produce
-  a paypal.com URL carrying the exact amount. No SDK, no cookie, no
-  third-party request, so the strict CSP and the consent-free privacy policy
-  both survive. What it cannot do is confirm payment: the amount in a
-  PayPal.Me link is editable by the payer and nothing reports back to the page,
-  so the received total must be checked in PayPal against the order. Anything
-  better than that needs a Worker with `main` and PayPal REST credentials —
-  which is a backend, and therefore a decision, not a refactor.
+- **Payment is a payment, not a link.** PayPal.Me is gone: its amount was
+  editable by the payer and nothing reported back, so every order had to be
+  checked by hand. The checkout takes the money through PayPal Checkout and
+  records the result, so a paid order reaches the chat already marked paid,
+  with its reference.
+- **The checkout is built around payment methods, not around PayPal.** The
+  guest picks Apple Pay, Google Pay, card or PayPal. PayPal processes all four,
+  and three of them — the wallets and the card — are guest checkout: no PayPal
+  account, no sign-in, the guest never sees the name. A second provider is one
+  file in `worker/payments/` plus a line in `providers.js`, never a change to
+  the checkout.
+- **The server says what is possible; the browser draws what is real.** Apple
+  Pay and Google Pay need PayPal's Advanced Checkout enabled for the merchant
+  AND a device that has the wallet, and neither fact is knowable server-side.
+  So `pay.js` asks the SDK per method and skips whatever is ineligible. Do not
+  move that decision into config: the point is that the wallets appear on their
+  own the day PayPal approves the account, with no edit and no deploy.
+- **The server prices the order; the browser only says what is in the basket.**
+  No amount, discount or fee is ever read from a request body. The prices are
+  read out of `index.html` itself through the ASSETS binding.
+- **Payment happens before the WhatsApp handover, and never blocks the order.**
+  Paying first means the restaurant is told the truth in one message. But every
+  failure — declined, cancelled, SDK blocked, provider down — offers the same
+  way out: send the order anyway and pay on arrival. Losing an order to a
+  refused card costs more than taking cash at the door.
+- **A payment can only be captured once.** `worker/payments/store.js` moves a
+  payment only from a status it may legally come from, in one conditional
+  UPDATE, and `payment_events.event_key` is UNIQUE. Those two facts are what
+  make a double click, a provider retry and a replayed webhook all harmless.
+  Do not add a code path that writes `status` directly.
+- **The webhook is the source of truth, and is verified with PayPal before it
+  is believed.** A browser redirect only says the guest came back; it does not
+  say the money arrived.
 - **The basket expires.** `order.cartLifetimeMinutes` (120) is a sliding
   window: long enough to survive a reload, short enough that a guest returning
   tomorrow does not meet a stale order at last week's prices.

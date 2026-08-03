@@ -3,6 +3,8 @@ node_modules/
 .dev.vars
 .env
 .DS_Store
+playwright-report/
+test-results/
 
 # Scratch: upstream CSS used to generate fonts/fonts.css
 fonts/google.css

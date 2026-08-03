@@ -9,9 +9,28 @@
 wrangler.jsonc
 node_modules
 
+# Wrangler's own state and build output. `assets.directory` is the repo root,
+# so without these `wrangler dev` watches the files it is itself writing and
+# reloads in a loop until the runtime gives up.
+.wrangler
+.dev.vars
+playwright-report
+test-results
+
 # Build-time only: runs in GitHub Actions, never in the browser.
 fetch-reviews.js
 request-log.json
+
+# The Worker and its schema. `main` compiles worker/ into the Worker itself;
+# publishing the sources as static files would serve the payment routing —
+# and the shape of the database — to anyone who asked for them.
+worker
+migrations
+tests
+playwright.config.js
+package.json
+package-lock.json
+.dev.vars.example
 
 # Source data and the generators. The generated zones.js and sitemap.xml ARE
 # published; these are the editing surface and stay private.

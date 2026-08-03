@@ -8,7 +8,45 @@
   "observability": {
     "enabled": true
   },
+
+  // The site is still served as static assets. `main` exists only so that
+  // /api/* can be answered — worker/index.js hands every other path straight
+  // back to ASSETS, unchanged.
+  "main": "worker/index.js",
   "assets": {
-    "directory": "."
+    "directory": ".",
+    "binding": "ASSETS",
+
+    // A matching static asset is normally served without the Worker running
+    // at all, which is exactly what should happen for the menu, the styles
+    // and the fonts. The ordering page is the one exception: it is the only
+    // page allowed to load the checkout SDK, and that permission has to be
+    // set on the response (see CHECKOUT_CSP in worker/index.js). So the
+    // Worker runs first for this path and hands back the asset itself.
+    "run_worker_first": ["/"]
+  },
+
+  // Payment provenance. Created once with `npx wrangler d1 create
+  // kairo1980-payments`, in WEUR — the money and the restaurant are both in
+  // Germany, so the ledger stays in Europe too.
+  //
+  // The id is not a secret: it names a database that nothing can reach without
+  // this account's credentials.
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "kairo1980-payments",
+      "database_id": "771d18e5-b826-42f6-ac07-42e38a9dda8a",
+      "migrations_dir": "migrations"
+    }
+  ],
+
+  // Non-secret switches. The credentials themselves are secrets and are set
+  // with `wrangler secret put` — never here, and never in a file that ships.
+  "vars": {
+    // 'sandbox' while testing, 'live' once the PayPal account is approved.
+    // Stripe needs no equivalent: its key itself says which mode it is
+    // (sk_test_… / sk_live_…), so the two can never disagree.
+    "PAYPAL_ENV": "sandbox"
   }
 }

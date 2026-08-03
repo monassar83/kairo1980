@@ -1,0 +1,176 @@
+/* Persistence for payments. Every state change goes through here, and every
+   state change writes an event, so `payments` can always be re-derived from
+   `payment_events` if it ever has to be.
+
+   The transitions are deliberately narrow. `settle()` moves a payment forward
+   only from a status it is allowed to move from, in a single conditional
+   UPDATE. That is the duplicate-capture guard: two requests racing to capture
+   the same order both call it, exactly one changes a row, and the loser is
+   told the payment is already captured rather than capturing it twice. */
+
+const TERMINAL = ['captured', 'refunded', 'partially_refunded', 'cancelled'];
+
+// Which statuses a target status may be reached from. Anything else is a
+// no-op that reports the current state instead of overwriting it.
+const ALLOWED_FROM = {
+  approved: ['created'],
+  // `pending` is PayPal holding a capture for review. It is not failure and it
+  // is not money: the guest is told to expect a decision, and the webhook
+  // resolves it either way.
+  pending: ['created', 'approved'],
+  captured: ['created', 'approved', 'pending'],
+  failed: ['created', 'approved', 'pending'],
+  cancelled: ['created', 'approved', 'pending'],
+  refunded: ['captured', 'partially_refunded'],
+  partially_refunded: ['captured', 'partially_refunded']
+};
+
+const now = () => new Date().toISOString();
+
+/* Crockford base32 without the letters that get misread down a phone line.
+   Six characters is ~1 in a billion for the volume one restaurant does, and
+   it has to be readable aloud when a guest rings up about an order. */
+const ALPHABET = '0123456789ACDEFGHJKLMNPQRTUVWXYZ';
+export function newReference() {
+  const bytes = crypto.getRandomValues(new Uint8Array(6));
+  let out = '';
+  for (const b of bytes) out += ALPHABET[b % ALPHABET.length];
+  return out;
+}
+
+export async function create(db, payment) {
+  const ts = now();
+  await db.prepare(
+    `INSERT INTO payments (id, reference, provider, provider_order_id, status,
+       amount, currency, subtotal, discount, fee, order_type, business, postcode,
+       lines, created_at, updated_at)
+     VALUES (?1,?2,?3,?4,'created',?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?14)`
+  ).bind(
+    payment.id, payment.reference, payment.provider, payment.providerOrderId,
+    payment.amount, payment.currency, payment.subtotal, payment.discount, payment.fee,
+    payment.orderType, payment.business ? 1 : 0, payment.postcode || null,
+    JSON.stringify(payment.lines), ts
+  ).run();
+
+  await logEvent(db, {
+    paymentId: payment.id,
+    provider: payment.provider,
+    eventKey: payment.provider + ':created:' + payment.id,
+    eventType: 'payment.created',
+    source: 'api',
+    statusTo: 'created',
+    amount: payment.amount,
+    payload: { providerOrderId: payment.providerOrderId }
+  });
+
+  return get(db, payment.id);
+}
+
+export function get(db, id) {
+  return db.prepare('SELECT * FROM payments WHERE id = ?1').bind(id).first();
+}
+
+export function getByProviderOrder(db, provider, providerOrderId) {
+  return db.prepare(
+    'SELECT * FROM payments WHERE provider = ?1 AND provider_order_id = ?2'
+  ).bind(provider, providerOrderId).first();
+}
+
+/**
+ * Move a payment to `status`, but only from a status it may legally come from.
+ * Returns { changed, payment }. `changed: false` means somebody got there
+ * first — which is a success for the caller, not an error.
+ */
+export async function settle(db, id, status, fields = {}) {
+  const before = await get(db, id);
+  if (!before) return { changed: false, payment: null };
+
+  const from = ALLOWED_FROM[status] || [];
+  const ts = now();
+
+  const set = ['status = ?2', 'updated_at = ?3'];
+  const binds = [id, status, ts];
+  const put = (column, value) => {
+    if (value === undefined || value === null) return;
+    binds.push(value);
+    set.push(`${column} = ?${binds.length}`);
+  };
+
+  put('provider_order_id', fields.providerOrderId);
+  put('authorization_id', fields.authorizationId);
+  put('capture_id', fields.captureId);
+  put('payment_source', fields.paymentSource);
+  put('payer_email', fields.payerEmail);
+  put('payer_id', fields.payerId);
+  put('failure_code', fields.failureCode);
+  put('failure_message', fields.failureMessage);
+  if (fields.refundedAmount != null) put('refunded_amount', fields.refundedAmount);
+  if (status === 'captured') { binds.push(ts); set.push(`captured_at = ?${binds.length}`); }
+
+  const placeholders = from.map((_, i) => `?${binds.length + i + 1}`).join(',');
+  const result = await db.prepare(
+    `UPDATE payments SET ${set.join(', ')}
+      WHERE id = ?1 AND status IN (${placeholders || "''"})`
+  ).bind(...binds, ...from).run();
+
+  const changed = (result.meta?.changes || 0) > 0;
+  if (changed) {
+    await logEvent(db, {
+      paymentId: id,
+      provider: before.provider,
+      eventKey: fields.eventKey || `${before.provider}:${status}:${id}:${ts}`,
+      eventType: 'payment.' + status,
+      source: fields.source || 'api',
+      statusFrom: before.status,
+      statusTo: status,
+      amount: fields.amount != null ? fields.amount : before.amount,
+      payload: fields.payload
+    });
+  }
+
+  return { changed, payment: await get(db, id) };
+}
+
+/** Insert an event. A duplicate event_key is the point of the table, not a
+ *  failure: it returns false so a replayed webhook does no work twice. */
+export async function logEvent(db, event) {
+  try {
+    await db.prepare(
+      `INSERT INTO payment_events (payment_id, provider, event_key, event_type,
+         source, status_from, status_to, amount, payload, created_at)
+       VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10)`
+    ).bind(
+      event.paymentId || null, event.provider, event.eventKey, event.eventType,
+      event.source, event.statusFrom || null, event.statusTo || null,
+      event.amount != null ? event.amount : null,
+      event.payload ? JSON.stringify(event.payload).slice(0, 20000) : null,
+      now()
+    ).run();
+    return true;
+  } catch (err) {
+    if (String(err && err.message).includes('UNIQUE')) return false;
+    throw err;
+  }
+}
+
+export function isTerminal(status) {
+  return TERMINAL.includes(status);
+}
+
+/** What the browser is allowed to know about a payment. No provider payloads,
+ *  no payer identifiers — only what the guest needs to see their own order. */
+export function publicView(payment) {
+  if (!payment) return null;
+  return {
+    id: payment.id,
+    reference: payment.reference,
+    status: payment.status,
+    amount: payment.amount,
+    currency: payment.currency,
+    orderType: payment.order_type,
+    refunded: payment.refunded_amount,
+    capturedAt: payment.captured_at,
+    failureCode: payment.failure_code,
+    final: isTerminal(payment.status)
+  };
+}

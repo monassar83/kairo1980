@@ -37,20 +37,52 @@ jobs:
           # it, which needs more than the default single-commit checkout.
           fetch-depth: 0
 
+      # 24, not 22: the payment tests run against a real SQLite database
+      # through node:sqlite, which is only stable from 24.
       - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: '22'
+          node-version: '24'
 
-      # Guards against publishing a site whose scripts cannot parse. The page
-      # has no build step, so this is the only thing standing between a typo
+      # Guards against publishing a site whose scripts cannot parse. The pages
+      # have no build step, so this is the only thing standing between a typo
       # in config.js and a dead basket in production.
       - name: Check that the browser scripts parse
         run: |
-          for file in lang.js config.js order.js app.js qr.js zones.js fetch-reviews.js; do
+          for file in lang.js config.js order.js app.js qr.js pay.js zones.js fetch-reviews.js; do
             node --check "$file"
             echo "ok: $file"
           done
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Money. Nothing reaches production without these passing: pricing,
+      # the payment state machine, and the whole checkout against a stubbed
+      # PayPal — including the declines, replays and lost callbacks.
+      - name: Run the test suite
+        run: npm test
+
+      # A placeholder database id would fail inside wrangler with a message
+      # that explains nothing. Fail here instead, saying exactly what to do.
+      - name: Check the payments database is configured
+        run: |
+          if grep -q 'PASTE_D1_DATABASE_ID_HERE' wrangler.jsonc; then
+            echo "::error::wrangler.jsonc still has the placeholder database_id."
+            echo "Run 'npx wrangler d1 create kairo1980-payments' and paste the id it prints."
+            exit 1
+          fi
+          echo "ok: d1 database id is set"
+
+      # The schema has to exist before the Worker that writes to it goes live.
+      # Applying migrations is idempotent: already-applied ones are skipped.
+      - name: Apply database migrations
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          wranglerVersion: '4.114.0'
+          command: d1 migrations apply kairo1980-payments --remote
 
       # zones.js is generated. If someone edited the spreadsheet and forgot to
       # rebuild — or hand-edited zones.js — the published prices would silently
@@ -86,9 +118,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          # This is an assets-only Worker: wrangler.jsonc has `assets` but no
-          # `main`, which Wrangler only supports from 3.91 onwards. Pinned
-          # rather than floating so a deploy cannot break on its own.
+          # Pinned rather than floating so a deploy cannot break on its own.
           wranglerVersion: '4.114.0'
           command: deploy
 

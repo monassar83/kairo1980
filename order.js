@@ -84,22 +84,39 @@
       required: 'Bitte ausfüllen.',
       sentTitle: 'WhatsApp geöffnet',
       sentText: 'Bitte senden Sie die vorbereitete Nachricht ab — wir bestätigen Ihre Bestellung direkt im Chat.',
-      payNow: 'Jetzt per PayPal bezahlen', payHint: 'Optional — Sie können auch vor Ort bezahlen.',
+      payNow: 'Jetzt bezahlen', payHint: 'Optional — Sie können auch bei Erhalt bezahlen.',
       or: 'oder',
       pay: { cash: 'Bargeld', giro: 'EC-/Girocard', card: 'Kreditkarte' },
       payOnSite: 'Zahlung bei {type}: {methods}.',
-      payOnline: 'Oder direkt online per PayPal — den Zahlungslink erhalten Sie sofort nach dem Absenden der Bestellung.',
+      payOnline: 'Oder direkt online bezahlen — mit Apple Pay, Google Pay, Karte oder PayPal.',
       payInvoice: 'Rechnung (Firmenkunden)',
       // Lower case in English, where "Payment on Pickup" reads like a title.
       // German keeps the capitals: they are nouns.
       atPickup: 'Abholung', atDelivery: 'Lieferung',
       payMethod: 'Zahlungsart',
-      payOptionOnline: 'Online per PayPal',
+      payOptionOnline: 'Jetzt online bezahlen',
       payOptionOnSite: 'Bei Erhalt bezahlen',
-      payOnlineHint: 'Direkt nach dem Absenden öffnet sich PayPal mit dem exakten Betrag von {total}. Verbindlich wird Ihre Bestellung, sobald wir im Chat bestätigen — Sie können auch erst danach bezahlen.',
+      payOnlineHint: 'Im nächsten Schritt bezahlen Sie {total} mit Apple Pay, Google Pay, Karte oder PayPal. Danach öffnet sich WhatsApp mit Ihrer Bestellung.',
+      paySecure: 'Verschlüsselte Zahlung — Kartendaten erreichen kairo1980.de zu keinem Zeitpunkt.',
+      payTitle: 'Bezahlen', payAmountLabel: 'Zu zahlen', payRef: 'Bestellnummer',
+      payPaidTitle: 'Zahlung erfolgreich',
+      payPaidText: 'Vielen Dank! Wir öffnen jetzt WhatsApp — bitte senden Sie die Nachricht ab, damit wir Ihre Bestellung bestätigen können.',
+      payCancelTitle: 'Zahlung abgebrochen',
+      payCancelText: 'Es wurde nichts abgebucht. Versuchen Sie es erneut oder bezahlen Sie einfach bei Erhalt.',
+      payFailTitle: 'Zahlung fehlgeschlagen',
+      payFailText: 'Es wurde nichts abgebucht. Bitte versuchen Sie eine andere Zahlungsart — oder bezahlen Sie bei Erhalt.',
+      payDeclined: 'Ihre Bank hat die Zahlung abgelehnt. Es wurde nichts abgebucht.',
+      payPendingTitle: 'Zahlung wird geprüft',
+      payPendingText: 'Ihre Zahlung wird noch bestätigt. Senden Sie Ihre Bestellung jetzt ab — wir melden uns im Chat.',
+      payUnavailable: 'Online-Zahlung ist gerade nicht verfügbar. Senden Sie Ihre Bestellung und bezahlen Sie bei Erhalt.',
+      payRetry: 'Erneut versuchen',
+      paySendAnyway: 'Bestellung senden und bei Erhalt bezahlen',
+      payWorking: 'Einen Moment …',
       mPayment: 'Zahlung',
-      mPayOnline: 'Online per PayPal (bitte Zahlungseingang prüfen)',
+      mPayOnline: 'ONLINE BEZAHLT ✓ ({ref} · {amount})',
+      mPayPending: 'Online-Zahlung in Prüfung ({ref}) — bitte Eingang bestätigen',
       mPayOnSite: 'Vor Ort bei {type} ({methods})',
+      mRef: 'Bestellnummer',
       newOrder: 'Neue Bestellung', close: 'Schließen',
       msgTitle: 'Neue Bestellung über kairo1980.de',
       msgBusiness: 'FIRMENBESTELLUNG',
@@ -178,20 +195,37 @@
       required: 'Please fill this in.',
       sentTitle: 'WhatsApp opened',
       sentText: 'Please send the prepared message — we confirm your order right in the chat.',
-      payNow: 'Pay now with PayPal', payHint: 'Optional — you can also pay in person.',
+      payNow: 'Pay now', payHint: 'Optional — you can also pay on arrival.',
       or: 'or',
       pay: { cash: 'cash', giro: 'girocard', card: 'credit card' },
       payOnSite: 'Payment on {type}: {methods}.',
-      payOnline: 'Or pay online with PayPal — you receive the payment link the moment you send the order.',
+      payOnline: 'Or pay online right away — with Apple Pay, Google Pay, card or PayPal.',
       payInvoice: 'Invoice (business customers)',
       atPickup: 'pickup', atDelivery: 'delivery',
       payMethod: 'Payment',
-      payOptionOnline: 'Online with PayPal',
+      payOptionOnline: 'Pay online now',
       payOptionOnSite: 'Pay on arrival',
-      payOnlineHint: 'Right after you send, PayPal opens with the exact amount of {total}. Your order becomes binding when we confirm it in the chat — you can also pay after that.',
+      payOnlineHint: 'In the next step you pay {total} with Apple Pay, Google Pay, card or PayPal. WhatsApp then opens with your order.',
+      paySecure: 'Encrypted payment — card details never reach kairo1980.de.',
+      payTitle: 'Payment', payAmountLabel: 'To pay', payRef: 'Order number',
+      payPaidTitle: 'Payment successful',
+      payPaidText: 'Thank you! We are opening WhatsApp now — please send the message so we can confirm your order.',
+      payCancelTitle: 'Payment cancelled',
+      payCancelText: 'Nothing was charged. Try again, or simply pay on arrival.',
+      payFailTitle: 'Payment failed',
+      payFailText: 'Nothing was charged. Please try another payment method — or pay on arrival.',
+      payDeclined: 'Your bank declined the payment. Nothing was charged.',
+      payPendingTitle: 'Payment being checked',
+      payPendingText: 'Your payment is still being confirmed. Send your order now — we will get back to you in the chat.',
+      payUnavailable: 'Online payment is unavailable right now. Send your order and pay on arrival.',
+      payRetry: 'Try again',
+      paySendAnyway: 'Send order and pay on arrival',
+      payWorking: 'One moment …',
       mPayment: 'Payment',
-      mPayOnline: 'Online via PayPal (please check it arrived)',
+      mPayOnline: 'PAID ONLINE ✓ ({ref} · {amount})',
+      mPayPending: 'Online payment under review ({ref}) — please confirm receipt',
       mPayOnSite: 'In person on {type} ({methods})',
+      mRef: 'Order number',
       newOrder: 'New order', close: 'Close',
       msgTitle: 'New order via kairo1980.de',
       msgBusiness: 'CORPORATE ORDER',
@@ -270,20 +304,37 @@
       required: 'من فضلك املا الخانة دي.',
       sentTitle: 'واتساب اتفتح',
       sentText: 'من فضلك ابعت الرسالة الجاهزة — وهنأكد طلبك في الشات على طول.',
-      payNow: 'ادفع دلوقتي بـ PayPal', payHint: 'اختياري — تقدر تدفع عند الاستلام برضه.',
+      payNow: 'ادفع دلوقتي', payHint: 'اختياري — تقدر تدفع عند الاستلام برضه.',
       or: 'أو',
       pay: { cash: 'كاش', giro: 'كارت EC/Giro', card: 'كارت ائتمان' },
       payOnSite: 'الدفع عند ال{type}: {methods}.',
-      payOnline: 'أو ادفع أونلاين بـ PayPal — لينك الدفع بيوصلك أول ما تبعت الطلب.',
+      payOnline: 'أو ادفع أونلاين على طول — بـ Apple Pay أو Google Pay أو الكارت أو PayPal.',
       payInvoice: 'فاتورة (لعملاء الشركات)',
       atPickup: 'استلام', atDelivery: 'توصيل',
       payMethod: 'طريقة الدفع',
-      payOptionOnline: 'أونلاين بـ PayPal',
+      payOptionOnline: 'ادفع أونلاين دلوقتي',
       payOptionOnSite: 'الدفع عند الاستلام',
-      payOnlineHint: 'أول ما تبعت الطلب هيفتح PayPal بالمبلغ بالظبط {total}. طلبك بيبقى مؤكد لما نرد عليك في الشات — وتقدر تدفع بعد كده عادي.',
+      payOnlineHint: 'في الخطوة الجاية هتدفع {total} بـ Apple Pay أو Google Pay أو الكارت أو PayPal. وبعدين هيفتح واتساب بطلبك.',
+      paySecure: 'الدفع مشفّر — بيانات الكارت عمرها ما بتوصل لـ kairo1980.de.',
+      payTitle: 'الدفع', payAmountLabel: 'المطلوب دفعه', payRef: 'رقم الطلب',
+      payPaidTitle: 'تم الدفع بنجاح',
+      payPaidText: 'شكراً! بنفتحلك واتساب دلوقتي — من فضلك ابعت الرسالة عشان نأكدلك الطلب.',
+      payCancelTitle: 'تم إلغاء الدفع',
+      payCancelText: 'مفيش أي مبلغ اتخصم. جرّب تاني أو ادفع عند الاستلام عادي.',
+      payFailTitle: 'الدفع ما تمّش',
+      payFailText: 'مفيش أي مبلغ اتخصم. جرّب طريقة دفع تانية — أو ادفع عند الاستلام.',
+      payDeclined: 'البنك رفض العملية. مفيش أي مبلغ اتخصم.',
+      payPendingTitle: 'الدفع تحت المراجعة',
+      payPendingText: 'الدفع لسه بيتأكد. ابعت طلبك دلوقتي — وهنرد عليك في الشات.',
+      payUnavailable: 'الدفع أونلاين مش متاح دلوقتي. ابعت طلبك وادفع عند الاستلام.',
+      payRetry: 'جرّب تاني',
+      paySendAnyway: 'ابعت الطلب وادفع عند الاستلام',
+      payWorking: 'لحظة واحدة …',
       mPayment: 'الدفع',
-      mPayOnline: 'أونلاين بـ PayPal (برجاء التأكد من وصول المبلغ)',
+      mPayOnline: 'مدفوع أونلاين ✓ ({ref} · {amount})',
+      mPayPending: 'دفع أونلاين تحت المراجعة ({ref}) — برجاء تأكيد الوصول',
       mPayOnSite: 'عند ال{type} ({methods})',
+      mRef: 'رقم الطلب',
       newOrder: 'طلب جديد', close: 'إغلاق',
       msgTitle: 'طلب جديد من kairo1980.de',
       msgBusiness: 'طلب شركة',
@@ -960,6 +1011,10 @@
     // Outside opening hours "as soon as possible" is meaningless, so the panel
     // opens on the scheduling tab. Only ever pre-selected, never forced.
     if (!isOpenNow() && !draft.fDate && form.when === 'asap') form.when = 'scheduled';
+    // First time the basket is opened is the right moment to find out what
+    // can be paid: early enough to draw the choice, late enough that a visitor
+    // who never orders never pays for the request.
+    ensurePayConfig();
     lastFocused = document.activeElement;
     els.panel.hidden = false;
     els.backdrop.hidden = false;
@@ -1080,7 +1135,7 @@
         '<label class="cart-field"><span class="cart-label">' + L.timeLabel + '</span>' +
           '<input id="fTime" type="time" step="300"></label>' +
       '</div>' +
-      '<div class="cart-zone" id="cartWhenHint"></div>' +
+      '<div class="cart-warn" id="cartWhenHint"></div>' +
       '</fieldset>';
   }
 
@@ -1131,7 +1186,10 @@
     var host = document.getElementById('cartWhenHint');
     if (!host) return;
     var warnings = whenWarnings();
-    host.className = 'cart-zone' + (warnings.length ? ' is-below-min' : '');
+    // Its own class: this warns about the time, not about the delivery zone,
+    // and reusing 'is-below-min' for "outside opening hours" made both harder
+    // to read and impossible to target on their own.
+    host.className = 'cart-warn' + (warnings.length ? ' is-active' : '');
     host.textContent = warnings.map(function (w) { return w.text; }).join(' ');
   }
 
@@ -1267,17 +1325,17 @@
   // button for a method the website cannot process would be a promise made by
   // the wrong party.
   function payChoosable() {
-    return !!paypalHandle();
+    return onlinePayEnabled();
   }
 
-  // Only 'paypal' is ever stored; anything else means "in person".
+  // Only 'online' is ever stored; anything else means "in person".
   function syncPay() {
-    if (form.pay === 'paypal' && !paypalHandle()) form.pay = 'onsite';
+    if (form.pay === 'online' && !onlinePayEnabled()) form.pay = 'onsite';
   }
 
   function payChosenText() {
     var L = t();
-    if (form.pay === 'paypal') {
+    if (form.pay === 'online') {
       return fill(L.payOnlineHint, { total: money(totals().total) });
     }
     return payOnSiteText(form.type);
@@ -1292,15 +1350,19 @@
       return '<p class="cart-pay">' + escapeHtml(payOnSiteText(form.type)) + '</p>';
     }
 
+    var online = form.pay === 'online';
     return '<fieldset class="cart-pay-pick">' +
       '<legend class="cart-label">' + L.payMethod + '</legend>' +
       '<div class="cart-types" role="group" aria-label="' + L.payMethod + '">' +
-        '<button type="button" class="cart-type' + (form.pay === 'paypal' ? ' active' : '') +
-          '" data-pay="paypal">' + L.payOptionOnline + '</button>' +
-        '<button type="button" class="cart-type' + (form.pay === 'paypal' ? '' : ' active') +
+        '<button type="button" class="cart-type' + (online ? ' active' : '') +
+          '" data-pay="online">' + L.payOptionOnline + '</button>' +
+        '<button type="button" class="cart-type' + (online ? '' : ' active') +
           '" data-pay="onsite">' + L.payOptionOnSite + '</button>' +
       '</div>' +
       '<p class="cart-pay">' + escapeHtml(payChosenText()) + '</p>' +
+      // The one sentence a first-time guest wants before typing a card number.
+      // Only shown where it is relevant, so it reads as a fact and not a slogan.
+      (online ? '<p class="cart-pay-trust">' + escapeHtml(L.paySecure) + '</p>' : '') +
       '</fieldset>';
   }
 
@@ -1427,19 +1489,35 @@
      drift apart — and cannot outlive a card terminal.
   ------------------------------------------------------------------------- */
 
-  // PayPal needs a handle AND the switch: either one missing and no PayPal
-  // word, link or paragraph appears anywhere.
-  function paypalHandle() {
-    var p = CFG.payment || {};
-    if (!p.prepayOnline) return '';
-    return String(p.paypalMe || '').replace(/^@/, '').trim();
+  /* Online payment needs the switch in config.js AND a payment account the
+     server can actually use. The second half is not knowable in the browser,
+     so the server is asked — once, when the basket is first opened.
+
+     Not on page load: a visitor who reads the menu and leaves should cost one
+     request for the menu and nothing else. And not the payment SDK either —
+     that is fetched by pay.js only once a guest chooses to pay online, which
+     is what keeps "no third-party requests on load" true. */
+  var payCfg = null;
+  var payCfgAsked = false;
+
+  function onlinePayEnabled() {
+    return !!(payCfg && payCfg.online && CFG.payment && CFG.payment.prepayOnline);
   }
 
-  function paypalLink(amount) {
-    var handle = paypalHandle();
-    if (!handle) return '';
-    return 'https://www.paypal.com/paypalme/' + encodeURIComponent(handle) + '/' +
-      amount.toFixed(2) + 'EUR';
+  function ensurePayConfig() {
+    if (payCfgAsked || !(CFG.payment && CFG.payment.prepayOnline)) return;
+    payCfgAsked = true;
+    fetch('/api/payments/config', { credentials: 'same-origin' })
+      .then(function (res) { return res.ok ? res.json() : null; })
+      .then(function (data) {
+        if (!data || !data.online) return;
+        payCfg = data;
+        // The option only now became known; redraw whatever is on screen.
+        if (els.panel && !els.panel.hidden) paintPanel();
+        renderPaymentNote();
+        applyConfig();
+      })
+      .catch(function () { /* offline — the basket simply offers paying in person */ });
   }
 
   function joinList(parts) {
@@ -1466,6 +1544,19 @@
   // Both order types plus PayPal and the invoice, for schema.org. Only ever
   // what is actually on offer: a payment method Google shows and the shop does
   // not take is a wasted trip for the guest.
+  // Provider ids -> the words Google and the guest read. Apple Pay, Google Pay
+  // and PayPal are brands and are the same string in all three languages; a
+  // card is not a brand, so it comes from the dictionary like everything else.
+  function onlineMethodLabels() {
+    var L = t();
+    return [
+      ['applepay', 'Apple Pay'],
+      ['googlepay', 'Google Pay'],
+      ['card', L.pay.card],
+      ['paypal', 'PayPal']
+    ];
+  }
+
   function paymentAccepted() {
     var L = t();
     var seen = {};
@@ -1475,14 +1566,22 @@
         if (!seen[label]) { seen[label] = true; out.push(label); }
       });
     });
-    if (paypalHandle()) out.push('PayPal');
+    // Only ever what is really on offer. The online methods come from the
+    // server, so a method PayPal has not enabled for this account is never
+    // advertised to Google or to a guest.
+    if (onlinePayEnabled()) onlineMethodLabels().forEach(function (pair) {
+      if (payCfg.methods.indexOf(pair[0]) !== -1 && !seen[pair[1]]) {
+        seen[pair[1]] = true;
+        out.push(pair[1]);
+      }
+    });
     if (CFG.payment && CFG.payment.invoiceForBusiness) out.push(L.payInvoice);
     return out.join(', ');
   }
 
   function renderPaymentNote() {
     var text = [payOnSiteText('pickup'), payOnSiteText('delivery')];
-    if (paypalHandle()) text.push(t().payOnline);
+    if (onlinePayEnabled()) text.push(t().payOnline);
     [].forEach.call(document.querySelectorAll('.payment-note'), function (el) {
       el.textContent = text.filter(Boolean).join(' ');
     });
@@ -1490,7 +1589,27 @@
 
   /* --- WhatsApp handover -------------------------------------------------- */
 
-  function buildMessage(data) {
+  // What the chat is told about payment. A captured payment says so in as
+  // many words, with the reference and the amount actually taken — the two
+  // facts that make checking anything by hand unnecessary.
+  function paymentLine(data, payment) {
+    var L = t();
+    if (payment && payment.status === 'captured') {
+      return fill(L.mPayOnline, {
+        ref: payment.reference,
+        amount: money(payment.amount / 100)
+      });
+    }
+    if (payment && payment.status === 'pending') {
+      return fill(L.mPayPending, { ref: payment.reference });
+    }
+    return fill(L.mPayOnSite, {
+      methods: joinList(onSiteMethods(data.type)),
+      type: data.type === 'pickup' ? L.atPickup : L.atDelivery
+    });
+  }
+
+  function buildMessage(data, payment) {
     var L = t();
     var sums = totals();
     var outside = isOutsideArea();
@@ -1514,14 +1633,10 @@
     out.push('*' + L.mTotal + ': ' + money(sums.total) + '*');
     out.push('');
     out.push(L.mType + ': ' + (data.type === 'delivery' ? L.delivery : L.pickup));
-    // Whoever answers the chat has to know whether to watch for a PayPal
-    // payment, take the terminal to the counter or send the driver for cash.
-    out.push(L.mPayment + ': ' + (data.pay === 'paypal'
-      ? L.mPayOnline
-      : fill(L.mPayOnSite, {
-          methods: joinList(onSiteMethods(data.type)),
-          type: data.type === 'pickup' ? L.atPickup : L.atDelivery
-        })));
+    // Whoever answers the chat has to know whether the money is already in —
+    // and if so, under which reference — or whether to take the terminal to
+    // the counter or send the driver out for cash.
+    out.push(L.mPayment + ': ' + paymentLine(data, payment));
     out.push(L.mName + ': ' + data.name);
     out.push(L.mPhone + ': ' + data.phone);
     if (data.type === 'delivery') {
@@ -1654,11 +1769,31 @@
     document.body.removeChild(area);
   }
 
+  /* --- placing the order --------------------------------------------------
+     Two routes out of the form, and which one is taken decides what the
+     restaurant reads in the chat.
+
+     Paying in person is unchanged: hand the message to WhatsApp and be done.
+
+     Paying online takes payment FIRST and hands over afterwards, so the order
+     arrives already marked paid, with its reference — nobody has to check an
+     app against a chat, which is the manual reconciliation this exists to
+     remove. It is also the better order on a phone: sending the message first
+     switches apps and leaves the payment behind in a tab the guest may never
+     come back to.
+
+     What it must never do is lose an order. Every failure path below ends with
+     the same escape — send the order anyway and pay on arrival — because a
+     guest whose card was declined still wants dinner.
+  ------------------------------------------------------------------------- */
+
+  var pending = null;   // { data, outside } — the order awaiting payment
+
   function submitOrder(e) {
     e.preventDefault();
-    var L = t();
     syncType();
     syncPay();
+
     var data = {
       type: form.type,
       pay: form.pay,
@@ -1679,41 +1814,224 @@
     });
     if (bad) { bad.focus(); return; }
 
-    var total = totals().total;
     var outside = isOutsideArea();
-    var message = buildMessage(data);
+    pending = { data: data, outside: outside };
+
+    // An out-of-area enquiry has no agreed price yet, so there is nothing to
+    // pay for and the payment step is skipped entirely.
+    if (data.pay === 'online' && !outside && onlinePayEnabled()) {
+      showPaymentStep();
+      return;
+    }
+
+    handOver(null);
+  }
+
+  /* --- the payment step ---------------------------------------------------- */
+
+  function payScreen(body) {
+    els.body.innerHTML = '<div class="cart-pay-step">' + body + '</div>';
+  }
+
+  function loadPay(done) {
+    if (window.KairoPay) { done(true); return; }
+    var script = document.createElement('script');
+    script.src = 'pay.js';
+    script.onload = function () { done(!!window.KairoPay); };
+    script.onerror = function () { done(false); };
+    document.head.appendChild(script);
+  }
+
+  function showPaymentStep() {
+    var L = t();
+    var total = totals().total;
+
+    payScreen(
+      '<h3>' + escapeHtml(L.payTitle) + '</h3>' +
+      '<p class="cart-pay-amount"><span>' + escapeHtml(L.payAmountLabel) + '</span>' +
+        '<strong>' + escapeHtml(money(total)) + '</strong></p>' +
+      '<div class="cart-pay-methods" id="cartPayMethods">' +
+        '<p class="cart-empty-hint">' + escapeHtml(L.payWorking) + '</p>' +
+      '</div>' +
+      '<p class="cart-pay-trust">' + escapeHtml(L.paySecure) + '</p>' +
+      // The way out, present from the first frame. A guest who changes their
+      // mind at the payment step must never have to go back and start again.
+      '<button type="button" class="cart-alt" data-payact="onsite">' +
+        escapeHtml(L.paySendAnyway) + '</button>'
+    );
+
+    loadPay(function (ready) {
+      var host = document.getElementById('cartPayMethods');
+      if (!ready || !host) { paymentUnavailable(); return; }
+
+      host.innerHTML = '';
+      window.KairoPay.mount({
+        host: host,
+        // What is wanted, never what it costs — the server prices it.
+        order: {
+          items: cloneCart(),
+          type: pending.data.type,
+          business: pending.data.business,
+          postcode: pending.data.plz,
+          lang: lang()
+        },
+        // In cents, and only so the wallet sheet can show the guest the same
+        // figure the panel does. The charge is still the server's number.
+        amount: Math.round(total * 100),
+        labels: { payNow: L.payNow, amount: money(total) },
+        onState: onPaymentState
+      });
+    });
+  }
+
+  function cloneCart() {
+    var out = {};
+    Object.keys(cart).forEach(function (id) { out[id] = cart[id]; });
+    return out;
+  }
+
+  function onPaymentState(state, detail) {
+    var L = t();
+    var info = detail || {};
+
+    if (state === 'ready' || state === 'paying') return;
+    if (state === 'paid' || state === 'pending') { handOver(info.payment); return; }
+    if (state === 'cancelled') { paymentStopped(L.payCancelTitle, L.payCancelText); return; }
+    if (state === 'unavailable') { paymentUnavailable(); return; }
+
+    paymentStopped(L.payFailTitle, info.code === 'declined' ? L.payDeclined : L.payFailText);
+  }
+
+  // Nothing was charged. Both ways forward are offered: try again, or send the
+  // order and pay on arrival.
+  function paymentStopped(title, text) {
+    var L = t();
+    payScreen(
+      '<div class="cart-sent is-request">' +
+        '<div class="cart-sent-mark" aria-hidden="true">!</div>' +
+        '<h3>' + escapeHtml(title) + '</h3>' +
+        '<p>' + escapeHtml(text) + '</p>' +
+        '<button type="button" class="cart-send" data-payact="retry">' +
+          escapeHtml(L.payRetry) + '</button>' +
+        '<button type="button" class="cart-alt" data-payact="onsite">' +
+          escapeHtml(L.paySendAnyway) + '</button>' +
+      '</div>'
+    );
+  }
+
+  function paymentUnavailable() {
+    var L = t();
+    payScreen(
+      '<div class="cart-sent is-request">' +
+        '<div class="cart-sent-mark" aria-hidden="true">!</div>' +
+        '<h3>' + escapeHtml(L.payFailTitle) + '</h3>' +
+        '<p>' + escapeHtml(L.payUnavailable) + '</p>' +
+        '<button type="button" class="cart-send" data-payact="onsite">' +
+          escapeHtml(L.paySendAnyway) + '</button>' +
+      '</div>'
+    );
+  }
+
+  /* --- handing the order to WhatsApp --------------------------------------
+     The single exit. Whether payment happened, is still being checked or was
+     never attempted, the order leaves by exactly this route — so the message,
+     the confirmation screen and the emptying of the basket cannot disagree
+     about what just happened. */
+
+  function handOver(payment) {
+    if (!pending) return;
+    var L = t();
+    var data = pending.data;
+    var outside = pending.outside;
+    var paid = !!(payment && payment.status === 'captured');
+
+    var message = buildMessage(data, payment);
     var url = 'https://wa.me/' + CFG.whatsapp.number + '?text=' + encodeURIComponent(message);
     lastOrder = { url: url, text: message };
     window.open(url, '_blank', 'noopener');
 
-    // Only the guest who chose to pay online gets a payment button, and only
-    // once there is something to pay for: nothing is payable until we have
-    // accepted an out-of-area enquiry, so that path never shows it.
-    var pay = (outside || data.pay !== 'paypal') ? '' : paypalLink(total);
+    var title = outside ? L.sentTitleRequest : (paid ? L.payPaidTitle : L.sentTitle);
+    var text = outside ? L.sentTextRequest : (paid ? L.payPaidText : L.sentText);
+    var note = '';
+    if (payment && payment.status === 'pending') note = L.payPendingText;
+    else if (!outside && !paid) note = payChosenText();
+
     els.body.innerHTML =
-      '<div class="cart-sent' + (outside ? ' is-request' : '') + '">' +
+      '<div class="cart-sent' + (outside ? ' is-request' : '') + (paid ? ' is-paid' : '') + '">' +
         '<div class="cart-sent-mark" aria-hidden="true">' + (outside ? '!' : '✓') + '</div>' +
-        '<h3>' + (outside ? L.sentTitleRequest : L.sentTitle) + '</h3>' +
-        '<p>' + (outside ? L.sentTextRequest : L.sentText) + '</p>' +
-        (pay
-          ? '<a class="cart-paypal" href="' + pay + '" target="_blank" rel="noopener">' + L.payNow +
-            ' · ' + money(total) + '</a><p class="cart-empty-hint">' + L.payHint + ' ' +
-            escapeHtml(payOnSiteText(data.type)) + '</p>'
-          // An out-of-area enquiry has no agreed price yet, so it says nothing
-          // about paying; everyone else is reminded how they chose to.
-          : (outside ? '' : '<p class="cart-empty-hint">' + escapeHtml(payChosenText()) + '</p>')) +
+        '<h3>' + escapeHtml(title) + '</h3>' +
+        '<p>' + escapeHtml(text) + '</p>' +
+        // The reference is what ties this order to its payment in the books,
+        // so the guest gets it too: it is the number to quote on the phone.
+        (payment
+          ? '<p class="cart-pay-ref">' + escapeHtml(L.payRef) + ': <strong>' +
+            escapeHtml(payment.reference) + '</strong></p>'
+          : '') +
+        (note ? '<p class="cart-empty-hint">' + escapeHtml(note) + '</p>' : '') +
         '<button type="button" class="cart-reset" id="cartReset">' + L.newOrder + '</button>' +
         fallbackHtml() +
       '</div>';
 
+    pending = null;
     cart = {};
     draft = {};
     saveCart();
     paintMenu();
     if (els.fab) els.fab.hidden = true;
+    if (window.KairoPay) window.KairoPay.forget();
 
     var reset = document.getElementById('cartReset');
     if (reset) reset.addEventListener('click', closePanel);
+  }
+
+  /* --- coming back to a payment -------------------------------------------
+     A refresh, a back button, a tab the browser restored. The id is in
+     localStorage, but what HAPPENED is only ever read from the server, which
+     re-checks with the provider when it is unsure. A guest is never told an
+     order failed when the money was taken, and never asked to pay twice.
+  ------------------------------------------------------------------------- */
+
+  function recoverPayment() {
+    if (!CFG.payment || !CFG.payment.prepayOnline) return;
+    var record = null;
+    try {
+      var raw = localStorage.getItem('kairo.payment.v1');
+      record = raw ? JSON.parse(raw) : null;
+    } catch (e) { return; }
+    // Nothing to recover: do not fetch pay.js, and do not touch PayPal.
+    if (!record || !record.id) return;
+
+    loadPay(function (ready) {
+      if (!ready) return;
+      if (!window.KairoPay.remembered()) return;
+
+      window.KairoPay.statusOf(record.id).then(function (payment) {
+        if (!payment) return;
+        if (payment.status !== 'captured' && payment.status !== 'pending') {
+          window.KairoPay.forget();
+          return;
+        }
+        // Paid, but the handover never happened. The basket still holds the
+        // order, so it can still reach the kitchen.
+        if (!Object.keys(cart).length) { window.KairoPay.forget(); return; }
+        pending = pending || { data: restoreOrderData(), outside: isOutsideArea() };
+        openPanel();
+        handOver(payment);
+      }).catch(function () { /* leave it; the webhook remains the record */ });
+    });
+  }
+
+  // The form as the guest left it before the payment sheet. The draft survives
+  // in memory and in the inputs; this rebuilds the shape buildMessage expects.
+  function restoreOrderData() {
+    return {
+      type: form.type,
+      pay: form.pay,
+      business: form.business,
+      name: draft.fName || val('fName'), phone: draft.fPhone || val('fPhone'),
+      address: draft.fAddress || val('fAddress'), plz: draft.fPlz || val('fPlz'),
+      time: whenText(), company: draft.fCompany || '', notes: draft.fNotes || ''
+    };
   }
 
   function val(id) {
@@ -1745,6 +2063,23 @@
         form.pay = pay.getAttribute('data-pay');
         rememberForm();
         paintPanel();
+        return;
+      }
+
+      // Buttons on the payment step: try the payment again, or give up on
+      // paying now and send the order to be paid on arrival.
+      var payact = e.target.closest('[data-payact]');
+      if (payact) {
+        if (!pending) return;
+        if (payact.getAttribute('data-payact') === 'retry') {
+          showPaymentStep();
+        } else {
+          // The message must say what will actually happen, so the choice is
+          // corrected before the order is written.
+          pending.data.pay = 'onsite';
+          form.pay = 'onsite';
+          handOver(null);
+        }
         return;
       }
 
@@ -1860,10 +2195,10 @@
         encodeURIComponent(businessTemplate(el.getAttribute('data-wa-template'))));
     });
 
-    // PayPal is only advertised once a handle exists and the switch is on.
-    var hasPaypal = !!paypalHandle();
+    // Online payment is only advertised once the server confirms it works.
+    var canPayOnline = onlinePayEnabled();
     [].forEach.call(document.querySelectorAll('[data-requires="paypal"]'), function (el) {
-      el.hidden = !hasPaypal;
+      el.hidden = !canPayOnline;
     });
 
     if (!CFG.order.cartEnabled) {
@@ -2101,6 +2436,9 @@
       buildPanel();
       wireEvents();
       paint();
+      // A payment that was taken but never handed over must not be lost
+      // because the guest refreshed at the wrong moment.
+      recoverPayment();
     }
 
     // Language switch repaints everything that carries generated text.

@@ -101,25 +101,22 @@ window.KAIRO_CONFIG = {
 
   /* --- Payment ---------------------------------------------------------- */
   payment: {
-    // Your PayPal.Me handle WITHOUT the domain, e.g. 'kairo1980' for
-    // https://paypal.me/kairo1980. Leave empty ('') and every PayPal
-    // element stays hidden — nothing breaks, the option simply disappears.
+    // Offer paying online while ordering — Apple Pay, Google Pay, card or
+    // PayPal. Set to false and the whole online option disappears from the
+    // basket in a second; the site falls back to paying in person, exactly as
+    // it did before online payment existed.
     //
-    // Create the handle once while logged into the PayPal BUSINESS account at
-    // https://www.paypal.com/paypalme/grab — then paste the part after the
-    // last slash here. That handle is public by design; it is a link, not a
-    // credential. No API key, secret or password belongs in this file: the
-    // site never touches money itself, it only opens paypal.com with the
-    // amount prefilled, so no card or account data ever reaches kairo1980.de.
+    // No credential belongs in this file. The client id, the secret and the
+    // webhook id are Cloudflare secrets held by the Worker
+    // (`wrangler secret put PAYPAL_CLIENT_ID`, …), and the page asks the
+    // Worker what is switched on. That is deliberate: a client id pasted here
+    // could end up naming the sandbox while the secret names production, and
+    // the guest would meet a checkout that cannot take money.
     //
-    // The amount in that link is a suggestion the payer can edit, and PayPal
-    // does not tell this site whether it was paid. Always check the amount
-    // received against the WhatsApp order before the food goes out.
-    paypalMe: '',
-
-    // Offer paying online with PayPal while ordering. Both this AND a handle
-    // above are needed before a single PayPal word appears on the site, so the
-    // option can be switched off in a second without losing the handle.
+    // Which methods actually appear is decided by the payment account, not by
+    // this file: Apple Pay and Google Pay show up only on a device that
+    // supports them AND once PayPal has enabled them for the merchant. See
+    // docs/payments.md.
     prepayOnline: true,
 
     // What can be paid in person, per order type. The FAQ, the basket, the
