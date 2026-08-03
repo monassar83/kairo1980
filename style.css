@@ -1695,3 +1695,50 @@ a.cart-send-wa {
 /* A drop shadow has a direction and no logical form, so the one the drawer
    casts onto the page is mirrored by hand. */
 :root[dir="rtl"] .cart-panel { box-shadow: 18px 0 48px rgba(28,20,9,0.18); }
+
+
+/* PAngV and LMIV, said once at the top of the menu rather than repeated on
+   every dish. Readable, not fine print: the law wants it noticed. */
+.menu-legal {
+  max-width: 62ch; margin: 14px auto 0;
+  font-size: 12.5px; line-height: 1.75; color: #6b5836; text-align: center;
+}
+
+/* Allergen letters, the way a printed German menu does it: a superscript
+   beside the dish, and one legend underneath. Small, but never faint — the
+   person reading it has a reason to. */
+.mallergen-codes {
+  margin-inline-start: 3px; font-size: 0.62em; font-weight: 600;
+  letter-spacing: 0.06em; color: #a07838; vertical-align: super; line-height: 0;
+  cursor: help;
+}
+.mallergen-codes:empty { display: none; }
+
+/* The caffeine wording is prescribed, so it is stated in full on the drink. */
+.mcaffeine {
+  margin: 6px 0 0; font-size: 11.5px; line-height: 1.6; color: #7a6030;
+}
+
+.menu-allergen-legend {
+  max-width: 66ch; margin: 40px auto 0; padding-top: 22px;
+  border-top: 1px solid rgba(184,145,74,0.28);
+}
+.legend-title {
+  font-family: 'Cinzel', serif; font-size: 10px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: #7a6030; margin: 0 0 12px; text-align: center;
+}
+.legend-items {
+  display: flex; flex-wrap: wrap; justify-content: center;
+  gap: 8px 20px; margin-bottom: 12px;
+}
+.legend-item { font-size: 12.5px; color: #5a4020; }
+.legend-item b { color: #a07838; margin-inline-end: 4px; }
+.legend-note {
+  margin: 0; font-size: 12px; line-height: 1.75; color: #6b5836; text-align: center;
+}
+/* Arabic is cursive and has no capitals: the small-caps treatment above would
+   be wrong, so it gets size and weight instead. */
+:root[lang="ar"] .legend-title {
+  font-family: 'Cairo', 'DM Sans', sans-serif;
+  font-weight: 600; font-size: 13px; letter-spacing: normal; text-transform: none;
+}

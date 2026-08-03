@@ -87,6 +87,18 @@
       payNow: 'Jetzt bezahlen', payHint: 'Optional — Sie können auch bei Erhalt bezahlen.',
       or: 'oder',
       pay: { cash: 'Bargeld', giro: 'EC-/Girocard', card: 'Kreditkarte' },
+      // Kennzeichnungspflichtige Allergene nach LMIV (EU) Nr. 1169/2011.
+      allergen: {
+        gluten: 'Gluten', milk: 'Milch', sesame: 'Sesam',
+        nuts: 'Schalenfrüchte'
+      },
+      allergenLabel: 'Allergene',
+      allergenNone: 'Keine kennzeichnungspflichtigen Allergene',
+      allergenPending: 'Allergene bitte erfragen',
+      allergenLegendTitle: 'Allergenkennzeichnung',
+      allergenLegendNote: 'Die Buchstaben hinter einem Gericht nennen die enthaltenen kennzeichnungspflichtigen Allergene nach LMIV (EU) Nr. 1169/2011. Gerichte ohne Buchstaben enthalten keine kennzeichnungspflichtigen Allergene. Bei Fragen sprechen Sie uns bitte an — auch zu Spuren, die sich in einer offenen Küche nie ganz ausschließen lassen.',
+      // Wortlaut gesetzlich vorgegeben (LMIV Anhang III Nr. 4.1).
+      caffeineNotice: 'Erhöhter Koffeingehalt. Für Kinder und schwangere oder stillende Frauen nicht empfohlen.',
       payOnSite: 'Zahlung bei {type}: {methods}.',
       payOnline: 'Oder direkt online bezahlen — mit Apple Pay, Google Pay, Karte oder PayPal.',
       payInvoice: 'Rechnung (Firmenkunden)',
@@ -203,6 +215,16 @@
       payNow: 'Pay now', payHint: 'Optional — you can also pay on arrival.',
       or: 'or',
       pay: { cash: 'cash', giro: 'girocard', card: 'credit card' },
+      allergen: {
+        gluten: 'gluten', milk: 'milk', sesame: 'sesame',
+        nuts: 'tree nuts'
+      },
+      allergenLabel: 'Allergens',
+      allergenNone: 'No allergens requiring declaration',
+      allergenPending: 'Please ask us about allergens',
+      allergenLegendTitle: 'Allergen information',
+      allergenLegendNote: 'The letters after a dish name list the allergens requiring declaration under LMIV (EU) 1169/2011. Dishes without letters contain none. Please ask us about anything else — including traces, which an open kitchen can never fully rule out.',
+      caffeineNotice: 'High caffeine content. Not recommended for children or pregnant or breastfeeding women.',
       payOnSite: 'Payment on {type}: {methods}.',
       payOnline: 'Or pay online right away — with Apple Pay, Google Pay, card or PayPal.',
       payInvoice: 'Invoice (business customers)',
@@ -315,6 +337,16 @@
       payNow: 'ادفع دلوقتي', payHint: 'اختياري — تقدر تدفع عند الاستلام برضه.',
       or: 'أو',
       pay: { cash: 'كاش', giro: 'كارت EC/Giro', card: 'كارت ائتمان' },
+      allergen: {
+        gluten: 'جلوتين', milk: 'لبن', sesame: 'سمسم',
+        nuts: 'مكسرات قشرية'
+      },
+      allergenLabel: 'مسببات الحساسية',
+      allergenNone: 'لا توجد مسببات حساسية واجبة الإعلان',
+      allergenPending: 'برجاء السؤال عن مسببات الحساسية',
+      allergenLegendTitle: 'بيان مسببات الحساسية',
+      allergenLegendNote: 'الحروف اللي جنب اسم الطبق بتوضّح مسببات الحساسية الواجب الإعلان عنها حسب لائحة LMIV (EU) 1169/2011. والأطباق اللي من غير حروف مفيهاش مسببات واجبة الإعلان. ولو عندك أي سؤال كلّمنا — كمان بخصوص الآثار البسيطة اللي مطبخ مفتوح عمره ما يقدر يمنعها تماماً.',
+      caffeineNotice: 'نسبة كافيين عالية. غير مناسب للأطفال ولا للحوامل أو المرضعات.',
       payOnSite: 'الدفع عند ال{type}: {methods}.',
       payOnline: 'أو ادفع أونلاين على طول — بـ Apple Pay أو Google Pay أو الكارت أو PayPal.',
       payInvoice: 'فاتورة (لعملاء الشركات)',
@@ -918,6 +950,126 @@
       stepper.setAttribute('data-for', id);
       buy.appendChild(stepper);
     });
+  }
+
+  /* --- allergens ----------------------------------------------------------
+     LMIV (EU) 1169/2011 requires the declarable allergens to be given for
+     non-prepacked food, and for distance selling they must be available BEFORE
+     the order is placed — not on request afterwards. So they are rendered onto
+     the dish itself, where a guest reads the price.
+
+     The declaration lives on the .mitem in index.html, exactly like the price
+     and the diet tags: one place, edited by whoever edits the menu, nothing to
+     keep in sync. Only the four that actually occur in these recipes have
+     labels; a fifth is one word in three dictionaries.
+
+     Where a manufacturer's declaration is not in hand the dish says so rather
+     than guessing. An invented allergen line is worse than none — it is the
+     one field on this site where being wrong can put somebody in hospital.
+  ------------------------------------------------------------------------- */
+
+  /* The letters are the German trade convention, and they are not arbitrary:
+     a = Glutenhaltiges Getreide, g = Milch, h = Schalenfrüchte, k = Sesam,
+     in the order LMIV Annex II lists them. Every printed menu in the country
+     uses them, which is exactly why they work — a guest with an allergy knows
+     to look for the legend without being told.
+
+     Deliberately NOT behind a click. For distance selling the information has
+     to be available BEFORE the order, and something a guest must first
+     discover, then open, is an argument waiting to happen. Small type on the
+     page satisfies the law; a popup invites a lawyer. */
+  var ALLERGEN_CODE = { gluten: 'a', milk: 'g', nuts: 'h', sesame: 'k' };
+  var CODE_ORDER = ['a', 'g', 'h', 'k'];
+
+  function renderAllergens() {
+    var L = t();
+    var used = {};
+    var anyPending = false;
+    var anyCaffeine = false;
+
+    [].forEach.call(document.querySelectorAll('.mitem[data-item]'), function (el) {
+      var declared = (el.getAttribute('data-allergens') || '').trim();
+      var name = el.querySelector('.mname');
+      if (!name) return;
+
+      var mark = name.querySelector('.mallergen-codes');
+      if (!mark) {
+        mark = document.createElement('sup');
+        mark.className = 'mallergen-codes';
+        name.appendChild(mark);
+      }
+
+      if (declared === 'pending') {
+        anyPending = true;
+        mark.textContent = '*';
+        mark.setAttribute('aria-label', L.allergenPending);
+        mark.title = L.allergenPending;
+      } else if (!declared) {
+        // Nothing to declare: no mark, and no clutter.
+        mark.textContent = '';
+        mark.removeAttribute('aria-label');
+        mark.removeAttribute('title');
+      } else {
+        var codes = declared.split(/\s+/).map(function (key) {
+          return ALLERGEN_CODE[key];
+        }).filter(Boolean).sort();
+        codes.forEach(function (c) { used[c] = true; });
+        mark.textContent = codes.join(',');
+        // The letters are shorthand; screen readers and hovers get the words.
+        var words = declared.split(/\s+/).map(function (key) {
+          return L.allergen[key] || key;
+        }).join(', ');
+        mark.setAttribute('aria-label', L.allergenLabel + ': ' + words);
+        mark.title = L.allergenLabel + ': ' + words;
+      }
+
+      if (el.getAttribute('data-caffeine')) anyCaffeine = true;
+      renderCaffeine(el, L);
+    });
+
+    renderLegend(L, used, anyPending, anyCaffeine);
+  }
+
+  // The caffeine wording is prescribed by law and belongs on the drink itself,
+  // not folded into a legend with everything else.
+  function renderCaffeine(el, L) {
+    if (!el.getAttribute('data-caffeine')) return;
+    var host = el.querySelector('.mcaffeine');
+    if (!host) {
+      host = document.createElement('p');
+      host.className = 'mcaffeine';
+      var anchor = el.querySelector('.mtags') || el.querySelector('.mdesc') || el.querySelector('.mname');
+      if (anchor && anchor.parentNode) anchor.parentNode.appendChild(host);
+    }
+    if (host) host.textContent = L.caffeineNotice;
+  }
+
+  function renderLegend(L, used, anyPending, anyCaffeine) {
+    var section = document.querySelector('#speisekarte .menu-section');
+    if (!section) return;
+    var host = document.getElementById('allergenLegend');
+    if (!host) {
+      host = document.createElement('div');
+      host.className = 'menu-allergen-legend';
+      host.id = 'allergenLegend';
+      section.appendChild(host);
+    }
+
+    var parts = CODE_ORDER.filter(function (c) { return used[c]; }).map(function (code) {
+      var key = Object.keys(ALLERGEN_CODE).filter(function (k) {
+        return ALLERGEN_CODE[k] === code;
+      })[0];
+      return '<span class="legend-item"><b>' + code + '</b> ' +
+        escapeHtml(L.allergen[key] || key) + '</span>';
+    });
+    if (anyPending) {
+      parts.push('<span class="legend-item"><b>*</b> ' + escapeHtml(L.allergenPending) + '</span>');
+    }
+
+    host.innerHTML =
+      '<h3 class="legend-title">' + escapeHtml(L.allergenLegendTitle) + '</h3>' +
+      '<div class="legend-items">' + parts.join('') + '</div>' +
+      '<p class="legend-note">' + escapeHtml(L.allergenLegendNote) + '</p>';
   }
 
   function paintMenu() {
@@ -2225,6 +2377,7 @@
     });
 
     renderLunchNotice();
+    renderAllergens();
     renderPaymentNote();
     renderBusinessHours();
     renderAreas();
