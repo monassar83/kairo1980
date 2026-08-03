@@ -16,6 +16,7 @@ import { CONFIG } from './site-data.js';
 import * as store from './payments/store.js';
 import { providerFor, providerForMethod, availableMethods, publicKeys } from './payments/providers.js';
 import { ProviderError } from './payments/errors.js';
+import * as ordersPageView from './orders-page.js';
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
@@ -56,6 +57,7 @@ async function route(request, env, ctx, url) {
   const hook = path.match(/^\/api\/webhooks\/(\w+)$/);
   if (hook && method === 'POST') return webhook(request, env, ctx, hook[1]);
   if (path === '/api/reports/settlement' && method === 'GET') return settlement(request, env, url);
+  if (path === '/api/reports/orders' && method === 'GET') return ordersPage(request, env, url);
 
   const capture = path.match(/^\/api\/payments\/([\w-]{8,64})\/capture$/);
   if (capture && method === 'POST') return capturePayment(request, env, capture[1]);
@@ -533,6 +535,55 @@ async function settlement(request, env, url) {
       capturedAt: o.captured_at,
       items: JSON.parse(o.lines || '[]').map((l) => l.qty + '× ' + l.name)
     }))
+  });
+}
+
+/* The kitchen's own view. Internal only, noindex, basic auth so a phone can
+   open it without a credential ending up in browser history. */
+async function ordersPage(request, env, url) {
+  if (!env.REPORT_TOKEN) return fail(503, 'reports_off', 'Reporting is not configured.');
+  if (!ordersPageView.checkBasic(request, env.REPORT_TOKEN)) return ordersPageView.unauthorised();
+
+  // Berlin, because that is the day the restaurant is working.
+  const day = (url.searchParams.get('day') ||
+    new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' })).slice(0, 10);
+
+  /* captured_at is UTC; the working day is Berlin's. Comparing one against the
+     other files a 23:00 order under tomorrow and hides it. The window is
+     widened by a day either side in SQL and narrowed in JS, where the timezone
+     is actually known — a day's orders is a handful of rows, and correctness
+     across a DST boundary is worth more than the index. */
+  const berlinDay = (iso) =>
+    new Date(iso).toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+
+  const { results: window } = await env.DB.prepare(
+    `SELECT p.reference, p.amount, p.order_type, p.captured_at, p.lines, p.status,
+            EXISTS (SELECT 1 FROM payment_events e
+                     WHERE e.payment_id = p.id AND e.event_type = 'order.handed_over') AS sent
+       FROM payments p
+      WHERE p.captured_at IS NOT NULL
+        AND substr(p.captured_at, 1, 10) BETWEEN date(?1, '-1 day') AND date(?1, '+1 day')
+      ORDER BY p.captured_at DESC`
+  ).bind(day).all();
+
+  const onDay = window.filter((o) => berlinDay(o.captured_at) === day);
+  const orders = onDay;
+  const orphans = onDay.filter((o) => !o.sent);
+
+  const totals = orders.reduce((a, o) => ({
+    orders: a.orders + 1, net: a.net + o.amount
+  }), { orders: 0, net: 0 });
+
+  // Orphans are listed separately above, so they are not repeated below.
+  const flagged = new Set(orphans.map((o) => o.reference));
+  const rest = orders.filter((o) => !flagged.has(o.reference));
+
+  return new Response(ordersPageView.render({ day, orders: rest, orphans, totals }), {
+    headers: {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'X-Robots-Tag': 'noindex, nofollow'
+    }
   });
 }
 

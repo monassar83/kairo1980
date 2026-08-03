@@ -258,6 +258,59 @@ test('money held for review is never counted as revenue', async (t) => {
   assert.equal(settled.results.length, 0);
 });
 
+test('the kitchen page is closed to everyone without the token', async (t) => {
+  const env = workerEnv(MENU, { REPORT_TOKEN: 'kitchen-token' });
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const attempts = [
+    {},
+    { authorization: 'Basic ' + btoa('x:wrong') },
+    { authorization: 'Basic ' + btoa('x:kitchen-toke') },
+    { authorization: 'Basic ' + btoa('x:kitchen-tokenn') },
+    { authorization: 'Bearer kitchen-token' },   // wrong scheme for this page
+    { authorization: 'Basic not-base64' }
+  ];
+  for (const headers of attempts) {
+    const res = await worker.fetch(get('/api/reports/orders', headers), env, ctx());
+    assert.equal(res.status, 401, JSON.stringify(headers));
+  }
+
+  const ok = await worker.fetch(get('/api/reports/orders', {
+    authorization: 'Basic ' + btoa('kitchen:kitchen-token')
+  }), env, ctx());
+  assert.equal(ok.status, 200);
+  assert.match(ok.headers.get('x-robots-tag') || '', /noindex/);
+  assert.match(ok.headers.get('cache-control') || '', /no-store/);
+});
+
+test('the kitchen page cannot show what the server never stored', async (t) => {
+  const env = workerEnv(MENU, { REPORT_TOKEN: 'kitchen-token' });
+  const c = ctx();
+  let payment;
+  const paypal = fakePayPal({
+    '/v2/checkout/orders': () => orderResponse({ id: 'PP-1' }),
+    '/v2/checkout/orders/PP-1/capture': () => orderResponse({
+      id: 'PP-1', status: 'COMPLETED', captureId: 'CAP-1', captureStatus: 'COMPLETED',
+      amount: TOTAL, paymentId: payment.id, reference: payment.reference
+    })
+  });
+  t.after(() => paypal.restore());
+
+  payment = await (await worker.fetch(post('/api/payments', BASKET), env, c)).json();
+  await worker.fetch(post(`/api/payments/${payment.id}/capture`), env, c);
+
+  const html = await (await worker.fetch(get('/api/reports/orders', {
+    authorization: 'Basic ' + btoa('k:kitchen-token')
+  }), env, c)).text();
+
+  assert.ok(html.includes(payment.reference), 'the reference is the whole point');
+  // Contact details never reached this server and must not appear.
+  assert.ok(!html.includes('guest@example.com'));
+  assert.ok(!html.includes('PAYER1'));
+  assert.ok(!html.includes('CAP-1'), 'no provider identifiers');
+});
+
 /* --- the shape of the API itself ----------------------------------------- */
 
 test('endpoints refuse the wrong method rather than doing something surprising', async (t) => {
