@@ -60,6 +60,9 @@ async function route(request, env, ctx, url) {
   const capture = path.match(/^\/api\/payments\/([\w-]{8,64})\/capture$/);
   if (capture && method === 'POST') return capturePayment(request, env, capture[1]);
 
+  const handover = path.match(/^\/api\/payments\/([\w-]{8,64})\/handover$/);
+  if (handover && method === 'POST') return markHandover(env, handover[1]);
+
   const cancel = path.match(/^\/api\/payments\/([\w-]{8,64})\/cancel$/);
   if (cancel && method === 'POST') return cancelPayment(env, cancel[1]);
 
@@ -341,6 +344,37 @@ async function cancelPayment(env, id) {
   return json({ payment: store.publicView(payment) });
 }
 
+/* --- did the order actually reach the kitchen? -------------------------
+   Payment and order travel by different roads here: the money goes through
+   the provider, the order goes through the guest's own WhatsApp. A guest who
+   pays and then closes the tab has done nothing wrong and is owed food, but
+   nothing would have told the restaurant it existed.
+
+   So the page reports the handover, and the report below can name every
+   captured payment that never got one. No name, no phone, no address — only
+   the fact that a paid order has not been sent, its reference, and what was
+   in it. That is enough to recognise the order when the guest rings up, and
+   nothing more than the ledger already holds. */
+
+async function markHandover(env, id) {
+  const payment = await store.get(env.DB, id);
+  if (!payment) return fail(404, 'unknown_payment', 'No such payment.');
+
+  await store.logEvent(env.DB, {
+    paymentId: payment.id,
+    provider: payment.provider,
+    // Unique, so a guest who taps the link three times records it once.
+    eventKey: `handover:${payment.id}`,
+    eventType: 'order.handed_over',
+    source: 'client',
+    statusFrom: payment.status,
+    statusTo: payment.status,
+    amount: payment.amount
+  });
+
+  return json({ ok: true });
+}
+
 /* --- webhooks ------------------------------------------------------------
    The source of truth. A browser can lie, crash or never come back; this
    arrives regardless, is signed, and is verified with PayPal before a single
@@ -475,7 +509,31 @@ async function settlement(request, env, url) {
     net: sum.net + row.net
   }), { orders: 0, gross: 0, refunded: 0, net: 0 });
 
-  return json({ from, to, currency: 'EUR', days: results, totals });
+  // Paid, but never handed to the restaurant. A guest who paid and closed the
+  // tab is owed food and would otherwise be invisible. Reference and contents
+  // only — enough to recognise the order when they ring up, and no more than
+  // the ledger already holds.
+  const { results: orphans } = await env.DB.prepare(
+    `SELECT p.reference, p.amount, p.order_type, p.captured_at, p.lines
+       FROM payments p
+      WHERE p.captured_at IS NOT NULL
+        AND substr(p.captured_at, 1, 10) BETWEEN ?1 AND ?2
+        AND NOT EXISTS (
+          SELECT 1 FROM payment_events e
+           WHERE e.payment_id = p.id AND e.event_type = 'order.handed_over')
+      ORDER BY p.captured_at DESC`
+  ).bind(from, to).all();
+
+  return json({
+    from, to, currency: 'EUR', days: results, totals,
+    paidButNotSent: orphans.map((o) => ({
+      reference: o.reference,
+      amount: o.amount,
+      orderType: o.order_type,
+      capturedAt: o.captured_at,
+      items: JSON.parse(o.lines || '[]').map((l) => l.qty + '× ' + l.name)
+    }))
+  });
 }
 
 function timingSafeEqual(a, b) {

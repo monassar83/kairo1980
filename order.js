@@ -2182,7 +2182,8 @@
         // blocked or not — a guest who dismissed the new tab needs it too.
         '<p class="cart-must-send">' + escapeHtml(L.mustSend) + '</p>' +
         (blocked ? '<p class="cart-blocked">' + escapeHtml(L.popupBlocked) + '</p>' : '') +
-        '<a class="cart-send cart-send-wa" href="' + escapeHtml(url) + '" target="_blank" rel="noopener">' +
+        '<a class="cart-send cart-send-wa" href="' + escapeHtml(url) + '" target="_blank" rel="noopener"' +
+          (payment ? ' data-handover="' + escapeHtml(payment.id) + '"' : '') + '>' +
           escapeHtml(L.sendOrderNow) + '</a>' +
         (note ? '<p class="cart-empty-hint">' + escapeHtml(note) + '</p>' : '') +
         '<button type="button" class="cart-reset" id="cartReset">' + L.newOrder + '</button>' +
@@ -2285,6 +2286,20 @@
 
       // Buttons on the payment step: try the payment again, or give up on
       // paying now and send the order to be paid on arrival.
+      // The guest is handing the order over. Tell the server, so a paid order
+      // that never arrives can be found later. sendBeacon because the tab is
+      // about to lose focus to WhatsApp and a fetch would be cancelled.
+      var handover = e.target.closest('[data-handover]');
+      if (handover) {
+        var payId = handover.getAttribute('data-handover');
+        var to = '/api/payments/' + encodeURIComponent(payId) + '/handover';
+        try {
+          if (navigator.sendBeacon) navigator.sendBeacon(to);
+          else fetch(to, { method: 'POST', keepalive: true, credentials: 'same-origin' });
+        } catch (err) { /* the link must open regardless */ }
+        // Deliberately no return: the link still navigates.
+      }
+
       var payact = e.target.closest('[data-payact]');
       if (payact) {
         if (!pending) return;

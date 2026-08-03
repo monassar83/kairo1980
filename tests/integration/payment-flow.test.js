@@ -618,6 +618,56 @@ test('live credentials serve the live site normally', async (t) => {
   assert.deepEqual(config.methods, ['applepay', 'googlepay', 'card', 'paypal']);
 });
 
+test('a paid order that never reached the restaurant can be found', async (t) => {
+  // Payment and order travel different roads: the money through the provider,
+  // the order through the guest's own WhatsApp. A guest who pays and closes
+  // the tab is owed food and would otherwise be invisible.
+  const env = workerEnv(MENU, { REPORT_TOKEN: 'tok' });
+  const c = ctx();
+  let payment;
+  const paypal = fakePayPal({
+    '/v2/checkout/orders': () => orderResponse({ id: 'PP-ORDER-1' }),
+    '/v2/checkout/orders/PP-ORDER-1/capture': () => captureOk(payment.id, payment.reference)
+  });
+  t.after(() => paypal.restore());
+
+  payment = await createPayment(env, c);
+  await worker.fetch(post(`/api/payments/${payment.id}/capture`), env, c);
+
+  const report = () => worker.fetch(get('/api/reports/settlement', { authorization: 'Bearer tok' }), env, c)
+    .then((r) => r.json());
+
+  let body = await report();
+  assert.equal(body.paidButNotSent.length, 1, 'paid, not yet handed over');
+  assert.equal(body.paidButNotSent[0].reference, payment.reference);
+  assert.equal(body.paidButNotSent[0].amount, BASKET_TOTAL);
+  assert.ok(body.paidButNotSent[0].items.length, 'enough to recognise the order');
+  // Never more than the ledger already holds.
+  assert.equal(JSON.stringify(body).includes('@'), false, 'no contact details');
+
+  // Once the guest taps send, it stops being an orphan — and tapping three
+  // times does not record it three times.
+  for (let i = 0; i < 3; i++) {
+    const res = await worker.fetch(post(`/api/payments/${payment.id}/handover`), env, c);
+    assert.equal(res.status, 200);
+  }
+  body = await report();
+  assert.equal(body.paidButNotSent.length, 0);
+
+  const events = await env.DB.prepare(
+    "SELECT * FROM payment_events WHERE event_type = 'order.handed_over'"
+  ).all();
+  assert.equal(events.results.length, 1, 'recorded once, however many taps');
+});
+
+test('handover cannot be reported for a payment that does not exist', async (t) => {
+  const env = workerEnv(MENU);
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+  const res = await worker.fetch(post('/api/payments/00000000-0000-4000-8000-000000000000/handover'), env, ctx());
+  assert.equal(res.status, 404);
+});
+
 test('the settlement report is closed without the token', async (t) => {
   const env = workerEnv(MENU, { REPORT_TOKEN: 'sekret' });
   const paypal = fakePayPal({});
