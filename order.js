@@ -136,6 +136,9 @@
       mPayPending: 'Online-Zahlung in Prüfung ({ref}) — bitte Eingang bestätigen',
       mPayOnSite: 'Vor Ort bei {type} ({methods})',
       mRef: 'Bestellnummer',
+      mItemCount: '{n} Positionen',
+      mListFollows: 'Vollständige Liste folgt gleich im Chat',
+      waShortened: 'Ihre Bestellung ist sehr umfangreich. An WhatsApp haben wir eine Kurzfassung übergeben — die vollständige Liste liegt in der Zwischenablage, bitte im Chat einfügen.',
       newOrder: 'Neue Bestellung', close: 'Schließen',
       msgTitle: 'Neue Bestellung über kairo1980.de',
       msgBusiness: 'FIRMENBESTELLUNG',
@@ -259,6 +262,9 @@
       mPayPending: 'Online payment under review ({ref}) — please confirm receipt',
       mPayOnSite: 'In person on {type} ({methods})',
       mRef: 'Order number',
+      mItemCount: '{n} items',
+      mListFollows: 'Full list follows in the chat',
+      waShortened: 'Your order is very large. We handed WhatsApp a short version — the full list is on your clipboard, please paste it into the chat.',
       newOrder: 'New order', close: 'Close',
       msgTitle: 'New order via kairo1980.de',
       msgBusiness: 'CORPORATE ORDER',
@@ -382,6 +388,9 @@
       mPayPending: 'دفع أونلاين تحت المراجعة ({ref}) — برجاء تأكيد الوصول',
       mPayOnSite: 'عند ال{type} ({methods})',
       mRef: 'رقم الطلب',
+      mItemCount: '{n} صنف',
+      mListFollows: 'القائمة الكاملة هتوصل حالاً في الشات',
+      waShortened: 'طلبك كبير جداً. بعتنا لواتساب نسخة مختصرة — والقائمة الكاملة متسجّلة في الحافظة، من فضلك الصقها في الشات.',
       newOrder: 'طلب جديد', close: 'إغلاق',
       msgTitle: 'طلب جديد من kairo1980.de',
       msgBusiness: 'طلب شركة',
@@ -462,8 +471,42 @@
         iso: get('year') + '-' + get('month') + '-' + get('day')
       };
     } catch (e) {
-      return null;
+      return berlinFromUTC(new Date());
     }
+  }
+
+  /* Berlin without Intl.
+     -----------------------------------------------------------------------
+     If the timezone database is missing — an old engine, a stripped embedded
+     browser, a locked-down kiosk — the previous fallback used the visitor's
+     OWN clock. A guest in Cairo or New York would then be shown the wrong
+     day's opening hours and could schedule an order for a date that is not
+     the restaurant's today.
+
+     The restaurant is in one place and that place has one rule: UTC+1, or
+     UTC+2 from the last Sunday in March at 01:00 UTC until the last Sunday in
+     October at 01:00 UTC. That rule is arithmetic, needs no data, and is the
+     same one Intl would have applied.
+
+     This is a fallback and stays one: whenever Intl works, Intl decides. */
+  function lastSundayUTC(year, monthIndex) {
+    // Day 0 of the next month is the last day of this one.
+    var d = new Date(Date.UTC(year, monthIndex + 1, 0, 1, 0, 0));
+    d.setUTCDate(d.getUTCDate() - d.getUTCDay());
+    return d;
+  }
+
+  function berlinFromUTC(date) {
+    var year = date.getUTCFullYear();
+    var summer = date >= lastSundayUTC(year, 2) && date < lastSundayUTC(year, 9);
+    var shifted = new Date(date.getTime() + (summer ? 120 : 60) * 60000);
+    var pad = function (n) { return (n < 10 ? '0' : '') + n; };
+    return {
+      day: DAY_KEYS[(shifted.getUTCDay() + 6) % 7],   // DAY_KEYS starts Monday
+      minutes: shifted.getUTCHours() * 60 + shifted.getUTCMinutes(),
+      iso: shifted.getUTCFullYear() + '-' + pad(shifted.getUTCMonth() + 1) +
+        '-' + pad(shifted.getUTCDate())
+    };
   }
 
   /* --- the lunch service --------------------------------------------------
@@ -492,12 +535,11 @@
   }
   // Berlin's date, with the device's own as a fallback: a start date is only
   // ever compared against a calendar day, never against a clock time.
+  // berlinNow() always answers now — with Intl where it works, by arithmetic
+  // where it does not. There is deliberately no local-clock fallback here: the
+  // restaurant's day is Berlin's day, wherever the guest happens to be reading.
   function todayISO() {
-    var now = berlinNow();
-    if (now) return now.iso;
-    var d = new Date();
-    var pad = function (n) { return (n < 10 ? '0' : '') + n; };
-    return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+    return berlinNow().iso;
   }
   function lunchRunning() {
     if (!lunchPublished()) return false;
@@ -850,9 +892,19 @@
     } catch (e) { /* private mode */ }
   }
 
+  /* The dish name, without the allergen letters.
+     .mname carries a <sup> of allergen codes, so textContent alone yields
+     "Baba Ghanougha,g,k" — which is what the kitchen would then read in the
+     WhatsApp order and the guest would read in the basket. Only the text
+     nodes belong to the name; the superscript is a footnote marker. */
   function itemName(id) {
     var node = items[id] && items[id].node;
-    return node ? node.textContent.trim() : id;
+    if (!node) return id;
+    var name = '';
+    [].forEach.call(node.childNodes, function (child) {
+      if (child.nodeType === 3) name += child.nodeValue;
+    });
+    return (name || node.textContent).trim();
   }
 
   // Postcode -> zone. Advisory only: an unknown postcode is reported, never
@@ -1805,8 +1857,17 @@
     return '*! ' + text + '*';
   }
 
-  function buildMessage(data, payment) {
+  /* How much of the order goes into the message.
+       'full'     every line with its price — what a normal order sends
+       'compact'  every line, prices dropped; the totals still state them
+       'summary'  no lines, a count instead
+
+     Never a truncation: each is a complete, readable order. The full text
+     reaches the clipboard regardless, so nothing is lost — only moved out of
+     the URL and into the paste. */
+  function buildMessage(data, payment, density) {
     var L = t();
+    var mode = density || 'full';
     var sums = totals();
     var outside = isOutsideArea();
     var out = ['*' + (outside ? L.msgTitleRequest : L.msgTitle) + '*'];
@@ -1814,9 +1875,15 @@
     if (data.business) out.push('*' + L.msgBusiness + '*');
     out.push('');
 
-    Object.keys(cart).forEach(function (id) {
-      out.push(cart[id] + '× ' + itemName(id) + ' — ' + money(items[id].price * cart[id]));
-    });
+    if (mode === 'summary') {
+      out.push(fill(L.mItemCount, { n: count() }));
+      out.push(L.mListFollows);
+    } else {
+      Object.keys(cart).forEach(function (id) {
+        out.push(cart[id] + '× ' + itemName(id) +
+          (mode === 'compact' ? '' : ' — ' + money(items[id].price * cart[id])));
+      });
+    }
 
     out.push('');
     out.push(L.mSubtotal + ': ' + money(sums.subtotal));
@@ -1896,7 +1963,8 @@
     if (!lastOrder) return '';
     var sms = 'sms:' + CFG.whatsapp.number.replace(/^/, '+') +
       '?body=' + encodeURIComponent(lastOrder.text);
-    return '<details class="cart-fallback" id="cartFallback">' +
+    return '<details class="cart-fallback" id="cartFallback"' +
+      (lastOrder.shortened ? ' open' : '') + '>' +
       '<summary>' + escapeHtml(L.noWhatsapp) + '</summary>' +
       '<div class="cart-fallback-body">' +
         '<div class="cart-qr" id="cartQr"></div>' +
@@ -2141,9 +2209,17 @@
     var outside = pending.outside;
     var paid = !!(payment && payment.status === 'captured');
 
+    /* A wa.me link carries the whole order in its query string, and a very
+       large order can outgrow what a browser or a mobile OS will follow —
+       silently, by refusing to open at all. So the URL gets the densest
+       version that fits, and the clipboard always gets the whole thing.
+
+       Three complete orders, never a cut-off one. Whichever is used, the full
+       text is what copyOrder() puts on the clipboard and what the QR encodes. */
     var message = buildMessage(data, payment);
-    var url = 'https://wa.me/' + CFG.whatsapp.number + '?text=' + encodeURIComponent(message);
-    lastOrder = { url: url, text: message };
+    var fitted = fitForWhatsApp(data, payment, message);
+    var url = fitted.url;
+    lastOrder = { url: url, text: message, shortened: fitted.shortened };
 
     /* Opening WhatsApp is a convenience, never the mechanism.
 
@@ -2182,6 +2258,8 @@
         // blocked or not — a guest who dismissed the new tab needs it too.
         '<p class="cart-must-send">' + escapeHtml(L.mustSend) + '</p>' +
         (blocked ? '<p class="cart-blocked">' + escapeHtml(L.popupBlocked) + '</p>' : '') +
+        // A short version went to WhatsApp; the full one is on the clipboard.
+        (fitted.shortened ? '<p class="cart-blocked">' + escapeHtml(L.waShortened) + '</p>' : '') +
         '<a class="cart-send cart-send-wa" href="' + escapeHtml(url) + '" target="_blank" rel="noopener"' +
           (payment ? ' data-handover="' + escapeHtml(payment.id) + '"' : '') + '>' +
           escapeHtml(L.sendOrderNow) + '</a>' +
@@ -2200,6 +2278,28 @@
 
     var reset = document.getElementById('cartReset');
     if (reset) reset.addEventListener('click', closePanel);
+  }
+
+  /* Practical ceiling for a URL a browser or mobile OS will actually follow.
+     Desktop Chrome and Safari go far higher; Android intent handling and some
+     in-app browsers do not. Comfortably below the lowest of them. */
+  var WA_URL_LIMIT = 3500;
+
+  function waUrl(text) {
+    return 'https://wa.me/' + CFG.whatsapp.number + '?text=' + encodeURIComponent(text);
+  }
+
+  function fitForWhatsApp(data, payment, full) {
+    var url = waUrl(full);
+    if (url.length <= WA_URL_LIMIT) return { url: url, shortened: false };
+
+    // The same order with prices dropped from the lines. The totals below
+    // still state them, so nothing a kitchen needs has gone.
+    url = waUrl(buildMessage(data, payment, 'compact'));
+    if (url.length <= WA_URL_LIMIT) return { url: url, shortened: false };
+
+    // Hundreds of lines. A count travels; the guest pastes the rest.
+    return { url: waUrl(buildMessage(data, payment, 'summary')), shortened: true };
   }
 
   /* --- coming back to a payment -------------------------------------------

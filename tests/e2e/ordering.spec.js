@@ -97,7 +97,11 @@ test('the order that reaches the restaurant carries the items, total and contact
   await page.locator('#cartSend').click();
 
   const message = decodeURIComponent((await whatsapp()).split('?text=')[1]);
-  expect(message).toContain('Hummus');
+  // The dish name and nothing else. The allergen letters are a footnote for
+  // the guest on the website; the kitchen already knows its own recipes, and
+  // "Hummusa,h,k" in an order is noise.
+  expect(message).toContain('2× Hummus —');
+  expect(message).not.toMatch(/Hummus[a-k],/);
   expect(message).toContain('17,10');
   expect(message).toContain('Sherif Esmat');
   expect(message).toContain('+49 176 79906621');
@@ -139,6 +143,57 @@ test('the confirmation screen appears and the basket is emptied afterwards', asy
 
   await expect(page.locator('.cart-sent')).toBeVisible();
   await expect(page.locator('#cartFab')).toBeHidden();
+});
+
+test('a very large order still produces a URL WhatsApp will open', async ({ page }) => {
+  // A wa.me link carries the order in its query string. Past a point a browser
+  // or mobile OS simply refuses to follow it — silently. The URL must stay
+  // openable, and nothing may be lost: the full text goes to the clipboard.
+  const whatsapp = await captureWhatsApp(page);
+  await page.goto('/?lang=de');
+
+  // One of everything on the menu. Line count is what grows the URL, not
+  // quantity, so this is the largest realistic order the site can produce.
+  // Re-query each time: paintMenu() replaces the button after every click, so
+  // a cached NodeList goes stale after the first one.
+  await page.evaluate(() => {
+    document.querySelectorAll('.mitem[data-item]').forEach((row) => {
+      row.querySelector('[data-act="inc"]').click();
+    });
+  });
+  await openBasket(page);
+  await choosePickup(page);
+  await fillContact(page, { name: 'Grossbestellung Test', phone: '+49 176 0000000' });
+  await page.locator('#cartSend').click();
+
+  const url = await whatsapp();
+  const sent = decodeURIComponent(url.split('?text=')[1]);
+
+  // The invariant, and the only thing that matters: the link stays openable,
+  // and what it carries is a complete order rather than a severed one.
+  expect(url.length, 'the URL must stay openable').toBeLessThanOrEqual(3500);
+  expect(sent).toContain('Gesamt');
+  expect(sent).toContain('Grossbestellung Test');
+  expect(sent.trimEnd().endsWith('€') || /[.*\d]$/.test(sent.trimEnd())).toBe(true);
+
+  // Whatever went in the URL, the full order is still copyable from the page.
+  await expect(page.locator('.cart-sent')).toBeVisible();
+  expect(await page.evaluate(() => !!document.querySelector('#cartFallback'))).toBe(true);
+});
+
+test('a normal order is sent in full, with prices on every line', async ({ page }) => {
+  const whatsapp = await captureWhatsApp(page);
+  await page.goto('/?lang=de');
+  await addItem(page, 'hummus', 2);
+  await openBasket(page);
+  await choosePickup(page);
+  await fillContact(page, {});
+  await page.locator('#cartSend').click();
+
+  const sent = decodeURIComponent((await whatsapp()).split('?text=')[1]);
+  expect(sent).toContain('2× Hummus');
+  expect(sent).toContain('19,00');            // the line price, not just the total
+  await expect(page.locator('.cart-blocked')).toHaveCount(0);
 });
 
 test('an order cannot be sent without a name and a phone number', async ({ page }) => {
