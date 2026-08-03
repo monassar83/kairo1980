@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "wrangler dev --persist-to ../.kairo1980-dev-state",
     "test": "node --test \"tests/unit/*.test.js\" \"tests/integration/*.test.js\"",
+    "test:abuse": "node --test \"tests/integration/abuse.test.js\"",
     "test:e2e": "playwright test",
     "migrate:local": "wrangler d1 migrations apply kairo1980-payments --local",
     "migrate:remote": "wrangler d1 migrations apply kairo1980-payments --remote",

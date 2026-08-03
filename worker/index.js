@@ -451,8 +451,15 @@ async function handleEvent(env, provider, event) {
 
 async function settlement(request, env, url) {
   if (!env.REPORT_TOKEN) return fail(503, 'reports_off', 'Reporting is not configured.');
-  const offered = (request.headers.get('authorization') || '').replace(/^Bearer\s+/i, '');
-  if (!timingSafeEqual(offered, env.REPORT_TOKEN)) return fail(401, 'unauthorised', 'Not authorised.');
+  // The scheme is required, not stripped if present. Accepting a bare token
+  // is not exploitable — you still need the token — but an endpoint that
+  // takes credentials in more shapes than it documents is one nobody can
+  // reason about later.
+  const header = request.headers.get('authorization') || '';
+  const match = header.match(/^Bearer (.+)$/);
+  if (!match || !timingSafeEqual(match[1], env.REPORT_TOKEN)) {
+    return fail(401, 'unauthorised', 'Not authorised.');
+  }
 
   const from = (url.searchParams.get('from') || '0000-01-01').slice(0, 10);
   const to = (url.searchParams.get('to') || '9999-12-31').slice(0, 10);
