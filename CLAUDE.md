@@ -23,6 +23,20 @@ Push to `main` deploys automatically. `.github/workflows/deploy.yml` checks
 that every browser script parses and that `zones.js` still matches the
 spreadsheet before publishing.
 
+**That workflow is the only way anything reaches production, on purpose.**
+Cloudflare's own Git integration — Worker Builds, configured in the dashboard
+rather than in this repository — was connected once and disconnected on
+4 August 2026. It deployed the same Worker on the same push, which is a race
+whose winner is whichever finishes last, and it ran none of the guards this
+deploy exists for: no parse check, no test suite, no `zones.js`-versus-
+spreadsheet comparison, no D1 migration, no regenerated `sitemap.xml`, no
+IndexNow ping. A green build there would have published a site that skipped
+all of it. **Do not reconnect it.** If deploys ever appear to be broken, the
+answer is in the Actions log, and usually in one of the two repository secrets
+the workflow needs — `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. A
+rolled token fails there the way a rolled build token failed in the dashboard:
+loudly, and with a message that names everything except the cause.
+
 ## Files
 
 ```
