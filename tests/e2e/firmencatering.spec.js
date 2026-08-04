@@ -177,7 +177,32 @@ test('the page is in the sitemap and linked from the homepage', async ({ page })
   expect(await sitemap.text()).toContain('<loc>https://kairo1980.de/firmencatering</loc>');
 
   await page.goto('/');
-  await expect(page.locator('a[href="/firmencatering"]').first()).toHaveCount(1);
+  // Navigation, the announcement strip, the teaser's own button and the
+  // footer. An orphan page is one nobody links to; this one is reachable from
+  // wherever a reader happens to be on the homepage.
+  await expect(page.locator('a[href="/firmencatering"]')).not.toHaveCount(0);
+  await expect(page.locator('#firmen a[href="/firmencatering"]')).toHaveCount(1);
+  await expect(page.locator('nav.nav a[href="/firmencatering"]')).toHaveCount(1);
+});
+
+test('the homepage teaser hands over instead of repeating the page', async ({ page }) => {
+  await page.goto('/');
+  const teaser = page.locator('#firmen');
+
+  // What a teaser keeps: the heading, the lead, the two figures, one way on.
+  await expect(teaser).toBeVisible();
+  await expect(teaser.locator('[data-cfg="freeDeliveryFrom"]')).toHaveCount(1);
+  await expect(teaser.locator('[data-cfg="leadTimeHours"]')).toHaveCount(1);
+
+  // What it must not keep: the detail that now has one authoritative address.
+  await expect(teaser).not.toContainText('LMIV');
+  await expect(teaser).not.toContainText('§ 19 UStG');
+  await expect(teaser.locator('.bcard')).toHaveCount(0);
+
+  // And the detail really is on the other page.
+  await page.goto(URL);
+  await expect(page.locator('body')).toContainText('§ 19 UStG');
+  await expect(page.locator('.bcard').first()).toBeVisible();
 });
 
 test('the strict content-security policy still applies to this page', async ({ page }) => {
@@ -188,3 +213,32 @@ test('the strict content-security policy still applies to this page', async ({ p
   expect(csp).not.toContain('paypal');
   expect(csp).not.toContain("style-src 'self' 'unsafe-inline'");
 });
+
+test('both pages state the delivery rules in the words config writes',
+  async ({ page }) => {
+    // The two sentences are generated from config.order.minimumOrder and
+    // business.freeDeliveryFrom, so a page cannot be edited into promising
+    // something the basket does not do.
+    for (const path of ['/', URL]) {
+      await page.goto(path);
+      const areas = page.locator('#liefergebiet');
+      await expect(areas).toContainText('nur für private Lieferbestellungen');
+      await expect(areas).toContainText('privat wie geschäftlich');
+      // The old framing, in which free delivery was a corporate perk.
+      await expect(page.locator('body')).not.toContainText('Firmen- und Büro-Bestellungen ab');
+    }
+  });
+
+test('the minimum sentence disappears by itself if the rule ever changes',
+  async ({ page }) => {
+    // Not a hypothetical: the clause exists so nobody has to remember to
+    // delete it by hand. Flip the rule in the page's own config and the
+    // sentence must go, without touching a word of markup.
+    await page.goto(URL);
+    const shown = await page.evaluate(() => {
+      window.KAIRO_CONFIG.order.minimumOrder.pickup = true;
+      document.dispatchEvent(new CustomEvent('kairo:lang', { detail: 'de' }));
+      return document.querySelector('.areas-lead').textContent;
+    });
+    expect(shown).not.toContain('nur für private Lieferbestellungen');
+  });

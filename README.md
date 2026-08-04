@@ -14,7 +14,8 @@ in the delivery spreadsheet. Neither needs a developer.
 | --- | --- | --- |
 | Opening hours, per day | `config.js` → `hours.days` | commit |
 | Turn lunch service on/off | `config.js` → `hours.lunch.enabled` | commit |
-| Free-delivery threshold for companies | `config.js` → `business.freeDeliveryFrom` | commit |
+| Free-delivery threshold (every order) | `config.js` → `business.freeDeliveryFrom` | commit |
+| Who the minimum order applies to | `config.js` → `order.minimumOrder` | commit |
 | Lead time for large orders | `config.js` → `business.leadTimeHours` | commit |
 | Direct-order discount | `config.js` → `order.directDiscountPercent` | commit |
 | How long a basket is remembered | `config.js` → `order.cartLifetimeMinutes` | commit |

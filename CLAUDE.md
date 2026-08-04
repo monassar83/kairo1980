@@ -62,6 +62,7 @@ into a second file, stop — that is the bug this architecture exists to prevent
 | PayPal credentials, which online methods are live | Cloudflare secrets + `wrangler.jsonc` vars, served by `/api/payments/config` |
 | Postcodes, fees, minimums | `data/delivery_zones.xlsx` → `zones.js` |
 | Discounts, thresholds, lead time, basket lifetime | `config.js` → `order`, `business` |
+| Who the minimum order value is asked of | `config.js` → `order.minimumOrder` |
 | Dishes, prices, diet tags | `index.html` `.mitem[data-item][data-price]` |
 | Ratings and reviews | `reviews.json` (fetched weekly) |
 | Every visible string | `data-de` / `data-en` / `data-ar` on the element itself |
@@ -114,13 +115,31 @@ are only the no-JavaScript fallback — update both or neither.
 
 ## Things that are the way they are on purpose
 
-- **The corporate offer has a URL, and the homepage section stays.**
-  `#firmen` sells the offer to someone already reading the homepage;
-  `/firmencatering` is what a search for *Firmencatering Walldorf* can land on,
-  which a `#fragment` never can. They are not two copies: the page states its
-  own case, but every figure, the delivery towns, the lunch caveat and the
-  legal notices come from the same `config.js`, `zones.js` and `order.js` the
-  homepage uses. `order.js` runs there for what it knows, not for the basket —
+- **The two delivery rules are asked by name, never re-derived.**
+  Free delivery is one threshold for every order — company and private are the
+  same trip to a driver, so there is no switch to narrow it. The minimum order
+  value is asked only of a private order that has to be driven out: never of a
+  collection, never of a company. Both live in `config.js`
+  (`business.freeDeliveryFrom`, `order.minimumOrder`) and are asked through
+  `freeDeliveryQualifies()` / `minimumApplies()` — the same two names in
+  `order.js` and in `worker/pricing.js`. The server cannot trust the browser's
+  answer, but it must never give a different one. `totals()` answers
+  `belowMinimum` once, so the basket, the send button and the WhatsApp message
+  cannot each reach their own verdict.
+- **A rule that qualifies a number is printed with it, from the rule.**
+  `{minimumClause}` and `{freeDeliveryAll}` are written by `applyConfig()` the
+  way `{lunchClause}` is, and fall silent by themselves when the rule they
+  describe no longer needs saying. Never type "gilt nur für private
+  Lieferbestellungen" into copy: that is the sentence that goes stale the day
+  the rule changes, in the one place nobody thinks to look.
+- **The corporate offer has a URL, and the homepage section is a teaser.**
+  `#firmen` keeps the heading, the lead, the two figures and one button, and
+  hands the reader on; `/firmencatering` carries the formats, the allergen
+  declaration, the diet tags, the invoice and § 19 UStG, and is the only place
+  any of that is written. Hub and spoke: the homepage sells the idea to someone
+  already reading it, the page answers a search for *Firmencatering Walldorf*,
+  which a `#fragment` never can. Do not let the teaser grow the detail back —
+  two pages saying the same thing is how a site competes with itself. `order.js` runs there for what it knows, not for the basket —
   it builds no basket on a page carrying no `.mitem`, which also keeps the
   checkout away from a page the relaxed CSP does not name.
 - **A page that can be found alone must be complete alone.** Whoever lands on

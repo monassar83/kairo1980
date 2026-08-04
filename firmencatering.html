@@ -114,6 +114,9 @@
   <ul class="nav-links">
     <li><a href="/#ueber-uns" class="t" data-de="Über uns" data-en="About us" data-ar="من إحنا">Über uns</a></li>
     <li><a href="/#speisekarte" class="t" data-de="Speisekarte" data-en="Menu" data-ar="المنيو">Speisekarte</a></li>
+    <!-- Same entry as on the homepage, so the navigation does not change shape
+         between pages. aria-current marks it as the page being read. -->
+    <li><a href="/firmencatering" aria-current="page" class="t" data-de="Firmen" data-en="Business" data-ar="الشركات">Firmen</a></li>
     <li class="nav-hide-sm"><a href="#faq" class="t" data-de="FAQ" data-en="FAQ" data-ar="أسئلة شائعة">FAQ</a></li>
     <li><a href="/#kontakt" class="t" data-de="Kontakt" data-en="Contact" data-ar="تواصل معانا">Kontakt</a></li>
   </ul>
@@ -197,6 +200,30 @@
       </div>
       <div class="bcard">
         <span class="bcard-num">04</span>
+        <h2 class="bcard-title t" data-de="Lieferung frei ab {freeDeliveryFrom} €" data-en="Free delivery from €{freeDeliveryFrom}" data-ar="توصيل مجاني من {freeDeliveryFrom} €">Lieferung frei ab 100 €</h2>
+        <p class="bcard-text t"
+           data-de="Ab {freeDeliveryFrom} € Bestellwert übernehmen wir die Liefergebühr — im gesamten Liefergebiet rund um Hockenheim, für jede Bestellung, privat wie geschäftlich. Darunter gilt die Gebühr Ihrer Postleitzahl, wie unten aufgeführt. Ein Mindestbestellwert gilt für Firmenbestellungen nicht. {lunchClause}"
+           data-en="From €{freeDeliveryFrom} we cover the delivery fee — anywhere in our delivery area around Hockenheim, on every order, private or corporate. Below that, the fee for your postcode applies, as listed below. No minimum order value applies to company orders. {lunchClause}"
+           data-ar="من {freeDeliveryFrom} € وفوق بنتحمّل رسوم التوصيل — في كل منطقة التوصيل حوالين هوكنهايم، وعلى أي طلب، فرد أو شركة. أقل من كده بتتحسب رسوم الرمز البريدي بتاعك زي ما هي تحت. وطلبات الشركات مفيهاش حد أدنى للطلب. {lunchClause}">Ab 100 € Bestellwert übernehmen wir die Liefergebühr — im gesamten Liefergebiet rund um Hockenheim, für jede Bestellung, privat wie geschäftlich. Darunter gilt die Gebühr Ihrer Postleitzahl, wie unten aufgeführt. Ein Mindestbestellwert gilt für Firmenbestellungen nicht.</p>
+      </div>
+      <div class="bcard">
+        <span class="bcard-num">05</span>
+        <h2 class="bcard-title t" data-de="Auf die Minute geplant" data-en="Planned to the minute" data-ar="مظبوط بالدقيقة">Auf die Minute geplant</h2>
+        <p class="bcard-text t"
+           data-de="Sagen Sie uns die Uhrzeit, zu der gegessen wird. Wir kochen so, dass alles warm und pünktlich bei Ihnen steht, und bestätigen Menge, Zeit und Preis vorab schriftlich. Ab {leadTimeHours} Stunden Vorlauf ist das sicher planbar."
+           data-en="Tell us the time you want to eat. We cook so that everything arrives warm and on time, and we confirm quantities, time and price in writing beforehand. With {leadTimeHours} hours' notice that is reliably plannable."
+           data-ar="قول لنا الساعة اللي هتتاكل فيها. بنطبخ بحيث كل حاجة توصلك سخنة وفي معادها، وبنأكدلك الكمية والوقت والسعر كتابةً قبلها. من {leadTimeHours} ساعات تحضير بيبقى الترتيب مضمون.">Sagen Sie uns die Uhrzeit, zu der gegessen wird. Wir kochen so, dass alles warm und pünktlich bei Ihnen steht, und bestätigen Menge, Zeit und Preis vorab schriftlich. Ab 2 Stunden Vorlauf ist das sicher planbar.</p>
+      </div>
+      <div class="bcard">
+        <span class="bcard-num">06</span>
+        <h2 class="bcard-title t" data-de="{discount} % auf jede Bestellung" data-en="{discount}% off every order" data-ar="{discount} % على كل طلب">10 % auf jede Bestellung</h2>
+        <p class="bcard-text t"
+           data-de="Ob Lieferung oder Abholung, Firma oder privat: Jede Bestellung über diese Seite erhält {discount} % Rabatt — ohne Aktionscode und ohne Mindestmenge. Abholbestellungen stehen zur vereinbarten Zeit fertig verpackt bereit."
+           data-en="Delivery or pickup, company or private: every order placed through this site gets {discount}% off — no promo code, no minimum quantity. Collection orders are packed and waiting at the agreed time."
+           data-ar="توصيل أو استلام، شركة أو فرد: أي طلب من الموقع ده بياخد خصم {discount} % — من غير كود خصم ومن غير حد أدنى للكمية. وطلبات الاستلام بتكون متغلّفة وجاهزة في الميعاد المتفق عليه.">Ob Lieferung oder Abholung, Firma oder privat: Jede Bestellung über diese Seite erhält 10 % Rabatt — ohne Aktionscode und ohne Mindestmenge. Abholbestellungen stehen zur vereinbarten Zeit fertig verpackt bereit.</p>
+      </div>
+      <div class="bcard">
+        <span class="bcard-num">07</span>
         <h2 class="bcard-title t" data-de="Allergene bei jedem Gericht" data-en="Allergens with every dish" data-ar="مسببات الحساسية مع كل طبق">Allergene bei jedem Gericht</h2>
         <p class="bcard-text t"
            data-de="Die kennzeichnungspflichtigen Allergene nach LMIV (EU) Nr. 1169/2011 stehen in der Speisekarte bei jedem Gericht — vor der Bestellung, nicht auf Nachfrage. Wir kochen in einer offenen Küche, in der unter anderem Sesam, Nüsse, Gluten und Milch verarbeitet werden, sodass Spuren nicht vollständig ausgeschlossen werden können."
@@ -204,7 +231,7 @@
            data-ar="مسببات الحساسية الواجب الإعلان عنها طبقاً لـ LMIV (EU) Nr. 1169/2011 مكتوبة مع كل طبق في المنيو — قبل الطلب، مش لما حد يسأل. وإحنا بنطبخ في مطبخ مفتوح فيه سمسم ومكسرات وجلوتين ولبن، فمش ممكن نستبعد الآثار البسيطة تماماً.">Die kennzeichnungspflichtigen Allergene nach LMIV (EU) Nr. 1169/2011 stehen in der Speisekarte bei jedem Gericht — vor der Bestellung, nicht auf Nachfrage. Wir kochen in einer offenen Küche, in der unter anderem Sesam, Nüsse, Gluten und Milch verarbeitet werden, sodass Spuren nicht vollständig ausgeschlossen werden können.</p>
       </div>
       <div class="bcard">
-        <span class="bcard-num">05</span>
+        <span class="bcard-num">08</span>
         <h2 class="bcard-title t" data-de="Vegan und vegetarisch gekennzeichnet" data-en="Vegan and vegetarian, marked" data-ar="نباتي وفيجن ومتعلّم">Vegan und vegetarisch gekennzeichnet</h2>
         <p class="bcard-text t"
            data-de="In jedem Team sitzt jemand, der kein Fleisch isst. Vegane und vegetarische Gerichte sind in der Speisekarte ausgewiesen, sodass beim Bestellen niemand raten muss — und niemand am Tisch mit einer Beilage dasteht."
@@ -212,7 +239,7 @@
            data-ar="في كل فريق حد مش بياكل لحمة. الأطباق النباتية والفيجن متعلّمة في المنيو، فمحدش هيضطر يخمّن وهو بيطلب — ومحدش هيقعد على السفرة بطبق جانبي بس.">In jedem Team sitzt jemand, der kein Fleisch isst. Vegane und vegetarische Gerichte sind in der Speisekarte ausgewiesen, sodass beim Bestellen niemand raten muss — und niemand am Tisch mit einer Beilage dasteht.</p>
       </div>
       <div class="bcard">
-        <span class="bcard-num">06</span>
+        <span class="bcard-num">09</span>
         <h2 class="bcard-title t" data-de="Rechnung ohne Umsatzsteuer" data-en="Invoice, without VAT" data-ar="فاتورة من غير ضريبة قيمة مضافة">Rechnung ohne Umsatzsteuer</h2>
         <p class="bcard-text t"
            data-de="Eine Rechnung stellen wir jedem aus, der eine braucht — auf Wunsch mit Firmenanschrift. Als Kleinunternehmer nach § 19 UStG weisen wir darin keine Umsatzsteuer aus. Regelmäßige Bestellungen legen wir Ihnen als Vorlage an."
@@ -238,9 +265,9 @@
     <span class="menu-eyebrow t" data-de="Liefergebiet" data-en="Delivery area" data-ar="منطقة التوصيل">Liefergebiet</span>
     <h2 class="areas-title t" data-de="Wohin wir ins Büro liefern" data-en="Where we deliver to the office" data-ar="بنوصّل للمكاتب فين">Wohin wir ins Büro liefern</h2>
     <p class="areas-lead t"
-       data-de="Wir liefern aus Hockenheim in {deliveryPostcodes} Postleitzahlen im Rhein-Neckar-Kreis und der Vorderpfalz — darunter die Büro- und Gewerbestandorte in Walldorf, Wiesloch, Schwetzingen und St. Leon-Rot. Zu jedem Ort stehen Postleitzahl und Liefergebühr; der Mindestbestellwert gilt für die ganze Gruppe. Genau diese Werte rechnet auch der Warenkorb. {lunchClause}"
-       data-en="We deliver from Hockenheim to {deliveryPostcodes} postcodes across the Rhein-Neckar district and the Vorderpfalz — including the office and business parks in Walldorf, Wiesloch, Schwetzingen and St. Leon-Rot. Each town shows its postcode and delivery fee; the minimum order value applies to the whole group. These are the very figures the basket calculates with. {lunchClause}"
-       data-ar="بنوصّل من Hockenheim لـ {deliveryPostcodes} رمز بريدي في منطقة راين-نيكار والـ Vorderpfalz — منها مناطق المكاتب والشركات في Walldorf و Wiesloch و Schwetzingen و St. Leon-Rot. جنب كل مدينة الرمز البريدي ورسوم التوصيل، والحد الأدنى للطلب بينطبق على المجموعة كلها. ودي نفس الأرقام اللي بتحسبها السلة. {lunchClause}">Wir liefern aus Hockenheim in 33 Postleitzahlen im Rhein-Neckar-Kreis und der Vorderpfalz — darunter die Büro- und Gewerbestandorte in Walldorf, Wiesloch, Schwetzingen und St. Leon-Rot. Zu jedem Ort stehen Postleitzahl und Liefergebühr; der Mindestbestellwert gilt für die ganze Gruppe. Genau diese Werte rechnet auch der Warenkorb.</p>
+       data-de="Wir liefern aus Hockenheim in {deliveryPostcodes} Postleitzahlen im Rhein-Neckar-Kreis und der Vorderpfalz — darunter die Büro- und Gewerbestandorte in Walldorf, Wiesloch, Schwetzingen und St. Leon-Rot. Zu jedem Ort stehen Postleitzahl und Liefergebühr; der Mindestbestellwert gilt für die ganze Gruppe. Genau diese Werte rechnet auch der Warenkorb. {freeDeliveryAll} {minimumClause} {lunchClause}"
+       data-en="We deliver from Hockenheim to {deliveryPostcodes} postcodes across the Rhein-Neckar district and the Vorderpfalz — including the office and business parks in Walldorf, Wiesloch, Schwetzingen and St. Leon-Rot. Each town shows its postcode and delivery fee; the minimum order value applies to the whole group. These are the very figures the basket calculates with. {freeDeliveryAll} {minimumClause} {lunchClause}"
+       data-ar="بنوصّل من Hockenheim لـ {deliveryPostcodes} رمز بريدي في منطقة راين-نيكار والـ Vorderpfalz — منها مناطق المكاتب والشركات في Walldorf و Wiesloch و Schwetzingen و St. Leon-Rot. جنب كل مدينة الرمز البريدي ورسوم التوصيل، والحد الأدنى للطلب بينطبق على المجموعة كلها. ودي نفس الأرقام اللي بتحسبها السلة. {freeDeliveryAll} {minimumClause} {lunchClause}">Wir liefern aus Hockenheim in 33 Postleitzahlen im Rhein-Neckar-Kreis und der Vorderpfalz — darunter die Büro- und Gewerbestandorte in Walldorf, Wiesloch, Schwetzingen und St. Leon-Rot. Zu jedem Ort stehen Postleitzahl und Liefergebühr; der Mindestbestellwert gilt für die ganze Gruppe. Genau diese Werte rechnet auch der Warenkorb.</p>
     <div class="areas-list" id="areasList"></div>
     <p class="areas-note lunch-note" data-requires="lunch" hidden></p>
     <!-- Preisangabenverordnung, § 19 UStG and LMIV in one paragraph, exactly as
@@ -270,9 +297,9 @@
       <details class="faq-item">
         <summary class="t" data-de="Wie bestellen wir ein Firmencatering?" data-en="How do we order corporate catering?" data-ar="نطلب تجهيز أكل للشركة إزاي؟">Wie bestellen wir ein Firmencatering?</summary>
         <div class="faq-answer"><p class="t"
-          data-de="Am schnellsten per WhatsApp: schreiben Sie uns Bestellwert und Wunschzeit, wir bestätigen Menge, Zeit und Preis schriftlich. Oder stellen Sie die Bestellung direkt in der Speisekarte zusammen — Gerichte in den Warenkorb legen, unter „Wunschtermin“ die Uhrzeit angeben und die fertige Bestellung absenden. Auf jede Bestellung über diese Seite erhalten Sie {discount} % Rabatt, ab {freeDeliveryFrom} € Bestellwert entfällt die Liefergebühr, und wir bitten um mindestens {leadTimeHours} Stunden Vorlauf. {lunchClause}"
-          data-en="WhatsApp is fastest: send us the order value and the time you need it, and we confirm quantities, time and price in writing. Or put the order together in the menu itself — add dishes to the basket, set the time under &quot;Preferred time&quot; and send the finished order. Every order placed through this site gets {discount}% off, the delivery fee is waived from €{freeDeliveryFrom}, and we ask for at least {leadTimeHours} hours' notice. {lunchClause}"
-          data-ar="أسرع طريقة واتساب: ابعتلنا قيمة الطلب والوقت اللي عايزه، وإحنا بنأكد الكمية والوقت والسعر كتابةً. أو جهّز الطلب من المنيو على طول — حط الأطباق في السلة، حدد الساعة تحت «الموعد المطلوب»، وابعت الطلب جاهز. أي طلب من الموقع ده بياخد خصم {discount} %، ومن {freeDeliveryFrom} € وفوق مفيش رسوم توصيل، وبنرجو {leadTimeHours} ساعات تحضير على الأقل. {lunchClause}">Am schnellsten per WhatsApp: schreiben Sie uns Bestellwert und Wunschzeit, wir bestätigen Menge, Zeit und Preis schriftlich. Oder stellen Sie die Bestellung direkt in der Speisekarte zusammen — Gerichte in den Warenkorb legen, unter „Wunschtermin“ die Uhrzeit angeben und die fertige Bestellung absenden. Auf jede Bestellung über diese Seite erhalten Sie 10 % Rabatt, ab 100 € Bestellwert entfällt die Liefergebühr, und wir bitten um mindestens 2 Stunden Vorlauf.</p></div>
+          data-de="Am schnellsten per WhatsApp: schreiben Sie uns Bestellwert und Wunschzeit, wir bestätigen Menge, Zeit und Preis schriftlich. Oder stellen Sie die Bestellung direkt in der Speisekarte zusammen — Gerichte in den Warenkorb legen, „Firmenbestellung“ ankreuzen, unter „Wunschtermin“ die Uhrzeit angeben und die fertige Bestellung absenden. Auf jede Bestellung über diese Seite erhalten Sie {discount} % Rabatt, ab {freeDeliveryFrom} € Bestellwert entfällt die Liefergebühr, ein Mindestbestellwert gilt für Firmenbestellungen nicht, und wir bitten um mindestens {leadTimeHours} Stunden Vorlauf. {lunchClause}"
+          data-en="WhatsApp is fastest: send us the order value and the time you need it, and we confirm quantities, time and price in writing. Or put the order together in the menu itself — add dishes to the basket, tick &quot;Firmenbestellung&quot;, set the time under &quot;Preferred time&quot; and send the finished order. Every order placed through this site gets {discount}% off, the delivery fee is waived from €{freeDeliveryFrom}, no minimum order value applies to company orders, and we ask for at least {leadTimeHours} hours' notice. {lunchClause}"
+          data-ar="أسرع طريقة واتساب: ابعتلنا قيمة الطلب والوقت اللي عايزه، وإحنا بنأكد الكمية والوقت والسعر كتابةً. أو جهّز الطلب من المنيو على طول — حط الأطباق في السلة، علّم على «Firmenbestellung»، حدد الساعة تحت «الموعد المطلوب»، وابعت الطلب جاهز. أي طلب من الموقع ده بياخد خصم {discount} %، ومن {freeDeliveryFrom} € وفوق مفيش رسوم توصيل، وطلبات الشركات مفيهاش حد أدنى للطلب، وبنرجو {leadTimeHours} ساعات تحضير على الأقل. {lunchClause}">Am schnellsten per WhatsApp: schreiben Sie uns Bestellwert und Wunschzeit, wir bestätigen Menge, Zeit und Preis schriftlich. Oder stellen Sie die Bestellung direkt in der Speisekarte zusammen — Gerichte in den Warenkorb legen, unter „Wunschtermin“ die Uhrzeit angeben und die fertige Bestellung absenden. Auf jede Bestellung über diese Seite erhalten Sie 10 % Rabatt, ab 100 € Bestellwert entfällt die Liefergebühr, und wir bitten um mindestens 2 Stunden Vorlauf.</p></div>
       </details>
 
       <details class="faq-item">

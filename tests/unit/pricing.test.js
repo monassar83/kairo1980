@@ -42,6 +42,26 @@ test('the fee is waived once the food reaches the free-delivery threshold', asyn
   const q = await quote(env, { items: { koshari: 7 }, type: 'delivery', postcode: '69168' });
   assert.equal(q.subtotal, 10150);
   assert.equal(q.fee, 0);
+  assert.equal(q.freeDelivery, true);
+});
+
+test('free delivery is the same rule for a company and for a private guest', async () => {
+  // One threshold, no carve-out: the same basket to the same postcode costs
+  // the same to drive, whoever ordered it.
+  const items = { koshari: 7 };
+  const asCompany = await quote(env, { items, type: 'delivery', postcode: '69168', business: true });
+  const asPrivate = await quote(env, { items, type: 'delivery', postcode: '69168', business: false });
+  assert.equal(asCompany.fee, 0);
+  assert.equal(asPrivate.fee, 0);
+  assert.equal(asCompany.total, asPrivate.total);
+});
+
+test('below the threshold both pay the same fee, too', async () => {
+  const items = { hummus: 1 };
+  const asCompany = await quote(env, { items, type: 'delivery', postcode: '69168', business: true });
+  const asPrivate = await quote(env, { items, type: 'delivery', postcode: '69168', business: false });
+  assert.equal(asCompany.fee, 200);
+  assert.equal(asPrivate.fee, 200);
 });
 
 test('a postcode we do not serve is charged no fee, and is not refused', async () => {
@@ -51,11 +71,26 @@ test('a postcode we do not serve is charged no fee, and is not refused', async (
   assert.ok(q.total > 0);
 });
 
-test('a sub-minimum order is flagged but still priced', async () => {
+test('a sub-minimum private delivery is flagged but still priced', async () => {
   // 76661 Philippsburg has a 50 € minimum.
   const q = await quote(env, { items: { hummus: 1 }, type: 'delivery', postcode: '76661' });
   assert.equal(q.belowMinimum, true);
   assert.ok(q.total > 0);
+});
+
+test('a company order is never held to the minimum', async () => {
+  // The minimum pays for a driver's trip. We make that trip for an office
+  // whatever the order is worth, so it is not asked of them at all.
+  const q = await quote(env, {
+    items: { hummus: 1 }, type: 'delivery', postcode: '76661', business: true
+  });
+  assert.equal(q.belowMinimum, false);
+  assert.ok(q.total > 0);
+});
+
+test('pickup is never held to the minimum — there is no trip to pay for', async () => {
+  const q = await quote(env, { items: { hummus: 1 }, type: 'pickup', postcode: '76661' });
+  assert.equal(q.belowMinimum, false);
 });
 
 test('pickup never pays a delivery fee, whatever postcode is typed', async () => {

@@ -313,9 +313,9 @@ Action → `https://kairo1980.de/#speisekarte`
 **3 — Corporate catering.** Permanent, and the highest-value one.
 ```
 Büro-Catering aus Ägypten
-Meetings & Team-Lunch. Ab 100 € liefern wir kostenlos.
+Meetings & Team-Lunch. Ab 100 € liefern wir kostenlos — ohne Mindestbestellwert.
 ```
-Action → `https://kairo1980.de/#firmen`
+Action → `https://kairo1980.de/firmencatering`
 
 Both figures come from `config.js` (`order.directDiscountPercent`,
 `business.freeDeliveryFrom`). Change either one there and these two Showcases

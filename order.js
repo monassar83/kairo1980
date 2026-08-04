@@ -62,7 +62,13 @@
       deliveryFee: 'Lieferung',
       zoneOk: 'Wir liefern nach {city}.',
       zoneFee: 'Lieferung nach {city}: {fee}.',
+      zoneToFree: 'Noch {missing} bis zur kostenfreien Lieferung.',
+      zoneFreeReached: 'Lieferung nach {city} — kostenfrei, Sie sparen {saved}.',
       zoneBelowMin: 'Noch {missing} bis zum Mindestbestellwert in {city} ({min} €).',
+      // Who the minimum is asked of, written from config.order.minimumOrder so
+      // the pages state the rule the basket applies.
+      minimumClause: 'Der Mindestbestellwert gilt nur für private Lieferbestellungen — bei Abholung und bei Firmenbestellungen entfällt er.',
+      freeDeliveryAll: 'Ab {freeDeliveryFrom} € Bestellwert liefern wir kostenfrei — für jede Bestellung, privat wie geschäftlich.',
       zoneUnknown: 'Diese Postleitzahl liegt außerhalb unseres Liefergebiets. Sie können uns trotzdem eine unverbindliche Anfrage senden — das ist noch keine Bestellung. Wir prüfen, ob wir zu Ihnen liefern können, und antworten direkt im Chat.',
       when: 'Wunschtermin', asap: 'So schnell wie möglich', scheduled: 'Für später planen',
       dateLabel: 'Datum', timeLabel: 'Uhrzeit',
@@ -195,7 +201,11 @@
       deliveryFee: 'Delivery',
       zoneOk: 'We deliver to {city}.',
       zoneFee: 'Delivery to {city}: {fee}.',
+      zoneToFree: '{missing} to go until delivery is free.',
+      zoneFreeReached: 'Delivery to {city} — free, saving you {saved}.',
       zoneBelowMin: '{missing} to go until the minimum order in {city} (€{min}).',
+      minimumClause: 'The minimum order value applies to private delivery orders only — it does not apply to collection or to company orders.',
+      freeDeliveryAll: 'From €{freeDeliveryFrom} we deliver free of charge — on every order, private or corporate.',
       zoneUnknown: 'This postcode is outside our delivery area. You can still send us a non-binding enquiry — this is not an order yet. We will check whether we can deliver to you and reply in the chat.',
       when: 'Preferred time', asap: 'As soon as possible', scheduled: 'Schedule for later',
       dateLabel: 'Date', timeLabel: 'Time',
@@ -321,7 +331,11 @@
       deliveryFee: 'التوصيل',
       zoneOk: 'بنوصّل لـ {city}.',
       zoneFee: 'التوصيل لـ {city}: {fee}.',
+      zoneToFree: 'فاضل {missing} والتوصيل يبقى مجاني.',
+      zoneFreeReached: 'التوصيل لـ {city} — مجاني، ووفّرت {saved}.',
       zoneBelowMin: 'فاضل {missing} على الحد الأدنى للطلب في {city} ({min} €).',
+      minimumClause: 'الحد الأدنى للطلب بينطبق على طلبات التوصيل للأفراد بس — مش بينطبق على الاستلام ولا على طلبات الشركات.',
+      freeDeliveryAll: 'من {freeDeliveryFrom} € وفوق التوصيل مجاني — على أي طلب، فرد أو شركة.',
       zoneUnknown: 'الرمز البريدي ده برة منطقة التوصيل بتاعتنا. تقدر تبعتلنا استفسار من غير أي التزام — ده لسه مش طلب. هنشوف نقدر نوصّلك ولا لأ ونرد عليك في الشات.',
       when: 'الموعد المطلوب', asap: 'في أقرب وقت', scheduled: 'حدد موعد بعدين',
       dateLabel: 'التاريخ', timeLabel: 'الساعة',
@@ -986,6 +1000,27 @@
     return null;
   }
 
+  /* --- the two delivery rules ---------------------------------------------
+     Both are stated once in config.js and asked here by name, so that no
+     screen has to re-derive them from a threshold and a checkbox. The server
+     asks the same two questions of the same config in worker/pricing.js —
+     it cannot trust the browser's answer, but it must never give a different
+     one.
+  ------------------------------------------------------------------------- */
+
+  // Free delivery: one threshold, every order, company or private.
+  function freeDeliveryQualifies(subtotal) {
+    var from = (CFG.business || {}).freeDeliveryFrom;
+    return from != null && subtotal >= from;
+  }
+
+  // The minimum order value is asked of a private order that has to be driven
+  // out, and of nothing else.
+  function minimumApplies(type, business) {
+    var rule = (CFG.order && CFG.order.minimumOrder) || {};
+    return business ? rule.business === true : rule[type] === true;
+  }
+
   function totals() {
     var subtotal = 0;
     Object.keys(cart).forEach(function (id) {
@@ -1001,13 +1036,10 @@
 
     // The delivery fee sits OUTSIDE the discount: the 10 % is a discount on
     // food, not on driving. It is waived once the food subtotal reaches the
-    // threshold — optionally only for corporate orders, see config. An unknown
-    // zone charges nothing here; that fee is agreed in the chat rather than
-    // guessed by the page.
+    // threshold, for every order alike. An unknown zone charges nothing here;
+    // that fee is agreed in the chat rather than guessed by the page.
     var zone = form.type === 'delivery' ? zoneFor(draft.fPlz) : null;
-    var b = CFG.business || {};
-    var threshold = b.freeDeliveryFrom || Infinity;
-    var qualifies = subtotal >= threshold && (!b.freeDeliveryBusinessOnly || form.business);
+    var qualifies = freeDeliveryQualifies(subtotal);
     var fee = (zone && !qualifies) ? zone.fee : 0;
 
     return {
@@ -1016,6 +1048,15 @@
       discountPercent: pct,
       fee: fee,
       zone: zone,
+      // Answered once, here, so the basket, the send button and the WhatsApp
+      // message cannot each reach their own verdict about the same order.
+      freeDelivery: qualifies,
+      // The fee this postcode would have charged had the order not reached
+      // the threshold — what "you have just saved" is measured against.
+      feeWaived: (zone && qualifies) ? zone.fee : 0,
+      minimumApplies: !!(zone && minimumApplies(form.type, form.business)),
+      belowMinimum: !!(zone && minimumApplies(form.type, form.business) &&
+                       subtotal < zone.minOrder),
       total: subtotal - discount + fee
     };
   }
@@ -1550,14 +1591,28 @@
       return;
     }
 
-    // Deliberately says nothing about free delivery: that benefit is a
-    // business-catering term and is advertised only in the Firmen section.
+    /* Free delivery is now every guest's, so this is where they find out.
+       Three different things can be true and they must not be confused:
+         - this postcode is free anyway (Hockenheim and its neighbours),
+         - the fee has been waived because the order reached the threshold,
+         - a fee applies, and it is worth saying how much is missing.
+       Saying "free delivery" for the first case would promise a discount the
+       guest never earned; saying nothing for the second hides one they did. */
+    var from = (CFG.business || {}).freeDeliveryFrom;
     var parts = [];
-    parts.push(sums.fee > 0
-      ? fill(L.zoneFee, { city: zone.city, fee: money(sums.fee) })
-      : fill(L.zoneOk, { city: zone.city }));
 
-    if (sums.subtotal < zone.minOrder) {
+    if (sums.fee > 0) {
+      parts.push(fill(L.zoneFee, { city: zone.city, fee: money(sums.fee) }));
+      if (from != null) {
+        parts.push(fill(L.zoneToFree, { missing: money(from - sums.subtotal) }));
+      }
+    } else if (sums.feeWaived > 0) {
+      parts.push(fill(L.zoneFreeReached, { city: zone.city, saved: money(sums.feeWaived) }));
+    } else {
+      parts.push(fill(L.zoneOk, { city: zone.city }));
+    }
+
+    if (sums.belowMinimum) {
       parts.push(fill(L.zoneBelowMin, {
         missing: money(zone.minOrder - sums.subtotal), city: zone.city, min: zone.minOrder
       }));
@@ -1971,9 +2026,11 @@
       out.push(L.mAddress + ': ' + data.address + ', ' + data.plz +
         (sums.zone ? ' ' + sums.zone.city : ''));
 
-      // Flags the restaurant acts on. Neither one blocked the guest.
+      // Flags the restaurant acts on. Neither one blocked the guest, and the
+      // minimum is only ever raised with someone it is actually asked of —
+      // a company order or a collected one must not arrive flagged for it.
       if (!sums.zone) out.push(warn(L.mOutsideArea));
-      else if (sums.subtotal < sums.zone.minOrder) {
+      else if (sums.belowMinimum) {
         out.push(warn(fill(L.mUnderMin, { min: sums.zone.minOrder })));
       }
     }
@@ -2296,9 +2353,23 @@
 
        So the link below is always drawn, as a link. A tap on it IS a gesture
        and cannot be blocked. The automatic open is attempted anyway, and if it
-       fails the guest is told plainly rather than reassured. */
+       fails the guest is told plainly rather than reassured.
+
+       The feature string used to say 'noopener', and that quietly broke the
+       detection: window.open returns null WHENEVER noopener is set — that is
+       the specified behaviour, not a blocked popup — so `blocked` was true on
+       every single order and every guest was told their browser had stopped
+       WhatsApp while WhatsApp was opening in front of them. A warning that is
+       always shown is a warning nobody reads on the day it is true.
+
+       So the opener is severed on the handle instead. Same protection against
+       the opened tab navigating this one, and a null return now means what it
+       says. Setting it can throw once the tab is cross-origin, which costs
+       nothing here: the target is wa.me, and the guest is one tap from a link
+       carrying rel="noopener" anyway. */
     var opened = null;
-    try { opened = window.open(url, '_blank', 'noopener'); } catch (e) { opened = null; }
+    try { opened = window.open(url, '_blank'); } catch (e) { opened = null; }
+    if (opened) { try { opened.opener = null; } catch (e) { /* cross-origin */ } }
     var blocked = !opened;
 
     var title = outside ? L.sentTitleRequest : (paid ? L.payPaidTitle : L.sentTitle);
@@ -2540,6 +2611,7 @@
 
   function applyConfig() {
     var b = CFG.business || {};
+    var minRule = (CFG.order && CFG.order.minimumOrder) || {};
 
     // Sections that config can switch off entirely.
     if (!b.enabled) {
@@ -2569,7 +2641,20 @@
         : '',
       // How far we deliver, counted from the zone list rather than written
       // into the copy as "over 30" and left to rot when a postcode is added.
-      deliveryPostcodes: ((CFG.delivery && CFG.delivery.zones) || []).length
+      deliveryPostcodes: ((CFG.delivery && CFG.delivery.zones) || []).length,
+      // The two delivery rules as sentences, written from the same config the
+      // basket applies. Wherever a page shows a minimum or a threshold it can
+      // print the rule with it, and neither can be edited into disagreeing
+      // with what the basket actually charges. Both fall silent by themselves:
+      // a minimum asked of everyone, or no threshold at all, needs no caveat.
+      // Printed only while it is exactly true: a minimum asked of a private
+      // delivery and of nothing else. Widen or drop the rule in config and
+      // the sentence stops being written, rather than becoming a small lie.
+      minimumClause: (minRule.delivery === true && minRule.pickup !== true &&
+                      minRule.business !== true) ? t().minimumClause : '',
+      freeDeliveryAll: b.freeDeliveryFrom != null
+        ? fill(t().freeDeliveryAll, { freeDeliveryFrom: b.freeDeliveryFrom })
+        : ''
     };
 
     [].forEach.call(document.querySelectorAll('[data-cfg]'), function (el) {

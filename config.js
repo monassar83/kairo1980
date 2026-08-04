@@ -38,6 +38,26 @@ window.KAIRO_CONFIG = {
     //   15   -> "Firmenbestellung" ticked AND pickup selected earns 15 %
     businessPickupDiscountPercent: null,
 
+    /* Who the per-zone minimum order value applies to.
+       -----------------------------------------------------------------------
+       The minimum exists for one reason: to make a driver's trip worth making.
+       So it applies to exactly one case — a private order that has to be
+       driven out. Nobody who collects their own order pays it, because there
+       is no trip to pay for; and a company order is never held to it, whatever
+       it is worth, because that is the relationship we want with an office.
+
+       The AMOUNTS live per postcode in data/delivery_zones.xlsx. This is only
+       the rule about who they are asked of, and it is read by the basket, by
+       the WhatsApp message, by the server's pricing and by the sentence the
+       pages print — so there is one answer, not five.
+
+       Free delivery has no such carve-out: see business.freeDeliveryFrom. */
+    minimumOrder: {
+      pickup: false,      // collected in person — no trip to pay for
+      delivery: true,     // the ordinary case: a private order, driven out
+      business: false     // a company order is never held to it
+    },
+
     // How long a basket survives after the last change, in minutes.
     // A basket is a short-lived intention, not a saved document: it must
     // survive a reload, a phone call or a detour to the delivery-area list,
@@ -58,16 +78,19 @@ window.KAIRO_CONFIG = {
     // and the announcement strip.
     enabled: true,
 
-    // Order value from which the delivery fee is waived (euros). The waiver is
-    // applied to the food subtotal, before the direct-order discount.
-    freeDeliveryFrom: 100,
+    /* Order value from which the delivery fee is waived (euros), applied to
+       the food subtotal, before the direct-order discount.
 
-    // Who the waiver applies to.
-    //   false -> any order reaching the threshold (current rule)
-    //   true  -> only orders with the "Firmenbestellung" box ticked
-    // Either way it is ADVERTISED only in the Firmen section — the basket
-    // states the fee it charges and never promotes free delivery.
-    freeDeliveryBusinessOnly: false,
+       ONE THRESHOLD, EVERYONE. A company and a private guest reaching 100 €
+       are the same order to a driver, so they are charged the same for it.
+       There is deliberately no switch here to narrow it to company orders:
+       a rule with an exception has to be explained in every place it is
+       printed, and the exception was worth less than the explanation cost.
+
+       Because it now applies to everyone, it is advertised to everyone — the
+       basket says how much is missing and says so when it has been reached,
+       instead of leaving it as small print in the corporate section. */
+    freeDeliveryFrom: 100,
 
     // Minimum lead time for large / corporate orders, in hours.
     leadTimeHours: 2

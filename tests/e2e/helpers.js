@@ -31,11 +31,24 @@ export async function fillContact(page, {
 }
 
 /** Intercept the WhatsApp handover. window.open would otherwise leave the
- *  page, and the message it carries is the thing worth asserting. */
+ *  page, and the message it carries is the thing worth asserting.
+ *
+ *  It returns a window-like object because that is what a browser returns when
+ *  it ALLOWS the popup, and the page reads a null return as "blocked" and says
+ *  so on screen. Returning null here used to fabricate a blocked popup in
+ *  every test that captured the handover — which is how a real bug in the page
+ *  stayed hidden behind a test that failed at random. A fake must never report
+ *  something the real thing would not.
+ *
+ *  The two tests that are ABOUT blocking install their own stub; see
+ *  payment.spec.js. */
 export async function captureWhatsApp(page) {
   await page.addInitScript(() => {
     window.__waUrl = null;
-    window.open = (url) => { window.__waUrl = url; return null; };
+    window.open = (url) => {
+      window.__waUrl = url;
+      return { closed: false, opener: null, focus() {}, close() {} };
+    };
   });
   return async () => {
     await expect.poll(() => page.evaluate(() => window.__waUrl)).toBeTruthy();

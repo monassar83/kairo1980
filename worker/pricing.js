@@ -9,12 +9,33 @@
    The rules mirror totals() in order.js exactly:
      - the discount applies to food, never to driving
      - the delivery fee sits outside the discount
-     - the fee is waived from `business.freeDeliveryFrom` on the food subtotal
+     - the fee is waived from `business.freeDeliveryFrom` on the food subtotal,
+       for every order alike — company and private are the same trip
+     - the per-zone minimum is asked only of a private order that has to be
+       driven out; pickup and company orders are never held to it
      - an unknown postcode charges no fee; that is agreed in the chat instead */
 
 import { CONFIG, menu, zoneFor } from './site-data.js';
 
 export const MAX_ITEMS = 200;
+
+/* The two delivery rules, asked of the same config.js the browser reads.
+   The server cannot trust the browser's answer — but it must never give a
+   different one, so these are deliberately the same two questions by the same
+   two names as in order.js. */
+
+// Free delivery: one threshold, every order, company or private.
+function freeDeliveryQualifies(subtotalCents) {
+  const from = (CONFIG.business || {}).freeDeliveryFrom;
+  return from != null && subtotalCents >= from * 100;
+}
+
+// The minimum order value is asked of a private order that has to be driven
+// out, and of nothing else.
+function minimumApplies(type, business) {
+  const rule = (CONFIG.order || {}).minimumOrder || {};
+  return business ? rule.business === true : rule[type] === true;
+}
 
 /**
  * @param {object} env
@@ -52,9 +73,7 @@ export async function quote(env, req) {
   const discount = Math.round(subtotal * percent / 100);
 
   const zone = type === 'delivery' ? zoneFor(req.postcode) : null;
-  const b = CONFIG.business || {};
-  const threshold = b.freeDeliveryFrom != null ? b.freeDeliveryFrom * 100 : Infinity;
-  const waived = subtotal >= threshold && (!b.freeDeliveryBusinessOnly || business);
+  const waived = freeDeliveryQualifies(subtotal);
   const fee = (zone && !waived) ? Math.round(zone.fee * 100) : 0;
 
   const total = subtotal - discount + fee;
@@ -68,9 +87,12 @@ export async function quote(env, req) {
     fee,
     total,
     zone,
+    freeDelivery: waived,
     // Advisory only, exactly as in the browser: a sub-minimum order is flagged
-    // in the chat, never refused. It must not block a payment either.
-    belowMinimum: !!(zone && subtotal < zone.minimum * 100)
+    // in the chat, never refused. It must not block a payment either — and it
+    // is not raised at all against an order the minimum is not asked of.
+    belowMinimum: !!(zone && minimumApplies(type, business) &&
+                     subtotal < zone.minimum * 100)
   };
 }
 

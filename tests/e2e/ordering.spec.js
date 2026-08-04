@@ -193,6 +193,12 @@ test('a normal order is sent in full, with prices on every line', async ({ page 
   const sent = decodeURIComponent((await whatsapp()).split('?text=')[1]);
   expect(sent).toContain('2× Hummus');
   expect(sent).toContain('19,00');            // the line price, not just the total
+
+  // window.open is called BEFORE the confirmation is drawn, so waiting on the
+  // URL alone proves nothing about the screen: "no warning yet" and "no
+  // warning" look identical for as long as the render takes. Wait for the
+  // screen to exist, then assert what is on it.
+  await expect(page.locator('.cart-sent')).toBeVisible();
   await expect(page.locator('.cart-blocked')).toHaveCount(0);
 });
 
@@ -230,4 +236,65 @@ test('the page never scrolls sideways on a phone', async ({ page }) => {
   const overflows = await page.evaluate(() =>
     document.documentElement.scrollWidth > document.documentElement.clientWidth + 1);
   expect(overflows).toBe(false);
+});
+
+/* --- the two delivery rules ------------------------------------------------
+   Free delivery from the threshold, for everyone. The minimum order value
+   only for a private order that has to be driven out. Both are stated in
+   config.js and asserted here as a guest meets them: in the basket, and in
+   the message the restaurant reads. */
+
+test('free delivery is announced to everyone once the threshold is reached', async ({ page }) => {
+  await page.goto('/');
+  await addItem(page, 'kebda', 4);            // 4 × 26.50 = 106.00, over 100 €
+  await openBasket(page);
+  await page.locator('[data-type="delivery"]').click();
+  await page.locator('#fPlz').fill('69168');  // Wiesloch would otherwise cost 2 €
+
+  const body = page.locator('#cartBody');
+  await expect(body).toContainText('kostenfrei');
+  await expect(body).toContainText('2,00');   // what was saved, named
+});
+
+test('below the threshold the basket says how much is missing', async ({ page }) => {
+  await page.goto('/');
+  await addItem(page, 'hummus', 2);           // 19.00
+  await openBasket(page);
+  await page.locator('[data-type="delivery"]').click();
+  await page.locator('#fPlz').fill('69168');
+
+  // 100.00 − 19.00 = 81.00 still to go.
+  await expect(page.locator('#cartBody')).toContainText('81,00');
+});
+
+test('a company order is not asked for a minimum, on screen or in the chat',
+  async ({ page }) => {
+    const whatsapp = await captureWhatsApp(page);
+    await page.goto('/?lang=de');
+    await addItem(page, 'hummus', 1);         // 9.50, far under Wiesloch's 20 €
+    await openBasket(page);
+    await page.locator('[data-type="delivery"]').click();
+    await page.locator('#fPlz').fill('69168');
+
+    const zone = page.locator('.cart-zone');
+    await expect(zone).toContainText('Mindestbestellwert');
+
+    // Ticking "Firmenbestellung" is what removes it — the same order, a
+    // different customer.
+    await page.locator('#fBusiness').check();
+    await expect(zone).not.toContainText('Mindestbestellwert');
+    await expect(page.locator('.cart-zone.is-below-min')).toHaveCount(0);
+
+    await fillContact(page, { address: 'Hauptstraße 1', postcode: '69168' });
+    await page.locator('#cartSend').click();
+    const sent = decodeURIComponent((await whatsapp()).split('?text=')[1]);
+    expect(sent).not.toContain('Mindestbestellwert');
+  });
+
+test('a collected order is never held to a delivery minimum', async ({ page }) => {
+  await page.goto('/');
+  await addItem(page, 'hummus', 1);
+  await openBasket(page);
+  await choosePickup(page);
+  await expect(page.locator('#cartBody')).not.toContainText('Mindestbestellwert');
 });
