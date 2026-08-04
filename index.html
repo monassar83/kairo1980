@@ -78,6 +78,7 @@
 {
   "@context": "https://schema.org",
   "@type": "Restaurant",
+  "@id": "https://kairo1980.de/#restaurant",
   "name": "KAIRO 1980",
   "description": "Authentische moderne ägyptische Küche in Hockenheim. Frisch zubereitet, handgemacht – inspiriert von den Aromen Kairos.",
   "url": "https://kairo1980.de/",
@@ -778,6 +779,11 @@
       <a href="https://www.instagram.com/_kairo1980_/" target="_blank" rel="noopener" class="footer-instagram">Instagram</a>
     </nav>
     <nav class="footer-links t" data-t="aria-label" aria-label="Rechtliches" data-de="Rechtliches" data-en="Legal" data-ar="روابط قانونية">
+      <!-- The corporate offer has its own URL. The section above stays exactly
+           where it is; this is the only link on this page that names the page,
+           so it is not an orphan a crawler has to be told about twice. -->
+      <a href="/firmencatering" class="t" data-de="Firmencatering" data-en="Corporate catering" data-ar="تجهيز أكل الشركات">Firmencatering</a>
+      <span class="footer-dot" aria-hidden="true">·</span>
       <a href="#faq" class="t" data-de="Häufige Fragen" data-en="FAQ" data-ar="أسئلة شائعة">Häufige Fragen</a>
       <span class="footer-dot" aria-hidden="true">·</span>
       <a href="#liefergebiet" class="t" data-de="Liefergebiet" data-en="Delivery area" data-ar="منطقة التوصيل">Liefergebiet</a>

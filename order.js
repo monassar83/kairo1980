@@ -747,19 +747,8 @@
       if (spec.length) data.openingHoursSpecification = spec;
 
       // Every town we deliver to, as a named place rather than a bare string.
-      var zones = (CFG.delivery && CFG.delivery.zones) || [];
-      if (zones.length) {
-        var seen = {};
-        data.areaServed = zones.map(function (row) {
-          return String(row[1]).replace(/\s*\(.*\)$/, '').split(' / ')[0];
-        }).filter(function (city) {
-          if (seen[city]) return false;
-          seen[city] = true;
-          return true;
-        }).map(function (city) {
-          return { '@type': 'City', name: city };
-        });
-      }
+      var cities = areaServedCities();
+      if (cities.length) data.areaServed = cities;
 
       // The menu, read from the page so it cannot drift from what guests see.
       var menu = buildMenuSchema();
@@ -783,6 +772,27 @@
 
       node.textContent = JSON.stringify(data, null, 2);
     } catch (e) { /* malformed JSON-LD — leave the original untouched */ }
+  }
+
+  // The delivery towns, derived once from the zone list and shared by both
+  // structured-data blocks: the Restaurant on the ordering page and the
+  // catering Service on /firmencatering. Two derivations would be two chances
+  // for the site to name different towns in different places.
+  // A postcode covering two places ("Schwetzingen / Plankstadt") is filed
+  // under the first, and a district suffix ("Heidelberg (Altstadt)") is
+  // dropped: schema.org wants the town, not our delivery bookkeeping.
+  function areaServedCities() {
+    var zones = (CFG.delivery && CFG.delivery.zones) || [];
+    var seen = {};
+    return zones.map(function (row) {
+      return String(row[1]).replace(/\s*\(.*\)$/, '').split(' / ')[0];
+    }).filter(function (city) {
+      if (seen[city]) return false;
+      seen[city] = true;
+      return true;
+    }).map(function (city) {
+      return { '@type': 'City', name: city };
+    });
   }
 
   function buildMenuSchema() {
@@ -830,6 +840,61 @@
       url: 'https://kairo1980.de/#speisekarte',
       hasMenuSection: sections
     };
+  }
+
+  /* --- the corporate catering page ----------------------------------------
+     /firmencatering is one business doing one named thing, so its Service node
+     points at the Restaurant by @id instead of describing a second company at
+     the same address — which is how a single restaurant ends up looking like
+     two to a search engine.
+
+     Everything the node says is read back off the page that carries it: the
+     name and description from the heading and lead a visitor reads, the towns
+     from the same zone list the basket prices with, the formats from the cards
+     that describe them. Nothing is asserted that the page does not state — an
+     offer invented in markup is the same violation as a rating nobody left.
+  ------------------------------------------------------------------------- */
+  function updateServiceSchema() {
+    var node = document.getElementById('serviceSchema');
+    if (!node) return;
+    try {
+      var data = JSON.parse(node.textContent);
+
+      var name = document.getElementById('serviceName');
+      var lead = document.getElementById('serviceDescription');
+      if (name) data.name = flatten(name.textContent);
+      if (lead) data.description = flatten(lead.textContent);
+      data.inLanguage = lang();
+
+      var cities = areaServedCities();
+      if (cities.length) data.areaServed = cities;
+
+      // Only the formats the page actually describes, in the words it uses.
+      // Deliberately without prices: a corporate order is quoted per order, and
+      // the page states no figure for one.
+      var offers = [];
+      [].forEach.call(document.querySelectorAll('.service-format'), function (el) {
+        var title = el.querySelector('.service-format-name');
+        if (!title) return;
+        var offered = { '@type': 'Service', name: flatten(title.textContent) };
+        var text = el.querySelector('.service-format-text');
+        if (text) offered.description = flatten(text.textContent);
+        offers.push({ '@type': 'Offer', itemOffered: offered });
+      });
+      if (offers.length) {
+        data.hasOfferCatalog = {
+          '@type': 'OfferCatalog', name: data.name, itemListElement: offers
+        };
+      } else {
+        delete data.hasOfferCatalog;
+      }
+
+      node.textContent = JSON.stringify(data, null, 2);
+    } catch (e) { /* malformed JSON-LD — leave the original untouched */ }
+  }
+
+  function flatten(text) {
+    return String(text || '').replace(/\s+/g, ' ').trim();
   }
 
   /* =========================================================================
@@ -2501,7 +2566,10 @@
       // second. The caveat now appears as soon as lunch is mentioned at all.
       lunchClause: (lunchPublished() && !lunchDelivers())
         ? fill(t().lunchClause, { evening: eveningStart() || '18:00' })
-        : ''
+        : '',
+      // How far we deliver, counted from the zone list rather than written
+      // into the copy as "over 30" and left to rot when a postcode is added.
+      deliveryPostcodes: ((CFG.delivery && CFG.delivery.zones) || []).length
     };
 
     [].forEach.call(document.querySelectorAll('[data-cfg]'), function (el) {
@@ -2527,6 +2595,7 @@
     renderAreas();
     renderFaqHours();
     updateFaqSchema();
+    updateServiceSchema();
 
     // Corporate enquiry links carry a prefilled, structured template.
     [].forEach.call(document.querySelectorAll('[data-wa-template]'), function (el) {
@@ -2769,7 +2838,14 @@
     applyConfig();
     renderHours();
 
-    if (CFG.order.cartEnabled) {
+    // The basket has no menu of its own — it reads the dishes out of the page.
+    // A page that carries no menu (the corporate catering page) still wants
+    // the hours, the config-driven copy and the structured data, but must not
+    // grow a floating basket button for a menu that is not there, and must
+    // never reach for the checkout: it is not the page the relaxed CSP names.
+    var hasMenu = !!document.querySelector('.mitem[data-item]');
+
+    if (CFG.order.cartEnabled && hasMenu) {
       collectItems();
       loadCart();
       buildPanel();
@@ -2784,7 +2860,7 @@
     document.addEventListener('kairo:lang', function () {
       renderHours();
       applyConfig();
-      if (CFG.order.cartEnabled) paint();
+      if (CFG.order.cartEnabled && hasMenu) paint();
     });
 
     // Keep "open now" honest on a tab left open across closing time.
