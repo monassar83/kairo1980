@@ -31,6 +31,12 @@
   Cache-Control: public, max-age=0, must-revalidate
 /index.html
   Cache-Control: public, max-age=0, must-revalidate
+# Same reason: the corporate page states the delivery fees and the free-delivery
+# threshold, rendered from the same two files.
+/firmencatering
+  Cache-Control: public, max-age=0, must-revalidate
+/firmencatering.html
+  Cache-Control: public, max-age=0, must-revalidate
 /config.js
   Cache-Control: public, max-age=0, must-revalidate
 /zones.js

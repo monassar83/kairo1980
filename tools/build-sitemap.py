@@ -24,9 +24,13 @@ BASE = 'https://kairo1980.de'
 # url path -> (files whose changes count as a change to this page, priority,
 #              changefreq)
 PAGES = [
-    ('/',            ['index.html', 'config.js', 'zones.js', 'order.js', 'style.css'], '1.0', 'weekly'),
-    ('/impressum',   ['impressum.html'],  '0.2', 'yearly'),
-    ('/datenschutz', ['datenschutz.html'], '0.2', 'yearly'),
+    ('/',                ['index.html', 'config.js', 'zones.js', 'order.js', 'style.css'], '1.0', 'weekly'),
+    # The corporate offer is rendered from the same config and zone data as the
+    # ordering page, so a changed threshold or a new postcode changes this page
+    # too — even though its own markup was not touched.
+    ('/firmencatering',  ['firmencatering.html', 'config.js', 'zones.js', 'order.js'], '0.8', 'monthly'),
+    ('/impressum',       ['impressum.html'],  '0.2', 'yearly'),
+    ('/datenschutz',     ['datenschutz.html'], '0.2', 'yearly'),
 ]
 
 

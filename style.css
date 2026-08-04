@@ -857,6 +857,20 @@ summary:focus-visible {
   gap: 1px; background: rgba(200,165,90,0.18);
   border: 1px solid rgba(200,165,90,0.18);
 }
+/* The corporate catering page carries six cards where the homepage section
+   carries four. auto-fit only ever makes as many columns as there is room
+   for — five, at the shared minimum width — which left the sixth card alone
+   in a row of its own beside a wide empty rectangle. A fixed track pairs them
+   3 + 3, then 2 + 2 + 2, then stacked, so no row is ever half empty. The rule
+   between two cards is still the one the 1px gap draws; nothing gains a
+   border of its own. */
+.business-grid.is-three-up { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+@media (max-width: 980px) {
+  .business-grid.is-three-up { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 620px) {
+  .business-grid.is-three-up { grid-template-columns: minmax(0, 1fr); }
+}
 .bcard { background: #1c1409; padding: 30px 26px; }
 .bcard-num {
   font-family: 'Cormorant Garamond', serif;

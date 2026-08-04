@@ -27,6 +27,7 @@ spreadsheet before publishing.
 
 ```
 index.html   markup only — no inline script, no inline style, ever
+firmencatering.html  the corporate offer as its own URL (/firmencatering)
 lang.js      language: detection, memory, direction, the switch (all pages)
 config.js    every business rule and feature flag
 zones.js     GENERATED from data/delivery_zones.xlsx — never hand-edit
@@ -113,6 +114,22 @@ are only the no-JavaScript fallback — update both or neither.
 
 ## Things that are the way they are on purpose
 
+- **The corporate offer has a URL, and the homepage section stays.**
+  `#firmen` sells the offer to someone already reading the homepage;
+  `/firmencatering` is what a search for *Firmencatering Walldorf* can land on,
+  which a `#fragment` never can. They are not two copies: the page states its
+  own case, but every figure, the delivery towns, the lunch caveat and the
+  legal notices come from the same `config.js`, `zones.js` and `order.js` the
+  homepage uses. `order.js` runs there for what it knows, not for the basket —
+  it builds no basket on a page carrying no `.mitem`, which also keeps the
+  checkout away from a page the relaxed CSP does not name.
+- **A page that can be found alone must be complete alone.** Whoever lands on
+  `/firmencatering` from a search may never see the menu, so LMIV, the PAngV
+  price notice and § 19 UStG are stated there in full rather than one click
+  away. Its `Service` node names the Restaurant by `@id` instead of describing
+  a second business, and asserts only what the page renders — the formats are
+  read out of the cards that describe them, so a format deleted from the page
+  leaves the markup with it.
 - **The basket hands over to WhatsApp.** The order itself still goes nowhere
   but the guest's own chat: no name, address or phone number is ever sent to
   our server, and the payment API receives only the basket and the postcode.

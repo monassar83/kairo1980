@@ -163,6 +163,7 @@ jobs:
               \"keyLocation\": \"https://kairo1980.de/$KEY.txt\",
               \"urlList\": [
                 \"https://kairo1980.de/\",
+                \"https://kairo1980.de/firmencatering\",
                 \"https://kairo1980.de/impressum\",
                 \"https://kairo1980.de/datenschutz\"
               ]
