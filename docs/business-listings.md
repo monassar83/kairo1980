@@ -165,6 +165,32 @@ Platforms rank and convert on photo count and freshness. Add a few every month.
 ### Google Business Profile — highest impact
 <https://business.google.com>
 
+| Field | URL |
+| --- | --- |
+| Website | `https://kairo1980.de` |
+| Menu link / Speisekarte | `https://kairo1980.de/#speisekarte` |
+| Order online / Online-Bestellung | `https://kairo1980.de/#speisekarte` |
+| Posts about catering | `https://kairo1980.de/firmencatering` |
+
+Three things about that table, all of which cost money if they are got wrong:
+
+- **No UTM parameters, and no tracking suffix of any kind.** A tagged URL is a
+  second address for the same page. The site runs no analytics, so the tag
+  would buy nothing and cost the tidy address it replaced.
+- **The menu is a fragment on purpose**, not a page of its own — see
+  `CLAUDE.md`. `#speisekarte` is where the basket is, so the button that says
+  "Speisekarte" lands on a menu a guest can order from rather than on one they
+  then have to leave. The homepage's `hasMenu` structured data carries every
+  dish, section, price and diet tag, so Google reads the full menu from `/`
+  whatever the link says.
+- **Google will offer to fill "Order online" from an ordering partner** —
+  Lieferando and Uber Eats both feed it. Decline it, or set our own link as the
+  preferred one where Google allows it. A partner button here hands away
+  commission on an order Google delivered to us for nothing, and it costs the
+  guest the 10 % direct discount. Same reasoning as the Apple place card.
+
+Then:
+
 1. Claim/verify the listing (postcard, phone or video — Google decides).
 2. Paste the long description, categories and service areas above.
 3. Add the menu: Products → use the dish names and prices from the website.

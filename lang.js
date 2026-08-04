@@ -105,13 +105,26 @@
     }
   }
 
-  // One canonical per language variant, matching the hreflang set in <head>.
-  // German is the site's default and keeps the bare URL.
+  /* One canonical per language variant, matching the hreflang set in <head>.
+     German is the site's default and keeps the bare URL.
+
+     The base is the page's OWN canonical href, read once here before this
+     function has ever rewritten it. It used to come from a data-base attribute
+     whose fallback was the homepage, which meant any page that did not carry
+     the attribute — impressum and datenschutz never did — declared the homepage
+     as its canonical the moment this script ran, asking Google to drop it as a
+     duplicate of a page it has nothing to do with. A page's canonical URL is
+     already written in its markup exactly once; reading it from there is what
+     makes that class of bug impossible rather than merely fixed. */
+  var canonicalBase = null;
+
   function paintCanonical(lang) {
     var link = document.querySelector('link[rel="canonical"]');
     if (!link) return;
-    var base = link.getAttribute('data-base') || 'https://kairo1980.de/';
-    link.setAttribute('href', lang === FALLBACK ? base : base + '?lang=' + lang);
+    if (canonicalBase === null) canonicalBase = link.getAttribute('href') || '';
+    if (!canonicalBase) return;
+    link.setAttribute('href',
+      lang === FALLBACK ? canonicalBase : canonicalBase + '?lang=' + lang);
   }
 
   function paintSwitcher(lang) {

@@ -156,6 +156,24 @@ are only the no-JavaScript fallback — update both or neither.
   two pages saying the same thing is how a site competes with itself. `order.js` runs there for what it knows, not for the basket —
   it builds no basket on a page carrying no `.mitem`, which also keeps the
   checkout away from a page the relaxed CSP does not name.
+- **A page's canonical URL is written once, in its own `<link rel="canonical">`.**
+  `lang.js` reads that href at load and appends `?lang=` to it for the two
+  non-German readings, so the canonical and the hreflang set always agree and a
+  new page needs nothing but a correct href. It used to read a `data-base`
+  attribute whose fallback was the homepage, which meant impressum and
+  datenschutz — neither of which carried one — declared the homepage as their
+  canonical the moment the script ran, and asked Google to drop them as
+  duplicates. Do not reintroduce a second attribute holding the same URL: the
+  bug was not the missing attribute, it was that the URL was written twice.
+  `tests/e2e/seo.spec.js` holds every page to it, in the rendered DOM.
+- **The menu is a section, not a page.** `#speisekarte` is the homepage's
+  primary content and the address printed on the Google and Apple place cards.
+  It stays there because the basket and the checkout CSP both belong to `/`,
+  because the homepage already emits the whole menu as `hasMenu` structured
+  data, and because a `/speisekarte` page would compete with `/` for the one
+  search the homepage exists to win. This is the opposite call to
+  `/firmencatering`, and for the opposite reason: *Firmencatering Walldorf* is
+  a search the homepage cannot answer, "Speisekarte" is the search it IS.
 - **A page that can be found alone must be complete alone.** Whoever lands on
   `/firmencatering` from a search may never see the menu, so LMIV, the PAngV
   price notice and § 19 UStG are stated there in full rather than one click
