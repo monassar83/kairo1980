@@ -187,7 +187,7 @@ window.KAIRO_CONFIG = {
     --------------------------------------------------------------------- */
     lunch: {
       enabled: true,
-      startsOn: '2026-08-05',
+      startsOn: '',
       delivery: false
     },
 

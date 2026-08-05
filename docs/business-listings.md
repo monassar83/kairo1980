@@ -31,21 +31,8 @@ abbreviate "Straße", do not add a second address line.
 only ones on this page that a directory cannot derive for itself. Read them out
 of `config.js`, never from memory.
 
-Until **4 August 2026** (evening service only):
-
-```
-Monday        closed
-Tuesday       closed
-Wednesday     18:00–23:00
-Thursday      18:00–23:00
-Friday        18:00–23:00
-Saturday      18:00–23:00
-Sunday        18:00–23:00
-```
-
-From **5 August 2026**, when `hours.lunch.startsOn` falls due — two windows a
-day, entered as two intervals on the same weekday wherever the platform allows
-it (Apple, Google and Bing all do):
+Two windows a day, entered as two intervals on the same weekday wherever the
+platform allows it (Apple, Google and Bing all do):
 
 ```
 Monday        closed
@@ -57,14 +44,16 @@ Saturday      11:00–14:30, 18:00–23:00
 Sunday        11:00–14:30, 18:00–23:00
 ```
 
-> The website switches itself on that date. **The directories do not** — put
-> the two intervals into every platform on 5 August, in one sitting.
+> The lunch service went live on 5 August 2026. **A directory does not follow
+> `config.js`** — whenever a window changes here, it has to be typed into every
+> platform in one sitting, or the place cards go on quoting last month's hours.
 >
-> On the same day, add the lunch window to the static `openingHoursSpecification`
-> block in `index.html`. `order.js` rewrites that JSON-LD from `config.js` for
-> anything that runs scripts, but the block in the markup is the fallback for
-> anything that does not — and a fallback that says "18:00–23:00" is a crawler
-> telling Siri we are closed at noon.
+> The static `openingHoursSpecification` block in `index.html` carries the same
+> two windows. `order.js` rewrites that JSON-LD from `config.js` for anything
+> that runs scripts, but the block in the markup is the fallback for anything
+> that does not — and a fallback that says "18:00–23:00" is a crawler telling
+> Siri we are closed at noon. Change the hours in `config.js` and that block
+> changes with them.
 >
 > Midday is **collection only** (`hours.lunch.delivery: false`). No directory
 > has a field for that, so it belongs in the description or a Showcase, never
@@ -321,10 +310,10 @@ places, so write to 58 and nothing gets clipped), an action, and a run of up to
 365 days. Keep two or three live and rotate them; a card that never changes is
 a card Apple stops trusting.
 
-**1 — Lunch launch.** Run from now to roughly mid-September.
+**1 — Mittagstisch.** Run from now to roughly mid-September.
 ```
-Neu: Mittagstisch ab 5. August
-Mi–So 11:00–14:30 Uhr. Abholung im Restaurant.
+Mittagstisch Mi–So
+11:00–14:30 Uhr. Abholung im Restaurant.
 ```
 Action → `https://kairo1980.de/#speisekarte`. Note "Abholung" — this is the one
 place the collection-only rule has to be said out loud on Apple.
