@@ -7,7 +7,8 @@
 
 import { test, expect } from '@playwright/test';
 import {
-  addItem, openBasket, fillContact, captureWhatsApp, stubPayments, choosePickup
+  addItem, openBasket, fillContact, captureWhatsApp, stubPayments, choosePickup,
+  chooseDelivery
 } from './helpers.js';
 
 /** Basket → contact filled → "pay online" chosen → submitted. */
@@ -57,7 +58,7 @@ test('the button says what pressing it obliges you to (§ 312j Abs. 3 BGB)', asy
   await expect(button).toHaveText('Zahlungspflichtig bestellen');
 
   // An enquiry with no agreed price obliges nobody, whatever was chosen.
-  await page.locator('[data-type="delivery"]').click();
+  await chooseDelivery(page);
   await page.locator('#fPlz').fill('10115');
   await expect(button).toHaveText('Unverbindliche Anfrage senden');
 });

@@ -5,7 +5,7 @@
    warning given, what reaches the restaurant — not pixels. */
 
 import { test, expect } from '@playwright/test';
-import { addItem, openBasket, captureWhatsApp, fillContact, choosePickup } from './helpers.js';
+import { addItem, openBasket, captureWhatsApp, fillContact, choosePickup, chooseDelivery } from './helpers.js';
 
 test('the menu shows a price for every dish that can be ordered', async ({ page }) => {
   await page.goto('/');
@@ -55,7 +55,7 @@ test('a postcode we deliver to shows its fee before the guest commits', async ({
   await addItem(page, 'hummus', 2);
   await openBasket(page);
 
-  await page.locator('[data-type="delivery"]').click();
+  await chooseDelivery(page);
   await page.locator('#fPlz').fill('69168');   // Wiesloch: 20 € minimum, 2 € fee
 
   const body = page.locator('#cartBody');
@@ -67,7 +67,7 @@ test('a sub-minimum order is warned about but never blocked', async ({ page }) =
   await page.goto('/');
   await addItem(page, 'hummus', 1);          // 9.50, under the 20 € minimum
   await openBasket(page);
-  await page.locator('[data-type="delivery"]').click();
+  await chooseDelivery(page);
   await page.locator('#fPlz').fill('69168');
 
   // Warned…
@@ -80,7 +80,7 @@ test('a postcode outside the area becomes an enquiry rather than a refusal', asy
   await page.goto('/');
   await addItem(page, 'hummus', 2);
   await openBasket(page);
-  await page.locator('[data-type="delivery"]').click();
+  await chooseDelivery(page);
   await page.locator('#fPlz').fill('10115');   // Berlin
 
   await expect(page.locator('.cart-zone')).toHaveClass(/is-unknown/);
@@ -119,7 +119,7 @@ test('warnings survive the trip to WhatsApp intact', async ({ page }) => {
   await page.goto('/');
   await addItem(page, 'hummus', 1);
   await openBasket(page);
-  await page.locator('[data-type="delivery"]').click();
+  await chooseDelivery(page);
   await fillContact(page, { address: 'Teststr. 1', postcode: '10115' });   // Berlin — outside the area
   await page.locator('#cartSend').click();
 
@@ -248,7 +248,7 @@ test('free delivery is announced to everyone once the threshold is reached', asy
   await page.goto('/');
   await addItem(page, 'kebda', 4);            // 4 × 26.50 = 106.00, over 100 €
   await openBasket(page);
-  await page.locator('[data-type="delivery"]').click();
+  await chooseDelivery(page);
   await page.locator('#fPlz').fill('69168');  // Wiesloch would otherwise cost 2 €
 
   const body = page.locator('#cartBody');
@@ -260,7 +260,7 @@ test('below the threshold the basket says how much is missing', async ({ page })
   await page.goto('/');
   await addItem(page, 'hummus', 2);           // 19.00
   await openBasket(page);
-  await page.locator('[data-type="delivery"]').click();
+  await chooseDelivery(page);
   await page.locator('#fPlz').fill('69168');
 
   // 100.00 − 19.00 = 81.00 still to go.
@@ -273,7 +273,7 @@ test('a company order is not asked for a minimum, on screen or in the chat',
     await page.goto('/?lang=de');
     await addItem(page, 'hummus', 1);         // 9.50, far under Wiesloch's 20 €
     await openBasket(page);
-    await page.locator('[data-type="delivery"]').click();
+    await chooseDelivery(page);
     await page.locator('#fPlz').fill('69168');
 
     const zone = page.locator('.cart-zone');

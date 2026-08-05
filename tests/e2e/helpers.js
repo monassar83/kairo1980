@@ -21,6 +21,64 @@ export async function choosePickup(page) {
   await page.locator('[data-type="pickup"]').click();
 }
 
+/* Delivery is not on offer at every hour: midday is collection only while
+   there is no driver (config.js -> hours.lunch.delivery), so between 11:00 and
+   14:30 the delivery button is deliberately dim. A test about fees, zones or
+   minimums is not a test about the clock, and it must not pass or fail
+   according to what time CI happens to start — so when delivery is withheld,
+   this schedules the next window that does deliver, exactly as the note under
+   the dimmed button tells a guest to.
+
+   The moment is read out of the page's own `KAIRO_CONFIG`, never typed here.
+   A time written into a test is a second copy of the opening hours, and it is
+   the copy nobody remembers to change. The browser is pinned to Europe/Berlin
+   by playwright.config.js, so its local day and the restaurant's are one. */
+export async function chooseDelivery(page) {
+  const button = page.locator('[data-type="delivery"]');
+
+  if (!(await button.isEnabled())) {
+    const slot = await page.evaluate(() => {
+      const hours = window.KAIRO_CONFIG.hours;
+      const KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+      const lunchDelivers = !!(hours.lunch && hours.lunch.enabled && hours.lunch.delivery);
+      const now = new Date();
+
+      for (let i = 0; i < 14; i++) {
+        const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+        const day = hours.days[KEYS[(d.getDay() + 6) % 7]];
+        if (!day || day.closed) continue;
+
+        const windows = [];
+        if (day.lunch && lunchDelivers) windows.push(day.lunch);
+        if (day.evening) windows.push(day.evening);
+
+        for (const w of windows) {
+          const [h, m] = w[0].split(':').map(Number);
+          // A quarter of an hour past opening: comfortably inside the window,
+          // so a slot cannot be missed by a minute either side.
+          const at = new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, m + 15);
+          if (at > now) {
+            const pad = (n) => String(n).padStart(2, '0');
+            return {
+              date: `${at.getFullYear()}-${pad(at.getMonth() + 1)}-${pad(at.getDate())}`,
+              time: `${pad(at.getHours())}:${pad(at.getMinutes())}`
+            };
+          }
+        }
+      }
+      return null;
+    });
+
+    expect(slot, 'config.js must offer some window that delivers').not.toBeNull();
+    await page.locator('[data-when="scheduled"]').click();
+    await page.locator('#fDate').fill(slot.date);
+    await page.locator('#fTime').fill(slot.time);
+    await expect(button).toBeEnabled();
+  }
+
+  await button.click();
+}
+
 export async function fillContact(page, {
   name = 'Test Gast', phone = '+49 176 1234567', address = null, postcode = null
 } = {}) {
