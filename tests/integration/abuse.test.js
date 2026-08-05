@@ -258,34 +258,184 @@ test('money held for review is never counted as revenue', async (t) => {
   assert.equal(settled.results.length, 0);
 });
 
-test('the kitchen page is closed to everyone without the token', async (t) => {
-  const env = workerEnv(MENU, { REPORT_TOKEN: 'kitchen-token' });
+/* --- the admin area -------------------------------------------------------
+   The one door in the whole site that a person walks through. Everything else
+   here defends money; this defends the switch that turns the shop off. */
+
+const CREDS = { ADMIN_USER: 'sherif', ADMIN_PASSWORD: 'correct-horse-battery-staple' };
+
+const form = (path, fields, headers = {}) => new Request('https://kairo1980.de' + path, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/x-www-form-urlencoded', ...headers },
+  body: new URLSearchParams(fields).toString()
+});
+
+/** Sign in and return the session cookie, as a browser would hold it. */
+async function signIn(env, fields = { username: CREDS.ADMIN_USER, password: CREDS.ADMIN_PASSWORD }) {
+  const res = await worker.fetch(form('/admin/login', fields), env, ctx());
+  const setCookie = res.headers.get('set-cookie') || '';
+  return { res, cookie: setCookie.split(';')[0] };
+}
+
+test('the admin area is closed to every wrong username and every wrong password', async (t) => {
+  const env = workerEnv(MENU, CREDS);
   const paypal = fakePayPal({});
   t.after(() => paypal.restore());
 
-  const attempts = [
+  const wrong = [
     {},
-    { authorization: 'Basic ' + btoa('x:wrong') },
-    { authorization: 'Basic ' + btoa('x:kitchen-toke') },
-    { authorization: 'Basic ' + btoa('x:kitchen-tokenn') },
-    { authorization: 'Bearer kitchen-token' },   // wrong scheme for this page
-    { authorization: 'Basic not-base64' }
+    { username: '', password: '' },
+    { username: 'sherif', password: 'wrong' },
+    { username: 'sherif', password: 'correct-horse-battery-stapl' },   // one short
+    { username: 'sherif', password: 'correct-horse-battery-staplex' }, // one long
+    { username: 'sherif', password: 'CORRECT-HORSE-BATTERY-STAPLE' },  // case
+    // The password alone is not enough — this is the bug being fixed. The page
+    // this replaces ignored the username entirely.
+    { username: 'admin', password: 'correct-horse-battery-staple' },
+    { username: '', password: 'correct-horse-battery-staple' },
+    { username: 'sherif', password: '' }
   ];
-  for (const headers of attempts) {
-    const res = await worker.fetch(get('/api/reports/orders', headers), env, ctx());
-    assert.equal(res.status, 401, JSON.stringify(headers));
+
+  for (const fields of wrong) {
+    const { res, cookie } = await signIn(env, fields);
+    assert.equal(res.status, 401, JSON.stringify(fields));
+    assert.equal(cookie, '', 'no session may be issued');
+    const body = await res.text();
+    assert.ok(body.includes('Passwort ist falsch'), 'says no, without saying which half');
+    assert.ok(!body.includes('Bezahlte Bestellungen') || body.includes('form'),
+      'never renders what is behind the door');
   }
 
-  const ok = await worker.fetch(get('/api/reports/orders', {
-    authorization: 'Basic ' + btoa('kitchen:kitchen-token')
+  const right = await signIn(env);
+  assert.equal(right.res.status, 303);
+  assert.ok(right.cookie.startsWith('kairo_session='));
+});
+
+test('no session, no page — and a forged cookie is not a session', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const { cookie } = await signIn(env);
+  const payload = cookie.split('=')[1].split('.')[0];
+
+  const forgeries = [
+    null,
+    'kairo_session=',
+    'kairo_session=nonsense',
+    'kairo_session=' + payload,                       // payload, no signature
+    'kairo_session=' + payload + '.badsignature',     // wrong signature
+    // A far-future expiry the holder wrote themselves. Unsigned, so worthless.
+    'kairo_session=' + btoa(JSON.stringify({ exp: 9999999999 })).replace(/=+$/, '') + '.x'
+  ];
+
+  for (const value of forgeries) {
+    for (const path of ['/admin', '/admin/orders']) {
+      const res = await worker.fetch(get(path, value ? { cookie: value } : {}), env, ctx());
+      const body = await res.text();
+      assert.ok(body.includes('name="password"'), `${path} must show the login form: ${value}`);
+      assert.ok(!body.includes('Bezahlte Bestellungen'), 'and nothing behind it');
+    }
+  }
+});
+
+test('a session dies when the password changes, with nothing to clean up', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const { cookie } = await signIn(env);
+  const before = await worker.fetch(get('/admin', { cookie }), env, ctx());
+  assert.ok((await before.text()).includes('Bezahlte Bestellungen'), 'signed in');
+
+  // The signing key is derived from the credentials, so changing either one
+  // invalidates every cookie ever issued — a phone lost on Friday is logged
+  // out by changing the password, and no session store has to be swept.
+  const rotated = { ...env, ADMIN_PASSWORD: 'a-brand-new-password' };
+  const after = await worker.fetch(get('/admin', { cookie }), rotated, ctx());
+  assert.ok((await after.text()).includes('name="password"'), 'logged out everywhere');
+});
+
+test('with no credentials configured the admin area opens for nobody', async (t) => {
+  const env = workerEnv(MENU);              // no ADMIN_USER, no ADMIN_PASSWORD
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const res = await worker.fetch(get('/admin'), env, ctx());
+  const body = await res.text();
+  assert.ok(body.includes('noch nicht eingerichtet'), 'says so plainly');
+  assert.ok(!body.includes('name="password"'), 'and offers nothing to guess at');
+
+  // An unconfigured lock is not an unlocked door.
+  const { res: attempt, cookie } = await signIn(env, { username: '', password: '' });
+  assert.equal(attempt.status, 401);
+  assert.equal(cookie, '');
+});
+
+test('logging out ends the session', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const { cookie } = await signIn(env);
+  const out = await worker.fetch(form('/admin/logout', {}, { cookie }), env, ctx());
+  assert.equal(out.status, 303);
+  assert.match(out.headers.get('set-cookie') || '', /Max-Age=0/);
+});
+
+test('the session cookie cannot be read by script, or sent by another site', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const res = await worker.fetch(form('/admin/login', {
+    username: CREDS.ADMIN_USER, password: CREDS.ADMIN_PASSWORD
   }), env, ctx());
-  assert.equal(ok.status, 200);
-  assert.match(ok.headers.get('x-robots-tag') || '', /noindex/);
-  assert.match(ok.headers.get('cache-control') || '', /no-store/);
+  const setCookie = res.headers.get('set-cookie') || '';
+
+  assert.match(setCookie, /HttpOnly/);
+  assert.match(setCookie, /SameSite=Strict/);
+  assert.match(setCookie, /Secure/, 'https, so the cookie must say so');
+});
+
+test('the admin area is never cached and never indexed', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const { cookie } = await signIn(env);
+  for (const path of ['/admin', '/admin/orders']) {
+    const res = await worker.fetch(get(path, { cookie }), env, ctx());
+    assert.equal(res.status, 200, path);
+    assert.match(res.headers.get('cache-control') || '', /no-store/, path);
+    assert.match(res.headers.get('x-robots-tag') || '', /noindex/, path);
+    // No script anywhere in here, and the policy says so rather than trusting it.
+    assert.match(res.headers.get('content-security-policy') || '', /default-src 'none'/, path);
+  }
+});
+
+test('signing in cannot be used to bounce a visitor off the site', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  // An open redirect on a login page is a phishing primitive: the victim sees
+  // the real domain, signs in, and lands somewhere else entirely.
+  for (const next of ['https://evil.example', '//evil.example', '/', '/../etc']) {
+    const res = await worker.fetch(form('/admin/login', {
+      username: CREDS.ADMIN_USER, password: CREDS.ADMIN_PASSWORD, next
+    }), env, ctx());
+    assert.equal(res.headers.get('location'), '/admin', `refused: ${next}`);
+  }
+
+  const inside = await worker.fetch(form('/admin/login', {
+    username: CREDS.ADMIN_USER, password: CREDS.ADMIN_PASSWORD, next: '/admin/orders'
+  }), env, ctx());
+  assert.equal(inside.headers.get('location'), '/admin/orders', 'but a real one is honoured');
 });
 
 test('the kitchen page cannot show what the server never stored', async (t) => {
-  const env = workerEnv(MENU, { REPORT_TOKEN: 'kitchen-token' });
+  const env = workerEnv(MENU, CREDS);
   const c = ctx();
   let payment;
   const paypal = fakePayPal({
@@ -300,9 +450,8 @@ test('the kitchen page cannot show what the server never stored', async (t) => {
   payment = await (await worker.fetch(post('/api/payments', BASKET), env, c)).json();
   await worker.fetch(post(`/api/payments/${payment.id}/capture`), env, c);
 
-  const html = await (await worker.fetch(get('/api/reports/orders', {
-    authorization: 'Basic ' + btoa('k:kitchen-token')
-  }), env, c)).text();
+  const { cookie } = await signIn(env);
+  const html = await (await worker.fetch(get('/admin/orders', { cookie }), env, c)).text();
 
   assert.ok(html.includes(payment.reference), 'the reference is the whole point');
   // Contact details never reached this server and must not appear.

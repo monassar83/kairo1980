@@ -55,9 +55,8 @@ mid-service. A kitchen page with a sound needs a device left open all evening.
 
 ## What already exists to build on
 
-- `/api/reports/orders` — the kitchen page, basic auth on `REPORT_TOKEN`,
-  showing settled payments and, highlighted, any paid order that never reached
-  the chat.
+- `/admin/orders` — the kitchen page, behind the admin login, showing settled
+  payments and, highlighted, any paid order that never reached the chat.
 - `order.handed_over` in `payment_events` — recorded by beacon when the guest
   taps send.
 - `buildMessage()` in `order.js` — already produces the exact text the

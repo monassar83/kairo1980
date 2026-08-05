@@ -53,6 +53,7 @@ style.css    all styles
 _headers     cache policy + CSP
 
 worker/      the /api/ routes: pricing, payments, webhooks, settlement
+worker/admin/  /admin — the internal pages, behind one login
 migrations/  the payments schema (D1)
 tests/       unit + integration (node --test) and e2e (Playwright)
 ```
@@ -181,6 +182,16 @@ are only the no-JavaScript fallback — update both or neither.
   a second business, and asserts only what the page renders — the formats are
   read out of the cards that describe them, so a format deleted from the page
   leaves the markup with it.
+- **The admin area checks a username AND a password.** `/admin` is the one
+  page a person signs into. It replaced a Basic-auth page that read the
+  password and threw the username away, and compared it with a length check
+  that leaked how long the real secret was. Both fields are now compared as
+  SHA-256 digests, neither comparison short-circuits, and the error never says
+  which half was wrong. The session cookie is signed with a key derived from
+  the two credentials, so changing either one logs every device out — that is
+  the lost-phone procedure, and it needs no session store to sweep. Secrets are
+  `ADMIN_USER` and `ADMIN_PASSWORD`; set neither and the area opens for nobody,
+  because an unconfigured lock is not an unlocked door. See `docs/admin.md`.
 - **The basket hands over to WhatsApp.** The order itself still goes nowhere
   but the guest's own chat: no name, address or phone number is ever sent to
   our server, and the payment API receives only the basket and the postcode.

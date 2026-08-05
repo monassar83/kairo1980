@@ -35,3 +35,23 @@ PAYPAL_WEBHOOK_ID=
 # Leave EMPTY and the setup script generates one.
 # ---------------------------------------------------------------------------
 REPORT_TOKEN=
+
+# ---------------------------------------------------------------------------
+# THE ADMIN AREA — /admin. The username and password that open it.
+#
+# In production these are Cloudflare secrets and nothing else:
+#   npx wrangler secret put ADMIN_USER
+#   npx wrangler secret put ADMIN_PASSWORD
+#
+# Both are checked, in constant time, and neither is stored anywhere but
+# Cloudflare. Let a password manager generate the password: what protects this
+# page is its length, not its cleverness.
+#
+# The session cookie is signed with a key derived from these two, so changing
+# either one signs every device out. That is the "lost phone" procedure.
+#
+# Leave both EMPTY and the admin area opens for nobody, which is the correct
+# behaviour for a lock nobody has configured.
+# ---------------------------------------------------------------------------
+ADMIN_USER=
+ADMIN_PASSWORD=

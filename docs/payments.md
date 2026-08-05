@@ -97,6 +97,12 @@ refunds, per day, provider and order type. It reads the `payments_settled`
 view, which counts only captured payments — not attempts, and not gross before
 refunds.
 
+That one is for a program. A person wants `/admin/orders`, which shows the same
+day's settled payments and, highlighted, every paid order that never reached
+the chat. It is behind the admin login — see `docs/admin.md`. The two are
+deliberately different doors: a report token pasted into a script should not
+also be able to close the shop.
+
 ## Setting it up
 
 Everything below is done once, in the PayPal and Cloudflare dashboards. No
