@@ -15,6 +15,7 @@ import { loginPage, dashboardPage, newNonce, adminHeaders } from './pages.js';
 import * as ordersView from './orders.js';
 import * as hoursView from './hours.js';
 import { readSettings, closeOrdering, openOrdering } from '../settings.js';
+import { subscribe, unsubscribe } from '../push.js';
 
 /* Long enough to make scripted guessing tedious, short enough that a mistyped
    password does not feel like a broken page. It is not a defence against a
@@ -36,13 +37,20 @@ export async function handle(request, env, url) {
   if (path === '/admin' && method === 'GET') {
     const nonce = newNonce();
     const { ordering, hours, hoursAreCustom } = await readSettings(env);
-    return html(dashboardPage({ nonce, ordering, hours, hoursAreCustom }), nonce);
+    // Public by definition — the browser needs it to subscribe, and a
+    // subscription is worth nothing without the private half.
+    return html(dashboardPage({
+      nonce, ordering, hours, hoursAreCustom, vapidKey: env.VAPID_PUBLIC_KEY || ''
+    }), nonce);
   }
 
   if (path === '/admin/ordering' && method === 'POST') return setOrdering(request, env);
   if (path === '/admin/hours' && method === 'GET') return hoursView.page(request, env, url);
   if (path === '/admin/hours' && method === 'POST') return hoursView.save(request, env, url);
   if (path === '/admin/orders' && method === 'GET') return ordersView.page(request, env, url);
+  if (path === '/admin/push/on' && method === 'POST') return pushOn(request, env);
+  if (path === '/admin/push/off' && method === 'POST') return pushOff(request, env);
+  if (path === '/admin/api/latest' && method === 'GET') return latest(env);
 
   return new Response('Not found.', {
     status: 404,
@@ -69,6 +77,55 @@ async function setOrdering(request, env) {
   return new Response(null, {
     status: 303,
     headers: { Location: '/admin', 'Cache-Control': 'no-store' }
+  });
+}
+
+/* --- notifications --------------------------------------------------------
+   All three are behind the session like everything else here, which is what
+   makes them safe: a subscription can only be registered by somebody already
+   signed in, and /admin/api/latest — read by the service worker when a push
+   arrives — answers only to the same cookie. */
+
+async function pushOn(request, env) {
+  const body = await request.json().catch(() => null);
+  if (!body) return jsonResponse({ error: 'bad_request' }, 400);
+  const ok = await subscribe(env, body);
+  return jsonResponse({ ok }, ok ? 200 : 400);
+}
+
+async function pushOff(request, env) {
+  const body = await request.json().catch(() => ({}));
+  if (body.endpoint) await unsubscribe(env, body.endpoint);
+  return jsonResponse({ ok: true });
+}
+
+/* What the service worker shows. The push itself carries nothing, so this is
+   where the words come from — over our own origin, to a signed-in session,
+   rather than through a third party's push service. */
+async function latest(env) {
+  const row = await env.DB.prepare(
+    `SELECT reference, amount, order_type, captured_at
+       FROM payments
+      WHERE captured_at IS NOT NULL
+      ORDER BY captured_at DESC LIMIT 1`
+  ).first().catch(() => null);
+
+  if (!row) {
+    return jsonResponse({ title: 'KAIRO 1980', body: 'Something needs your attention.', url: '/admin' });
+  }
+
+  const money = (row.amount / 100).toFixed(2).replace('.', ',') + ' €';
+  return jsonResponse({
+    title: `Paid: ${money}`,
+    body: `${row.order_type === 'pickup' ? 'Pickup' : 'Delivery'} · ${row.reference}`,
+    url: '/admin/orders'
+  });
+}
+
+function jsonResponse(body, status = 200) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' }
   });
 }
 

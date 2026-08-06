@@ -69,6 +69,20 @@
 /fonts/fonts.css
   Cache-Control: public, max-age=300, must-revalidate
 
+# The service worker registers with a scope ABOVE its own path, which a
+# browser refuses unless the file says so. Never cached: a stale service
+# worker is the one file that can keep serving itself for ever.
+/sw.js
+  Service-Worker-Allowed: /admin
+  Cache-Control: no-cache, must-revalidate
+
+/admin-push.js
+  Cache-Control: public, max-age=300, must-revalidate
+
+/manifest.webmanifest
+  Content-Type: application/manifest+json; charset=utf-8
+  Cache-Control: public, max-age=300, must-revalidate
+
 /images/*
   Cache-Control: public, max-age=604800
 

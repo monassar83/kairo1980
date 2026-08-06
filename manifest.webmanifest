@@ -1,0 +1,15 @@
+{
+  "name": "KAIRO 1980 — Admin",
+  "short_name": "KAIRO Admin",
+  "description": "Stop and start ordering, change the opening hours, see what has been paid.",
+  "start_url": "/admin",
+  "scope": "/admin",
+  "display": "standalone",
+  "background_color": "#faf7f2",
+  "theme_color": "#1c1409",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/images/logo-mark.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/images/logo-mark.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

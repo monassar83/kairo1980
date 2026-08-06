@@ -31,8 +31,17 @@ export function adminHeaders(nonce, extra = {}) {
     'X-Robots-Tag': 'noindex, nofollow, noarchive',
     'X-Content-Type-Options': 'nosniff',
     'Referrer-Policy': 'no-referrer',
+    /* One script file and one service worker, both named, both ours. It stays
+       far stricter than the public site's policy: no inline script, no third
+       party, and connect-src limited to this origin so the subscription can
+       only ever be posted back here. */
     'Content-Security-Policy': [
       "default-src 'none'",
+      "script-src 'self'",
+      "worker-src 'self'",
+      "connect-src 'self'",
+      "img-src 'self'",
+      "manifest-src 'self'",
       `style-src 'nonce-${nonce}'`,
       "form-action 'self'",
       "base-uri 'none'",
@@ -80,7 +89,7 @@ const CSS = `
       color:#a04a00;font-size:13.5px}
 `;
 
-export function layout({ title, nonce, body, logout = false, back = null, extraCss = '' }) {
+export function layout({ title, nonce, body, logout = false, back = null, extraCss = '', script = false }) {
   const bar = logout
     ? `<div class="bar">
          ${back ? `<a href="${esc(back)}">&larr; Admin</a>` : '<h1>Admin</h1>'}
@@ -95,9 +104,12 @@ export function layout({ title, nonce, body, logout = false, back = null, extraC
   return `<!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#1c1409">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/images/logo-mark.png">
 <title>${esc(title)} · KAIRO 1980</title>
 <style nonce="${nonce}">${CSS}${extraCss}</style></head><body>
-${bar}${body}
+${bar}${body}${script ? '<script src="/admin-push.js" defer></script>' : ''}
 </body></html>`;
 }
 
@@ -185,6 +197,12 @@ const SWITCH_CSS = `
  .row label{margin-bottom:5px}
  .row input{padding:11px;font-size:16px;border:1px solid #d8cbb0;background:#fffdf9;width:100%}
  .hint{margin:10px 0 0;font-size:12.5px;color:#7a6030;line-height:1.55}
+ .tile.push{display:block}
+ button.ghost{margin-top:12px;width:100%;padding:12px;font-size:14px;border:1px solid #d8cbb0;
+              background:#fffdf9;color:#1c1409;cursor:pointer}
+ button.ghost:disabled{opacity:.5;cursor:default}
+ .pushmsg{margin:8px 0 0;font-size:12.5px;color:#7a6030}
+ .pushmsg.bad{color:#a04a00}
 `;
 
 
@@ -249,7 +267,22 @@ function todayLine(hours) {
 
 /* The dashboard leads with the switch rather than a menu of pages, because the
    reason this page gets opened in a hurry is always the switch. */
-export function dashboardPage({ nonce, ordering, hours, hoursAreCustom }) {
+function pushCard(vapidKey) {
+  if (!vapidKey) {
+    return `<div class="tile"><b>Notifications</b>
+      <span>Not set up yet — run <code>node tools/setup-push.mjs</code> once.</span></div>`;
+  }
+  return `<div class="tile push">
+    <b>Notifications on this device</b>
+    <span>A sound when something needs you. Add this page to your home screen
+    first, then turn them on.</span>
+    <button id="pushToggle" class="ghost" data-vapid="${esc(vapidKey)}" disabled>
+      Turn notifications on or off</button>
+    <p class="pushmsg" id="pushStatus">Checking…</p>
+  </div>`;
+}
+
+export function dashboardPage({ nonce, ordering, hours, hoursAreCustom, vapidKey }) {
   const closed = !ordering.open;
   const resumesAt = closed ? Date.parse(ordering.resumesAt) : null;
   const today = todayLine(hours);
@@ -321,8 +354,10 @@ export function dashboardPage({ nonce, ordering, hours, hoursAreCustom }) {
     <span>What the provider actually settled, and what was paid but never sent.</span>
   </a>
 </div>
+${pushCard(vapidKey)}
+
 <p class="note">You stay signed in for 30 days. “Sign out” ends this session at once —
 and on every device, if you change the password afterwards.</p>`;
 
-  return layout({ title: 'Admin', nonce, body, logout: true, extraCss: SWITCH_CSS });
+  return layout({ title: 'Admin', nonce, body, logout: true, extraCss: SWITCH_CSS, script: true });
 }

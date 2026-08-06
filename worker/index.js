@@ -20,6 +20,7 @@ import * as admin from './admin/index.js';
 import { readSettings } from './settings.js';
 import { withLiveData, liveETag } from './page-render.js';
 import { dayOf, timeOf } from './berlin.js';
+import * as waWebhook from './whatsapp/webhook.js';
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
@@ -64,6 +65,16 @@ async function route(request, env, ctx, url) {
   if (path === '/api/payments/config' && method === 'GET') return paymentConfig(env, url);
   if (path === '/api/payments/quote' && method === 'POST') return quoteOnly(request, env);
   if (path === '/api/payments' && method === 'POST') return createPayment(request, env, url);
+  /* Meta verifies a webhook by GET before it will send anything to it, which
+     is a handshake no payment provider needs — hence the special case rather
+     than a shared route. */
+  if (path === '/api/webhooks/whatsapp' && method === 'GET') {
+    return waWebhook.verifySubscription(env, url);
+  }
+  if (path === '/api/webhooks/whatsapp' && method === 'POST') {
+    return whatsappEvent(request, env, ctx);
+  }
+
   const hook = path.match(/^\/api\/webhooks\/(\w+)$/);
   if (hook && method === 'POST') return webhook(request, env, ctx, hook[1]);
   if (path === '/api/reports/settlement' && method === 'GET') return settlement(request, env, url);
@@ -543,6 +554,66 @@ async function handleEvent(env, provider, event) {
     });
   } catch (err) {
     console.error('webhook handling failed', event && event.id, err && err.stack || err);
+  }
+}
+
+/* --- WhatsApp -------------------------------------------------------------
+   A public URL that acts on whatever is posted to it is a public URL anybody
+   can drive, so the signature is checked before a single field is read — over
+   the raw bytes, because re-serialising the JSON would change a space and fail
+   for the wrong reason.
+
+   Acknowledged with 200 whether or not there was anything to do. Meta retries
+   an unacknowledged event for days and treats repeated failures as a reason to
+   disable the subscription; work that goes wrong is recoverable from the log,
+   a disabled webhook is not. */
+
+async function whatsappEvent(request, env, ctx) {
+  if (!waWebhook.enabled(env)) return fail(503, 'whatsapp_off', 'Not configured.');
+
+  const raw = await request.text();
+  if (raw.length > 256 * 1024) return fail(413, 'too_large', 'Event too large.');
+
+  const signature = request.headers.get('x-hub-signature-256');
+  if (!(await waWebhook.signatureValid(env, signature, raw))) {
+    console.error('whatsapp webhook rejected: bad signature');
+    // 403, not 200: an unverified event must be investigated, never quietly
+    // accepted. Meta does not retry a 403, which is the correct outcome —
+    // whatever sent it was not Meta.
+    return fail(403, 'unverified', 'Signature not verified.');
+  }
+
+  let body;
+  try { body = JSON.parse(raw); } catch { return json({ ok: true, ignored: true }); }
+
+  const key = waWebhook.eventKey(body);
+  if (key) {
+    const fresh = await store.logEvent(env.DB, {
+      paymentId: null, provider: 'whatsapp', eventKey: key,
+      eventType: 'whatsapp.event', source: 'webhook', payload: body
+    });
+    if (!fresh) return json({ ok: true, duplicate: true });
+  }
+
+  const { messages, statuses } = waWebhook.readEvent(body);
+  if (messages.length || statuses.length) {
+    ctx.waitUntil(handleWhatsApp(env, messages, statuses));
+  }
+  return json({ ok: true });
+}
+
+async function handleWhatsApp(env, messages, statuses) {
+  /* Step 4 in docs/whatsapp-cloud-api.md. Until the order pipeline exists
+     there is nothing an inbound message can be attached to, so it is recorded
+     and left for a person — which is exactly what happens today, only now the
+     server knows it happened. */
+  for (const message of messages) {
+    console.log('whatsapp message', message.from, message.type, message.text.slice(0, 80));
+  }
+  for (const status of statuses) {
+    if (status.status === 'failed') {
+      console.error('whatsapp delivery failed', status.id, status.recipient);
+    }
   }
 }
 

@@ -817,3 +817,84 @@ test('the dashboard says what the hours say, not only what the switch says', asy
   assert.ok(page.includes('Taking orders'), 'the switch is on');
   assert.ok(page.includes('Closed today'), 'and the hours say otherwise, in the same card');
 });
+
+/* --- notifications --------------------------------------------------------
+   A push subscription is a URL that makes somebody's phone buzz. Registering
+   one, and reading what a notification will say, both have to be behind the
+   session — the service worker fetches the second one with the admin cookie,
+   and a stranger must not be able to. */
+
+test('a push subscription cannot be registered, or read, without signing in', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const sub = {
+    endpoint: 'https://fcm.googleapis.com/fcm/send/abc',
+    keys: { p256dh: 'p', auth: 'a' }, label: 'a phone'
+  };
+  const asJson = (path, body, headers = {}) => worker.fetch(
+    new Request('https://kairo1980.de' + path, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...headers },
+      body: JSON.stringify(body)
+    }), env, ctx());
+
+  // No session: the login form, and nothing registered.
+  const anon = await asJson('/admin/push/on', sub);
+  assert.ok((await anon.text()).includes('name="password"'));
+
+  const peek = await worker.fetch(get('/admin/api/latest'), env, ctx());
+  assert.ok((await peek.text()).includes('name="password"'),
+    'what a notification would say is not public either');
+
+  let rows = await env.DB.prepare('SELECT COUNT(*) AS n FROM push_subscriptions').first();
+  assert.equal(rows.n, 0, 'nothing was stored');
+
+  // Signed in: it works, and registering the same device twice is one row.
+  const { cookie } = await signIn(env);
+  assert.equal((await asJson('/admin/push/on', sub, { cookie })).status, 200);
+  assert.equal((await asJson('/admin/push/on', sub, { cookie })).status, 200);
+  rows = await env.DB.prepare('SELECT COUNT(*) AS n FROM push_subscriptions').first();
+  assert.equal(rows.n, 1, 'one device, one row, however many times it enrols');
+
+  // And it can be turned off again.
+  assert.equal((await asJson('/admin/push/off', { endpoint: sub.endpoint }, { cookie })).status, 200);
+  rows = await env.DB.prepare('SELECT COUNT(*) AS n FROM push_subscriptions').first();
+  assert.equal(rows.n, 0);
+});
+
+test('a half-formed subscription is refused rather than stored', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+  const { cookie } = await signIn(env);
+
+  for (const body of [{}, { endpoint: 'https://x/y' }, { keys: { p256dh: 'p', auth: 'a' } },
+                      { endpoint: 'https://x/y', keys: {} }]) {
+    const res = await worker.fetch(new Request('https://kairo1980.de/admin/push/on', {
+      method: 'POST', headers: { 'Content-Type': 'application/json', cookie },
+      body: JSON.stringify(body)
+    }), env, ctx());
+    assert.equal(res.status, 400, JSON.stringify(body));
+  }
+  const rows = await env.DB.prepare('SELECT COUNT(*) AS n FROM push_subscriptions').first();
+  assert.equal(rows.n, 0);
+});
+
+test('the admin area allows exactly one script, and it is ours', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const { cookie } = await signIn(env);
+  const res = await worker.fetch(get('/admin', { cookie }), env, ctx());
+  const csp = res.headers.get('content-security-policy') || '';
+
+  assert.match(csp, /script-src 'self'/, 'a file, never an inline block');
+  assert.ok(!csp.includes("'unsafe-inline'"), 'and no inline anything');
+  assert.match(csp, /connect-src 'self'/, 'a subscription can only be posted back here');
+  assert.match(csp, /worker-src 'self'/);
+
+  const html = await res.text();
+  assert.ok(!/<script(?![^>]*src=)/.test(html), 'no inline script in the markup either');
+});
