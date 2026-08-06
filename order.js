@@ -61,6 +61,34 @@
     return isFinite(at) && Date.now() >= at;
   }
 
+  /* When the closure ends, as a day and a minute in Hockenheim — the same two
+     values every other time comparison in this file uses, so no instant
+     arithmetic and no timezone to get wrong. */
+  function closureEnds() {
+    if (orderingOpen()) return null;
+    var at = Date.parse(LIVE.ordering.resumesAt || '');
+    if (!isFinite(at)) return null;
+    return { iso: berlinDayOf(at), minutes: hhmm(berlinClock(at)), at: at };
+  }
+
+  /* Is the moment the guest has actually chosen inside the closure?
+
+     This is the whole difference between withholding an option and refusing an
+     order. A kitchen that cannot cook tonight can still take an order for
+     tomorrow at seven, and the basket already knows how to schedule one. So
+     "as soon as possible" is what the closure takes away — exactly as a lunch
+     slot takes away delivery — and a time chosen after we reopen is an
+     ordinary order that goes through untouched. */
+  function orderingBlocksChoice() {
+    var end = closureEnds();
+    if (!end) return false;
+    if (form.when !== 'scheduled') return true;
+    if (!draft.fDate || !draft.fTime) return true;
+    var day = String(draft.fDate);
+    var minutes = hhmm(draft.fTime);
+    return day < end.iso || (day === end.iso && minutes < end.minutes);
+  }
+
   // v2 stores { savedAt, items } instead of a bare id -> qty map, so a basket
   // can expire. v1 keys are removed on sight rather than migrated: they carry
   // no timestamp, so there is no way to tell a five-minute-old basket from a
@@ -99,6 +127,7 @@
       offBackAt: 'Ab {time} Uhr sind wir wieder für Sie da.',
       offBackOn: 'Ab {date} sind wir wieder für Sie da.',
       offBackSoon: 'Bitte schauen Sie etwas später noch einmal vorbei.',
+      offOrderLater: 'Sie können aber jetzt schon für später bestellen — wählen Sie unter „Wunschtermin“ eine Zeit ab {resumes}.',
       offContact: 'Bei Fragen erreichen Sie uns unter {phone}.',
       ordersOffShort: 'Bestellungen pausiert',
       openNow: 'Jetzt geöffnet', closedNow: 'Zurzeit geschlossen',
@@ -247,6 +276,7 @@
       offBackAt: 'We are back from {time}.',
       offBackOn: 'We are back from {date}.',
       offBackSoon: 'Please check back a little later.',
+      offOrderLater: 'You can still order for later — pick a time from {resumes} under “Preferred time”.',
       offContact: 'If you have any questions, reach us on {phone}.',
       ordersOffShort: 'Ordering paused',
       openNow: 'Open now', closedNow: 'Currently closed',
@@ -386,6 +416,7 @@
       offBackAt: 'هنرجع من الساعة {time}.',
       offBackOn: 'هنرجع من {date}.',
       offBackSoon: 'تعالى بصّ تاني بعد شوية.',
+      offOrderLater: 'بس تقدر تطلب من دلوقتي لوقت لاحق — اختار تحت «الموعد المطلوب» وقت من {resumes}.',
       offContact: 'لو عندك أي استفسار كلّمنا على {phone}.',
       ordersOffShort: 'الطلبات متوقفة',
       openNow: 'مفتوح دلوقتي', closedNow: 'مغلق دلوقتي',
@@ -1650,12 +1681,12 @@
        repaint and on every open — and a button rebuilt after that call came
        back enabled with the notice above it still saying we are closed. One
        owner, applied wherever the button is drawn. */
-    var off = !orderingOpen();
-    btn.disabled = off;
+    var blocked = orderingBlocksChoice();
+    btn.disabled = blocked;
     var note = document.getElementById('cartOrderOff');
     if (note) {
-      note.textContent = off ? orderingNotice() : '';
-      note.hidden = !off;
+      note.textContent = blocked ? orderingNotice() : '';
+      note.hidden = !blocked;
     }
   }
 
@@ -2272,13 +2303,9 @@
   function submitOrder(e) {
     e.preventDefault();
 
-    /* The one thing on this site that refuses an order outright, and it is not
-       validation — it is the restaurant saying it cannot cook right now. A
-       basket built before the switch was thrown is still sitting in an open
-       tab, and letting it through would send a WhatsApp message nobody can
-       answer. Everything else stays: the basket is kept, the notice says when
-       we are back, and the phone number is right there. */
-    if (!orderingOpen()) { renderOrdering(); return; }
+    /* Refused only for a moment we have already said we cannot cook in. A
+       time chosen after we reopen is an ordinary order and goes through. */
+    if (orderingBlocksChoice()) { renderOrdering(); paintWhen(); return; }
 
     syncType();
     syncPay();
@@ -2362,6 +2389,11 @@
           type: pending.data.type,
           business: pending.data.business,
           postcode: pending.data.plz,
+          // Which moment this order is for, so the server can apply the same
+          // closure rule the basket did. Never a price — only a wish.
+          when: form.when === 'scheduled' && draft.fDate && draft.fTime
+            ? { date: String(draft.fDate), time: String(draft.fTime) }
+            : null,
           lang: lang()
         },
         // In cents, and only so the wallet sheet can show the guest the same
@@ -2605,10 +2637,9 @@
         var id = btn.getAttribute('data-id');
         if (!items[id]) return;
         var adding = btn.getAttribute('data-act') === 'inc';
-        // The CSS dims these while ordering is paused, but the switch can be
-        // thrown while the page is open — and taking something OFF an order
-        // must never be blocked, whatever the state.
-        if (adding && !orderingOpen()) { renderOrdering(); return; }
+        /* Building a basket is never withheld, even while the till is closed.
+           The guest may be putting together an order for tomorrow, and the
+           basket is where they find out that they can. */
         setQty(id, (cart[id] || 0) + (adding ? 1 : -1));
         return;
       }
@@ -2923,7 +2954,7 @@
     } catch (e) { return ''; }
   }
 
-  function berlinDay(ms) {
+  function berlinDayOf(ms) {
     try {
       return new Date(ms).toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
     } catch (e) { return ''; }
@@ -2936,7 +2967,7 @@
       return new Intl.DateTimeFormat(DATE_LOCALE[lang()], {
         timeZone: 'Europe/Berlin', weekday: 'long', day: 'numeric', month: 'long'
       }).format(new Date(ms));
-    } catch (e) { return berlinDay(ms); }
+    } catch (e) { return berlinDayOf(ms); }
   }
 
   var OFF_REASON = {
@@ -2959,12 +2990,24 @@
       /* Today gets a clock, another day gets a date. Naming a weekday for
          something six hours away reads as evasive; naming a time for something
          eleven days away reads as nonsense. */
-      when = berlinDay(at) === berlinNow().iso
+      when = berlinDayOf(at) === berlinNow().iso
         ? fill(L.offBackAt, { time: berlinClock(at) })
         : fill(L.offBackOn, { date: berlinDate(at) });
     }
 
-    return why + ' ' + when + ' ' + fill(L.offContact, { phone: phoneDisplay() });
+    /* The way out, named. Without this the notice is a closed door; with it,
+       it is a closed door and a bell — and the basket the guest already filled
+       is still worth something. */
+    var later = '';
+    if (isFinite(at)) {
+      later = ' ' + fill(L.offOrderLater, {
+        resumes: berlinDayOf(at) === berlinNow().iso
+          ? berlinClock(at) + (lang() === 'de' ? ' Uhr' : '')
+          : berlinDate(at)
+      });
+    }
+
+    return why + ' ' + when + later + ' ' + fill(L.offContact, { phone: phoneDisplay() });
   }
 
   /* `.order-off` carries the sentence; the attribute on <html> is what dims
@@ -2982,8 +3025,9 @@
 
     var send = document.getElementById('cartSend');
     if (send) {
-      send.disabled = off;
-      if (off) send.setAttribute('aria-describedby', 'cartOrderOff');
+      var blocked = orderingBlocksChoice();
+      send.disabled = blocked;
+      if (blocked) send.setAttribute('aria-describedby', 'cartOrderOff');
       else send.removeAttribute('aria-describedby');
     }
   }

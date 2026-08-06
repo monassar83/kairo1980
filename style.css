@@ -1780,13 +1780,17 @@ a.cart-send-wa {
 }
 .order-off:empty { display: none; }
 
-/* Dimmed, never removed: a button that has vanished reads as a broken page,
-   and the note above already says what happened. */
-:root[data-ordering="off"] .qty-add,
-:root[data-ordering="off"] .cart-send {
+/* The add buttons are NOT dimmed. Filling a basket is never withheld, even
+   while the till is closed — the guest may be putting together an order for
+   tomorrow, and the basket is where they find out that they can.
+
+   What the closure takes away is "as soon as possible", and it takes it away
+   the way a lunch slot takes away delivery: the send button dims, and the note
+   above it names the time to pick instead. Withholding an option, not an
+   order. */
+.cart-send:disabled {
   opacity: 0.4;
   cursor: not-allowed;
-  pointer-events: none;
 }
 
 /* Inside the basket the note sits directly above the send button, where the

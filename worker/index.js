@@ -19,6 +19,7 @@ import { ProviderError } from './payments/errors.js';
 import * as admin from './admin/index.js';
 import { readSettings } from './settings.js';
 import { withLiveData, liveETag } from './page-render.js';
+import { dayOf, timeOf } from './berlin.js';
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
@@ -165,21 +166,29 @@ async function createPayment(request, env, url) {
   if (!(CONFIG.payment && CONFIG.payment.prepayOnline)) {
     return fail(503, 'payments_off', 'Online payment is switched off.');
   }
-  /* Dimming the buttons is not enough. A tab opened before the switch was
-     thrown still has a live checkout in it, and taking money for an order the
-     kitchen has already said it cannot cook is the one failure here that costs
-     a refund and a phone call. The browser is told; the server decides. */
-  const { ordering } = await readSettings(env);
-  if (!ordering.open) {
-    return fail(503, 'ordering_closed', 'The restaurant is not taking orders right now.');
-  }
   // Hiding the buttons is not enough: the route itself must refuse, or a
   // hand-made request could still start a payment nobody can complete.
   if (sandboxOnProduction(env, url)) {
     return fail(503, 'payments_off', 'Online payment is not available right now.');
   }
 
+  // Read once: a request body is a stream and cannot be consumed twice.
   const body = await readJson(request);
+
+  /* Dimming the buttons is not enough: a tab opened before the switch was
+     thrown still has a live checkout in it, and taking money for an order the
+     kitchen has already said it cannot cook costs a refund and a phone call.
+
+     But a closure withholds a MOMENT, not the order — the same rule the basket
+     applies. An order scheduled for after we reopen is an ordinary order, so
+     the body may name the moment it is for. That is a wish, not a price: the
+     worst a false one buys is a prepaid order for a time the restaurant can
+     read in the message and answer. */
+  const { ordering } = await readSettings(env);
+  if (!ordering.open && !wantedAfterClosure(ordering.resumesAt, body.when)) {
+    return fail(503, 'ordering_closed', 'The restaurant is not taking orders right now.');
+  }
+
   // The method decides the provider. The browser names a method it was
   // offered; it never names a provider, and it never names a price.
   const provider = providerForMethod(env, body.method);
@@ -231,6 +240,26 @@ async function createPayment(request, env, url) {
     breakdown: { subtotal: q.subtotal, discount: q.discount, fee: q.fee },
     belowMinimum: q.belowMinimum
   }, 201);
+}
+
+/* Does the moment the guest asked for fall after we reopen?
+   `when` is a Berlin wall clock — { date: 'YYYY-MM-DD', time: 'HH:MM' } — and
+   is compared as one, against the closure's end read in the same zone. No
+   instant arithmetic, so nothing to get wrong on the two nights a year the
+   clocks move. Absent or malformed means "as soon as possible", which during
+   a closure is exactly the moment we cannot cook in. */
+export function wantedAfterClosure(resumesAt, when) {
+  const at = Date.parse(String(resumesAt || ''));
+  if (!Number.isFinite(at)) return true;          // no closure end: not closed
+  if (!when || typeof when !== 'object') return false;
+
+  const date = String(when.date || '');
+  const time = String(when.time || '');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date) || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) {
+    return false;
+  }
+
+  return `${date}T${time}` >= `${dayOf(at)}T${timeOf(at)}`;
 }
 
 const LOCALES = { de: 'de-DE', en: 'en-GB', ar: 'ar-EG' };

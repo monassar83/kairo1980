@@ -78,6 +78,16 @@ async function setOrdering(page, { closed, reason = '', untilDate = '', untilTim
 test.beforeEach(async ({ page }) => {
   await signIn(page);
   await setOrdering(page, { closed: false });
+
+  /* And an empty basket. These tests run serially against one browser profile,
+     so the basket and the remembered form survive from one to the next — which
+     is exactly the behaviour the site is built for and exactly wrong for a
+     test that then asserts a count. Isolation is the test's job, not the
+     site's. */
+  await page.goto('/');
+  await page.evaluate(() => {
+    try { localStorage.clear(); sessionStorage.clear(); } catch (e) { /* fine */ }
+  });
 });
 
 test.afterEach(async ({ page }) => {
@@ -113,40 +123,99 @@ test('a paused shop still shows its menu, and says why in all three languages',
     }
   });
 
-test('a paused shop cannot be made to take an order anyway', async ({ page }) => {
+test('a paused shop still lets a guest build a basket, and refuses only "now"',
+  async ({ page }) => {
+    const whatsapp = await captureWhatsApp(page);
+    await signIn(page);
+    await setOrdering(page, { closed: true, reason: 'emergency' });
+
+    /* Filling a basket is never withheld. The guest may be putting together an
+       order for tomorrow, and blocking the basket would lose it — which is the
+       same mistake as refusing an out-of-area postcode instead of flagging it. */
+    await page.goto('/');
+    await addItem(page, 'hummus', 2);
+    await expect(page.locator('#cartFabCount')).toHaveText('2');
+
+    await openBasket(page);
+    await choosePickup(page);
+    await fillContact(page, { name: 'Test Gast', phone: '+49 176 1234567' });
+
+    // "As soon as possible" is what the closure takes away.
+    const send = page.locator('#cartSend');
+    await expect(send).toBeDisabled();
+    const note = page.locator('#cartOrderOff');
+    await expect(note).toBeVisible();
+    // And the note names the way out rather than just closing the door.
+    await expect(note).toContainText(/Wunschtermin/);
+
+    // Forced past the disabled attribute, the way a script or a stuck tap would.
+    await send.evaluate((el) => { el.disabled = false; el.click(); });
+    await page.waitForTimeout(400);
+    expect(await page.evaluate(() => window.__waUrl)).toBeNull();
+    await expect(page.locator('.cart-sent')).toHaveCount(0);
+  });
+
+test('an order scheduled past the closure goes through untouched', async ({ page }) => {
   const whatsapp = await captureWhatsApp(page);
   await signIn(page);
-  await setOrdering(page, { closed: true, reason: 'emergency' });
 
-  /* Built AFTER the switch was thrown, which is the harder case: the guest is
-     not stopped from putting a basket together, only from sending it. Nothing
-     they did is thrown away — the basket is still there when we reopen. */
-  await page.goto('/');
-  await page.locator('.mitem[data-item="hummus"] [data-act="inc"]').dispatchEvent('click');
-  await page.waitForTimeout(200);
-  // The add is refused by the handler, not merely by the styling.
-  await expect(page.locator('#cartFab')).toBeHidden();
+  // Closed until a named time this evening, so "later today" is a real choice.
+  await setOrdering(page, { closed: true, reason: 'demand', untilTime: '23:30' });
 
-  // Reopen the basket the only way left — through a basket that already exists.
-  await setOrdering(page, { closed: false });
   await page.goto('/');
   await addItem(page, 'hummus', 2);
-  await setOrdering(page, { closed: true, reason: 'emergency' });
-
-  await page.goto('/');
   await openBasket(page);
-  await expect(page.locator('#cartFabCount')).toHaveText('2', { timeout: 10000 });
+  await choosePickup(page);
+
+  // Pick a moment after we reopen — tomorrow, so no clock arithmetic can make
+  // this test fail at some hours of the day and pass at others.
+  const tomorrow = await page.evaluate(() => {
+    const d = new Date(Date.now() + 86400000);
+    const pad = (n) => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  });
+  await page.locator('[data-when="scheduled"]').click();
+  await page.fill('#fDate', tomorrow);
+  await page.fill('#fTime', '19:00');
 
   const send = page.locator('#cartSend');
-  await expect(send).toBeDisabled();
-  await expect(page.locator('#cartOrderOff')).toBeVisible();
+  await expect(send).toBeEnabled();
+  await expect(page.locator('#cartOrderOff')).toBeHidden();
 
-  // Forced past the disabled attribute, the way a script or a stuck tap would.
-  await send.evaluate((el) => { el.disabled = false; el.click(); });
-  await page.waitForTimeout(400);
-  expect(await page.evaluate(() => window.__waUrl)).toBeNull();
-  await expect(page.locator('.cart-sent')).toHaveCount(0);
+  await fillContact(page, { name: 'Test Gast', phone: '+49 176 1234567' });
+  await send.click();
+
+  const message = decodeURIComponent((await whatsapp()).split('?text=')[1]);
+  expect(message).toContain('2× Hummus');
+  await expect(page.locator('.cart-sent')).toBeVisible();
 });
+
+test('moving the chosen time back into the closure withholds the button again',
+  async ({ page }) => {
+    await signIn(page);
+    await setOrdering(page, { closed: true, reason: 'demand', untilTime: '23:30' });
+
+    await page.goto('/');
+    await addItem(page, 'hummus', 1);
+    await openBasket(page);
+    await choosePickup(page);
+
+    const send = page.locator('#cartSend');
+    const tomorrow = await page.evaluate(() => {
+      const d = new Date(Date.now() + 86400000);
+      const pad = (n) => String(n).padStart(2, '0');
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+    });
+
+    await page.locator('[data-when="scheduled"]').click();
+    await page.fill('#fDate', tomorrow);
+    await page.fill('#fTime', '19:00');
+    await expect(send).toBeEnabled();
+
+    // Back to "as soon as possible", which is the one moment we cannot cook in.
+    await page.locator('[data-when="asap"]').click();
+    await expect(send).toBeDisabled();
+  });
 
 test('taking something OFF an order is never blocked', async ({ page }) => {
   await signIn(page);

@@ -182,6 +182,31 @@ are only the no-JavaScript fallback — update both or neither.
   a second business, and asserts only what the page renders — the formats are
   read out of the cards that describe them, so a format deleted from the page
   leaves the markup with it.
+- **The ordering switch withholds a MOMENT, not an order.** `/admin` can stop
+  the till in one tap, and a guest can still fill a basket while it is stopped —
+  because someone who cannot order tonight may be ordering for tomorrow, and
+  the basket already knows how to schedule one. What the closure takes away is
+  "as soon as possible", exactly as a lunch slot takes away delivery: the send
+  button dims, and the note above it names the time to pick instead. A moment
+  chosen after we reopen is an ordinary order and goes through untouched, in
+  the browser and at `/api/payments`, which applies the same comparison rather
+  than trusting the browser's verdict. Blocking the basket outright was the
+  first version and it was wrong — it broke the rule directly above it.
+- **A closure always carries its own end.** By default midnight tonight; a date
+  set at `/admin` overrides it. It expires by being read against the clock, so
+  nothing has to run for it to lift. The failure being guarded is not a shop
+  left open, it is a Tuesday lunchtime spent wondering why nobody is ordering
+  because someone stopped the till on Saturday and went home.
+- **Opening hours live in the database now, and config.js is the default.**
+  `config.js` → `hours` is what the site launched with, what "reset" restores
+  and what the browser falls back on when the server cannot be reached; a row
+  in `settings` overrides it entirely. Exactly one is in effect and `/admin`
+  says which. The Worker writes the live hours into the markup before it is
+  sent — the JSON-LD, the no-JavaScript table, and a JSON island `order.js`
+  reads synchronously — because Googlebot renders eventually but Applebot and
+  Bingbot largely do not, and those two feed the place cards. A time that is
+  not a time refuses the whole save: read as "no window" it would silently
+  publish that day as closed, and a typo would shut the restaurant.
 - **The admin area checks a username AND a password.** `/admin` is the one
   page a person signs into. It replaced a Basic-auth page that read the
   password and threw the username away, and compared it with a length check

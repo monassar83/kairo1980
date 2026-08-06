@@ -540,6 +540,19 @@ test('a closed shop refuses a payment, however the request is made', async (t) =
   assert.equal(res.status, 503);
   assert.equal((await res.json()).error.code, 'ordering_closed');
 
+  /* But a closure withholds a MOMENT, not the order. An order scheduled for
+     after we reopen is an ordinary order and must go through — that is the
+     difference between pausing a kitchen and turning customers away. */
+  const soon = await worker.fetch(post('/api/payments', {
+    ...BASKET, when: { date: '2020-01-01', time: '12:00' }
+  }), env, ctx());
+  assert.equal(soon.status, 503, 'a moment in the past is not "after we reopen"');
+
+  const later = await worker.fetch(post('/api/payments', {
+    ...BASKET, when: { date: '2099-01-01', time: '19:00' }
+  }), env, ctx());
+  assert.equal(later.status, 201, 'scheduled past the closure, so it is taken');
+
   await worker.fetch(form('/admin/ordering', { open: '1' }, { cookie }), env, ctx());
   const after = await worker.fetch(post('/api/payments', BASKET), env, ctx());
   assert.equal(after.status, 201, 'and taking orders again the moment it is released');

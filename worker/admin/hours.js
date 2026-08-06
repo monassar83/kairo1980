@@ -36,13 +36,24 @@ export async function save(request, env, url) {
     return seeOther('/admin/hours?saved=1');
   }
 
+  /* "Apply to every open day" is one checkbox and no JavaScript: the admin
+     pages carry `default-src 'none'` and have no script at all, which is worth
+     more than the convenience of doing this in the browser. Five identical
+     open days is this restaurant's actual week, so typing them once is the
+     common case rather than a shortcut. */
+  const bulk = form.get('apply_all') === '1';
+  const allLunch = pair(form.get('all_lunch_from'), form.get('all_lunch_to'));
+  const allEvening = pair(form.get('all_evening_from'), form.get('all_evening_to'));
+
   const days = {};
   for (const [key] of DAYS) {
     const closed = form.get(`${key}_closed`) === '1';
     days[key] = {
       closed,
-      lunch: pair(form.get(`${key}_lunch_from`), form.get(`${key}_lunch_to`)),
-      evening: pair(form.get(`${key}_evening_from`), form.get(`${key}_evening_to`))
+      lunch: bulk && !closed ? allLunch
+        : pair(form.get(`${key}_lunch_from`), form.get(`${key}_lunch_to`)),
+      evening: bulk && !closed ? allEvening
+        : pair(form.get(`${key}_evening_from`), form.get(`${key}_evening_to`))
     };
   }
 
@@ -74,8 +85,13 @@ function seeOther(location) {
 const CSS = `
  fieldset{border:1px solid #e6dcc9;background:#fff;padding:12px 14px;margin:0 0 10px}
  legend{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:#7a6030;padding:0 6px}
- .day{display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;align-items:end}
+ .day{display:grid;grid-template-columns:1fr 1fr;gap:10px 10px;align-items:end}
+ /* Two time ranges side by side stop fitting long before the phone runs out
+    of width — four inputs and two dashes in one row is unusable on a 360px
+    screen. */
+ @media(max-width:430px){ .day{grid-template-columns:1fr} }
  .day .full{grid-column:1/-1}
+ .note.full{font-size:12.5px;color:#7a6030;line-height:1.55}
  .times{display:flex;align-items:center;gap:6px}
  .times input{flex:1;min-width:0;padding:9px;font-size:16px;border:1px solid #d8cbb0;
               background:#fffdf9}
@@ -84,7 +100,12 @@ const CSS = `
             text-transform:none;color:#1c1409;margin:0}
  label.tick input{width:20px;height:20px;flex:none}
  .cap{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7a6030;margin:0 0 4px}
- .save{position:sticky;bottom:0;background:#faf7f2;padding:12px 0;margin-top:4px}
+ /* Sticky, and above what it sticks over. Without the z-index a label from
+    the last fieldset painted on top of the button and swallowed the tap —
+    a Save button that cannot be pressed on a phone, found by
+    tests/e2e/ordering-switch.spec.js and not by looking at it. */
+ .save{position:sticky;bottom:0;z-index:5;background:#faf7f2;padding:12px 0 8px;
+       margin-top:4px;box-shadow:0 -10px 14px -8px rgba(28,20,9,0.18)}
  button.save-btn{width:100%;padding:14px;font-size:15px;font-weight:600;border:0;
                  background:#1c1409;color:#f5e8cc;cursor:pointer}
  button.reset{width:100%;padding:11px;font-size:13.5px;border:1px solid #d8cbb0;background:none;
@@ -144,6 +165,20 @@ ${failed ? `<p class="msg bad">Not saved. Every time must be HH:MM and each clos
       <label class="tick full">
         <input type="checkbox" name="lunch_delivery" value="1" ${hours.lunch.delivery ? 'checked' : ''}>
         Deliver at lunchtime too (otherwise collection only)
+      </label>
+    </div>
+  </fieldset>
+
+  <fieldset><legend>All open days at once</legend>
+    <div class="day">
+      <p class="note full" style="margin:0 0 2px">Fill these in and every day not
+      marked “Closed all day” gets these times. Leave a pair empty to remove
+      that window everywhere.</p>
+      ${times('all_lunch', 'Lunch', null)}
+      ${times('all_evening', 'Evening', null)}
+      <label class="tick full">
+        <input type="checkbox" name="apply_all" value="1">
+        Apply these to every open day
       </label>
     </div>
   </fieldset>
