@@ -160,52 +160,54 @@ window.KAIRO_CONFIG = {
   /* --- Opening hours ----------------------------------------------------- */
   hours: {
 
-    /* --- The lunch service (Mittagsservice) -------------------------------
-       Three lines decide everything the site says about lunch. Change one,
-       save, push — no build step, nothing to restart, and config.js is served
-       with `must-revalidate`, so the change is live for every visitor at once.
+    /* --- When a driver goes out -------------------------------------------
+       The door and the driver do not open at the same time. The shop takes
+       collections from the moment it opens; a delivery needs somebody to drive
+       it, and that shift starts later.
 
-       enabled    false -> lunch does not exist anywhere on the site.
-                  true  -> lunch is published (see startsOn).
+       So this is a TIME, not a switch. It used to be `lunch.delivery: false` —
+       a boolean that said "the midday window is collection only" — which could
+       only ever express the restriction by pointing at a named window. That
+       worked while midday and evening were separated by a closed afternoon,
+       and stopped being able to say anything the moment the kitchen opened
+       straight through: "we are open 11:00–23:00 and deliver from 18:00" is
+       not a fact about lunch at all.
 
-       startsOn   'YYYY-MM-DD' — the first day the service actually runs.
-                  BEFORE that date the site advertises it ("New from
-                  Wednesday, 5 August: …") but nothing can be ordered into a
-                  lunch slot: the opening-hours table, the "open now" badge,
-                  the hours Google indexes and the basket all still end with
-                  the evening service. ON that date it becomes an ordinary
-                  service window by itself — nobody has to touch anything.
-                  Set to '' when it is running and the notice is no longer
-                  needed.
+         '18:00'  -> collection from opening, delivery from 18:00
+         ''       -> a driver is out whenever the door is open
 
-       delivery   false -> lunch is COLLECTION ONLY. There is no driver at
-                          midday, so the basket does not offer delivery for a
-                          lunch slot, and every place that mentions lunch says
-                          so. Evening delivery is unaffected.
-                  true  -> lunch delivers exactly like the evening. This is
-                          the one word to change once a midday driver exists.
-    --------------------------------------------------------------------- */
-    lunch: {
-      enabled: true,
-      startsOn: '',
-      delivery: false
-    },
+       Delivery always ends when the day does — there is no separate closing
+       time, because a driver cannot deliver from a shut kitchen. */
+    deliveryFrom: '18:00',
 
-    // One entry per weekday. Times are "HH:MM" in 24h format.
-    //   closed : true          -> closed all day, any times below are ignored
-    //   lunch  : ['11:30','14:30'] or null (no lunch service that day)
-    //   evening: ['18:00','23:00'] or null (no evening service that day)
-    //
-    // To open Monday for lunch only: set closed to false and give it a
-    // `lunch` window while leaving `evening` at null.
+    /* One entry per weekday. Times are "HH:MM" in 24h format.
+
+       A day has up to TWO opening windows, because a kitchen that shuts in the
+       afternoon is an ordinary thing and has to be sayable. The keys are named
+       `lunch` and `evening` for historical reasons and are simply the first and
+       second window of the day — they carry no meaning of their own any more,
+       and nothing is labelled "Mittag" or "Abend" on the strength of them.
+       Two windows that touch (11:00–18:00 and 18:00–23:00) are ONE opening,
+       and are printed as one: 11:00 – 23:00.
+
+         closed : true          -> closed all day; the times below are ignored
+         lunch  : ['11:00','23:00'] or null   the day's first window
+         evening: ['18:00','23:00'] or null   a second window, after a break
+
+       The two windows may not overlap, and a second window may not start
+       before the first has ended — worker/settings.js refuses the whole save
+       rather than publish a day that contradicts itself.
+
+       WHO can be served in those windows is not written here: collection runs
+       for the whole opening, delivery from `deliveryFrom` above. */
     days: {
       mon: { closed: true,  lunch: null,               evening: null },
       tue: { closed: true,  lunch: null,               evening: null },
-      wed: { closed: false, lunch: ['11:00', '14:30'], evening: ['18:00', '23:00'] },
-      thu: { closed: false, lunch: ['11:00', '14:30'], evening: ['18:00', '23:00'] },
-      fri: { closed: false, lunch: ['11:00', '14:30'], evening: ['18:00', '23:00'] },
-      sat: { closed: false, lunch: ['11:00', '14:30'], evening: ['18:00', '23:00'] },
-      sun: { closed: false, lunch: ['11:00', '14:30'], evening: ['18:00', '23:00'] }
+      wed: { closed: false, lunch: ['11:00', '23:00'], evening: null },
+      thu: { closed: false, lunch: ['11:00', '23:00'], evening: null },
+      fri: { closed: false, lunch: ['11:00', '23:00'], evening: null },
+      sat: { closed: false, lunch: ['11:00', '23:00'], evening: null },
+      sun: { closed: false, lunch: ['11:00', '23:00'], evening: null }
     }
   }
 };

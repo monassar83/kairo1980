@@ -11,9 +11,9 @@ import { test, expect } from '@playwright/test';
 
 const URL = '/firmencatering';
 
-/** The lunch rules, read from the config the page itself reads. */
-async function lunch(page) {
-  return page.evaluate(() => window.KAIRO_CONFIG.hours.lunch);
+/** The delivery shift, read from the config the page itself reads. */
+async function deliveryFrom(page) {
+  return page.evaluate(() => window.KAIRO_CONFIG.hours.deliveryFrom || '');
 }
 
 test('the page is served on its own URL and says what it is', async ({ page }) => {
@@ -89,19 +89,22 @@ test('the delivery towns are rendered from the zone list, not retyped', async ({
   await expect(page.locator('.areas-lead')).toContainText(String(zones));
 });
 
-test('the pickup-only lunch caveat travelled with the offer', async ({ page }) => {
+test('the collection-only caveat travelled with the offer', async ({ page }) => {
   await page.goto(URL);
-  const { enabled, delivery } = await lunch(page);
-  test.skip(!enabled, 'no lunch service is published');
+  const from = await deliveryFrom(page);
 
   const lead = page.locator('.areas-lead');
-  if (delivery === true) {
-    // Lunch delivers: the page must not carry a restriction that has been lifted.
-    await expect(lead).not.toContainText('nur Abholung');
+  if (!from) {
+    // A driver is out all day: the page must not carry a restriction that has
+    // been lifted. This is the assertion that makes emptying `deliveryFrom` at
+    // /admin enough on its own, with no copy to hunt down.
+    await expect(lead).not.toContainText('Abholung');
   } else {
-    // It does not: free delivery is qualified where it is promised, and the
-    // sentence is the one config writes, not one typed into this page.
-    await expect(lead).toContainText('nur Abholung');
+    // It is not: free delivery is qualified where it is promised, with the
+    // sentence config writes rather than one typed into this page — and it
+    // names the actual shift, so a changed time cannot leave stale copy behind.
+    await expect(lead).toContainText('Abholung');
+    await expect(lead).toContainText(from);
     await expect(page.locator('.business-notice')).toContainText('Abholung');
   }
 });

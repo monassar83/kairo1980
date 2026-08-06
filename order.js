@@ -104,17 +104,13 @@
   var T = {
     de: {
       days: { mon: 'Montag', tue: 'Dienstag', wed: 'Mittwoch', thu: 'Donnerstag', fri: 'Freitag', sat: 'Samstag', sun: 'Sonntag' },
-      lunch: 'Mittag', evening: 'Abend', closed: 'Geschlossen',
-      pickupOnly: 'nur Abholung',
-      lunchSoon: 'Neu ab {date}: Mittagsservice {windows}.',
-      lunchNow: 'Mittagsservice: {windows}.',
-      lunchPickupOnly: 'Mittags ausschließlich zur Abholung — Lieferungen ab {evening} Uhr.',
-      lunchWithDelivery: 'Mittags liefern wir und Sie können abholen.',
-      lunchClause: 'Bitte beachten: Mittags ist nur Abholung möglich, Lieferungen ab {evening} Uhr.',
-      lunchByArrangement: 'Firmenbestellungen zu anderen Zeiten nach Absprache.',
+      closed: 'Geschlossen',
+      pickupLabel: 'Abholung', deliveryLabel: 'Lieferung',
+      deliveryNotice: 'Abholung während der gesamten Öffnungszeit, Lieferung ab {from} Uhr.',
+      deliveryClause: 'Bitte beachten: Lieferungen ab {from} Uhr, davor ausschließlich Abholung.',
+      hoursByArrangement: 'Firmenbestellungen zu anderen Zeiten nach Absprache.',
       businessByArrangement: 'Liefertermine für Firmenbestellungen nach Absprache — sagen Sie uns einfach, wann Sie es brauchen.',
-      cartLunchPickup: 'Mittags ({windows}) bieten wir ausschließlich Abholung an. Für eine Lieferung wählen Sie unter „Wunschtermin“ bitte eine Zeit ab {evening} Uhr.',
-      warnLunchSoon: 'Der Mittagsservice startet erst am {date}. Bis dahin sind wir abends ab {evening} Uhr für Sie da — senden Sie die Bestellung gern trotzdem, wir antworten im Chat.',
+      cartDeliveryLater: 'Zu dieser Zeit bieten wir ausschließlich Abholung an. Für eine Lieferung wählen Sie unter „Wunschtermin“ bitte eine Zeit ab {from} Uhr.',
       /* The ordering switch. Three sentences, assembled: why (or nothing),
          when we are back (or nothing), and how to reach a person. Each part
          can fall silent on its own, which is what lets one switch produce a
@@ -258,17 +254,13 @@
     },
     en: {
       days: { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' },
-      lunch: 'Lunch', evening: 'Evening', closed: 'Closed',
-      pickupOnly: 'pickup only',
-      lunchSoon: 'New from {date}: lunch service {windows}.',
-      lunchNow: 'Lunch service: {windows}.',
-      lunchPickupOnly: 'Lunch is for pickup only — deliveries from {evening}.',
-      lunchWithDelivery: 'At lunchtime we deliver and you can collect.',
-      lunchClause: 'Please note: lunchtime is pickup only, deliveries from {evening}.',
-      lunchByArrangement: 'Corporate orders outside these times by arrangement.',
+      closed: 'Closed',
+      pickupLabel: 'Pickup', deliveryLabel: 'Delivery',
+      deliveryNotice: 'Collection throughout our opening hours, delivery from {from}.',
+      deliveryClause: 'Please note: deliveries from {from} — before that, collection only.',
+      hoursByArrangement: 'Corporate orders outside these times by arrangement.',
       businessByArrangement: 'Delivery times for corporate orders by arrangement — just tell us when you need it.',
-      cartLunchPickup: 'At lunchtime ({windows}) we offer pickup only. For a delivery, pick a time from {evening} under "Preferred time".',
-      warnLunchSoon: 'The lunch service only starts on {date}. Until then we are open in the evening from {evening} — do send the order anyway and we will reply in the chat.',
+      cartDeliveryLater: 'At this time we offer collection only. For a delivery, pick a time from {from} under "Preferred time".',
       offNone: 'We are not taking orders at the moment.',
       offDemand: 'We have an unusually high number of orders right now and are not taking new ones for the moment.',
       offEmergency: 'We have had to stop taking orders at short notice.',
@@ -398,17 +390,13 @@
     },
     ar: {
       days: { mon: 'الاثنين', tue: 'الثلاثاء', wed: 'الأربعاء', thu: 'الخميس', fri: 'الجمعة', sat: 'السبت', sun: 'الأحد' },
-      lunch: 'الغداء', evening: 'المساء', closed: 'مغلق',
-      pickupOnly: 'استلام فقط',
-      lunchSoon: 'جديد من {date}: خدمة الغداء {windows}.',
-      lunchNow: 'خدمة الغداء: {windows}.',
-      lunchPickupOnly: 'الغداء بالاستلام من المطعم بس — والتوصيل من الساعة {evening}.',
-      lunchWithDelivery: 'وقت الغداء بنوصّل وتقدر تستلم بنفسك.',
-      lunchClause: 'للعلم: وقت الغداء الاستلام بس، والتوصيل من الساعة {evening}.',
-      lunchByArrangement: 'طلبات الشركات في مواعيد تانية بالاتفاق معانا.',
+      closed: 'مغلق',
+      pickupLabel: 'الاستلام', deliveryLabel: 'التوصيل',
+      deliveryNotice: 'الاستلام من المطعم طول مواعيد الفتح، والتوصيل من الساعة {from}.',
+      deliveryClause: 'للعلم: التوصيل من الساعة {from}، وقبل كده الاستلام من المطعم بس.',
+      hoursByArrangement: 'طلبات الشركات في مواعيد تانية بالاتفاق معانا.',
       businessByArrangement: 'مواعيد توصيل طلبات الشركات بالاتفاق — قول لنا بس محتاجها إمتى.',
-      cartLunchPickup: 'وقت الغداء ({windows}) عندنا استلام من المطعم بس. لو عايز توصيل، اختار تحت «الموعد المطلوب» وقت من الساعة {evening}.',
-      warnLunchSoon: 'خدمة الغداء بتبدأ يوم {date}. لحد ساعتها إحنا معاك بالليل من الساعة {evening} — ابعت الطلب عادي وهنرد عليك في الشات.',
+      cartDeliveryLater: 'في الوقت ده عندنا استلام من المطعم بس. لو عايز توصيل، اختار تحت «الموعد المطلوب» وقت من الساعة {from}.',
       offNone: 'مش بنستقبل طلبات دلوقتي.',
       offDemand: 'عندنا طلبات كتير جداً دلوقتي، فمش بنستقبل طلبات جديدة مؤقتاً.',
       offEmergency: 'اضطرينا نوقف استقبال الطلبات فجأة.',
@@ -626,29 +614,25 @@
     };
   }
 
-  /* --- the lunch service --------------------------------------------------
-     Three questions, always in this order, because each only matters if the
-     one before it is true:
+  /* --- opening, and the delivery shift ------------------------------------
+     Two facts, and they are different shapes on purpose:
 
-       lunchPublished()  is lunch mentioned on the site at all?
-       lunchRunning()    has its start date arrived — can it be ordered yet?
-       lunchDelivers()   does it deliver, or is it collection only?
+       the OPENING is a set of windows, per day — when the door is unlocked,
+       and therefore when an order can be collected;
+       the DELIVERY SHIFT is a single time — when a driver starts.
 
-     A service that is advertised but has not started is deliberately NOT an
-     opening hour: it is absent from the hours table, from the "open now" badge
-     and from the hours Google indexes, while the marketing copy names the day
-     it begins. Nobody has to flip anything on launch day — the date does it.
+     Collection needs no window of its own: it runs for the whole opening, so
+     giving it one would be a second copy of the same fact, free to drift.
+     Delivery is the opening clipped at `deliveryFrom`, computed here and
+     nowhere else, so the table, the badge, the basket and the WhatsApp message
+     cannot each reach their own answer.
   ------------------------------------------------------------------------- */
 
-  function lunchCfg() {
-    return (CFG.hours && CFG.hours.lunch) || {};
-  }
-  function lunchPublished() {
-    return !!lunchCfg().enabled;
-  }
-  function lunchStartsOn() {
-    var iso = String(lunchCfg().startsOn || '').trim();
-    return /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso : '';
+  // The time a driver's shift starts. '' means a driver is out for the whole
+  // opening, and every question below answers itself accordingly.
+  function deliveryFrom() {
+    var v = String((CFG.hours && CFG.hours.deliveryFrom) || '').trim();
+    return /^([01]\d|2[0-3]):[0-5]\d$/.test(v) ? v : '';
   }
   // Berlin's date, with the device's own as a fallback: a start date is only
   // ever compared against a calendar day, never against a clock time.
@@ -658,40 +642,46 @@
   function todayISO() {
     return berlinNow().iso;
   }
-  function lunchRunning() {
-    if (!lunchPublished()) return false;
-    var starts = lunchStartsOn();
-    return !starts || todayISO() >= starts;   // ISO dates compare as strings
-  }
-  function lunchDelivers() {
-    return lunchCfg().delivery === true;
-  }
-
-  // Every service window of one day, lunch first, honouring the master switch.
+  /* Every opening window of one day, with windows that TOUCH merged into one.
+     11:00–18:00 followed by 18:00–23:00 is one opening typed into two boxes,
+     and printing it as two closes the shop at 18:00 in the reader's head. */
   function slotsFor(dayKey) {
     var day = (CFG.hours.days || {})[dayKey];
     if (!day || day.closed) return [];
     var out = [];
-    if (lunchRunning() && day.lunch) {
-      out.push({ kind: 'lunch', from: day.lunch[0], to: day.lunch[1],
-                 pickupOnly: !lunchDelivers() });
-    }
-    if (day.evening) {
-      out.push({ kind: 'evening', from: day.evening[0], to: day.evening[1] });
-    }
+    [day.lunch, day.evening].forEach(function (win) {
+      if (!win) return;
+      var last = out[out.length - 1];
+      if (last && last.to === win[0]) last.to = win[1];
+      else out.push({ from: win[0], to: win[1] });
+    });
     return out;
   }
 
-  // The evening opening every open day shares — the time copy points a guest
-  // to when they wanted a lunch delivery. The earliest one wins if they differ.
-  function eveningStart() {
-    var best = null;
-    DAY_KEYS.forEach(function (key) {
-      var day = (CFG.hours.days || {})[key];
-      if (!day || day.closed || !day.evening) return;
-      if (best === null || hhmm(day.evening[0]) < hhmm(best)) best = day.evening[0];
+  /* The windows a driver goes out in: the opening, clipped to start no earlier
+     than the delivery shift. A window ending before the shift starts drops out
+     — that is the collection-only stretch of the day. */
+  function deliverySlotsFor(dayKey) {
+    var from = deliveryFrom();
+    var out = [];
+    slotsFor(dayKey).forEach(function (s) {
+      if (from && hhmm(from) >= hhmm(s.to)) return;
+      out.push({ from: (from && hhmm(from) > hhmm(s.from)) ? from : s.from, to: s.to });
     });
-    return best;
+    return out;
+  }
+
+  // Can we drive an order out at this exact moment? The question the basket
+  // asks, and it is a comparison against a time — never against which named
+  // window a moment happens to fall in.
+  function deliversAt(iso, minutes) {
+    var key = dayKeyFromISO(iso);
+    if (!key) return false;
+    var hit = false;
+    deliverySlotsFor(key).forEach(function (s) {
+      if (minutes >= hhmm(s.from) && minutes <= hhmm(s.to)) hit = true;
+    });
+    return hit;
   }
 
   /* --- scheduling ---------------------------------------------------------
@@ -731,16 +721,6 @@
     return !!slotAt(iso, minutes);
   }
 
-  // A lunch time chosen before the service starts. Not the same as "we are
-  // closed": the service exists, it just has not begun — so say when it does.
-  function pendingLunchAt(iso, minutes) {
-    if (!lunchPublished() || lunchRunning()) return false;
-    var key = dayKeyFromISO(iso);
-    var day = key && (CFG.hours.days || {})[key];
-    if (!day || day.closed || !day.lunch) return false;
-    return minutes >= hhmm(day.lunch[0]) && minutes <= hhmm(day.lunch[1]);
-  }
-
   function isOpenNow() {
     var now = berlinNow();
     return !!now && openAt(now.iso, now.minutes);
@@ -757,11 +737,36 @@
       for (var j = 0; j < slots.length; j++) {
         if (i > 0 || hhmm(slots[j].from) > now.minutes) {
           return { day: key, from: slots[j].from, sameDay: i === 0, slot: slots[j],
+                   // The calendar date of that opening, so a caller can ask
+                   // whether we deliver then — a weekday name cannot be
+                   // compared against a delivery shift on its own.
+                   iso: addDays(now.iso, i),
                    label: (i === 0 ? '' : L.days[key] + ' ') + slots[j].from };
         }
       }
     }
     return null;
+  }
+
+  // 'YYYY-MM-DD' + n days, in UTC so no local timezone can shift the date.
+  function addDays(iso, n) {
+    var p = String(iso).split('-');
+    var d = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2]));
+    d.setUTCDate(d.getUTCDate() + n);
+    return d.toISOString().slice(0, 10);
+  }
+
+  // "11:00 – 23:00", or "11:00 – 14:30 & 18:00 – 23:00" across an afternoon
+  // break. One function, so the pickup row and the delivery row are formatted
+  // by the same rule and can be compared as strings to see if they differ.
+  function spanOf(wins) {
+    return wins.map(function (w) { return w.from + ' – ' + w.to; }).join(' & ');
+  }
+
+  function line(label, wins) {
+    return '<span class="hslot">' +
+      (label ? '<span class="hslot-label">' + label + '</span>' : '') +
+      '<span class="hslot-time">' + spanOf(wins) + '</span></span>';
   }
 
   function renderHours() {
@@ -770,26 +775,25 @@
 
     var L = t();
     var now = berlinNow();
-    var labelled = lunchRunning();
     var html = '';
 
     DAY_KEYS.forEach(function (key) {
       var slots = slotsFor(key);
+      var deliver = deliverySlotsFor(key);
       var isToday = now && now.day === key;
       var cells;
 
       if (!slots.length) {
         cells = '<span class="hclosed">' + L.closed + '</span>';
       } else {
-        cells = '<span class="hslots">' + slots.map(function (s) {
-          return '<span class="hslot">' +
-            (labelled ? '<span class="hslot-label">' + L[s.kind] + '</span>' : '') +
-            '<span class="hslot-time">' + s.from + ' – ' + s.to + '</span>' +
-            // A window we are open for but do not drive out of has to say so
-            // where the times are read, not only in the notice below them.
-            (s.pickupOnly ? '<span class="hslot-note">' + L.pickupOnly + '</span>' : '') +
-            '</span>';
-        }).join('') + '</span>';
+        /* Labelled by SERVICE, and only when the two differ. A day whose driver
+           is out for the whole opening has nothing to tell apart, so it gets
+           one unlabelled range — a lone "Abholung" would raise the question of
+           when delivery runs and then not answer it. */
+        var split = spanOf(deliver) !== spanOf(slots);
+        cells = '<span class="hslots">' + (split
+          ? line(L.pickupLabel, slots) + (deliver.length ? line(L.deliveryLabel, deliver) : '')
+          : line('', slots)) + '</span>';
       }
 
       html += '<div class="hrow' + (isToday ? ' today' : '') + '">' +
@@ -1502,27 +1506,27 @@
   var form = { type: 'delivery', business: false, when: 'asap', pay: 'onsite' };
 
   /* --- delivery or pickup -------------------------------------------------
-     The window an order will actually be served in decides whether delivery
-     is on offer at all. Midday is collection only while there is no driver
-     (config.js -> hours.lunch.delivery), so the basket has to know which
-     window the guest has aimed at, not merely that we are open then.
+     The MOMENT an order will actually be served at decides whether delivery is
+     on offer, and it is compared against the delivery shift
+     (config.js -> hours.deliveryFrom). Not against which window it falls in:
+     an opening that runs straight through has one window covering both a time
+     we can drive out at and a time we cannot.
   ----------------------------------------------------------------------- */
 
-  // The window this order lands in, or null when it cannot be known — a time
+  // The moment this order lands at, or null when it cannot be known — a time
   // outside every window is settled in the chat, and nothing is assumed here.
-  function targetSlot() {
+  function targetMoment() {
     if (form.when === 'scheduled') {
       if (!draft.fDate || !draft.fTime) return null;
-      return slotAt(draft.fDate, hhmm(draft.fTime));
+      return { iso: draft.fDate, minutes: hhmm(draft.fTime) };
     }
     // "As soon as possible" means now if we are open, and the next opening if
     // we are not — the same promise warnClosedAsap makes to the guest.
     var now = berlinNow();
     if (!now) return null;
-    var open = slotAt(now.iso, now.minutes);
-    if (open) return open;
+    if (slotAt(now.iso, now.minutes)) return { iso: now.iso, minutes: now.minutes };
     var next = nextOpening();
-    return next ? next.slot : null;
+    return next ? { iso: next.iso, minutes: hhmm(next.from) } : null;
   }
 
   // The single exception to "validation never blocks": it withholds an OPTION,
@@ -1532,8 +1536,12 @@
   // send. Promising a lunchtime delivery we then have to cancel by phone costs
   // far more than a clearly labelled disabled button.
   function deliveryBlocked() {
-    var slot = targetSlot();
-    return !!(slot && slot.kind === 'lunch' && slot.pickupOnly);
+    if (!deliveryFrom()) return false;
+    var at = targetMoment();
+    // A moment we cannot place is never blocked: an unknown time is settled in
+    // the chat, and withholding the button on a guess is the one thing this
+    // check must not do.
+    return !!(at && !deliversAt(at.iso, at.minutes));
   }
 
   function fill(template, values) {
@@ -1594,14 +1602,12 @@
       return out;
     }
     if (!openAt(iso, minutes)) {
-      // A lunch time picked before the service starts is not "we are closed";
-      // the guest has seen it advertised, so name the day it begins instead.
-      out.push({ kind: 'hours', text: pendingLunchAt(iso, minutes)
-        ? fill(L.warnLunchSoon, {
-            date: firstLunchDate() ? longDate(firstLunchDate()) : lunchStartsOn(),
-            evening: eveningStart() || '18:00'
-          })
-        : L.warnOutsideHours });
+      out.push({ kind: 'hours', text: L.warnOutsideHours });
+    } else if (form.type === 'delivery' && !deliversAt(iso, minutes)) {
+      // Open, but before a driver goes out. Not "we are closed" — the guest has
+      // picked a time we can serve, just not in the way they asked for — so the
+      // note names the alternative rather than the refusal.
+      out.push({ kind: 'hours', text: fill(L.cartDeliveryLater, { from: deliveryFrom() }) });
     }
     var lead = (CFG.business && CFG.business.leadTimeHours) || 0;
     if (form.business && lead && target - current < lead * 60) {
@@ -1766,9 +1772,7 @@
         '" data-type="pickup">' + L.pickup + '</button>' +
       '</div>' +
       '<p class="cart-note is-pickup-only" id="cartTypeNote"' + (blocked ? '' : ' hidden') + '>' +
-        (blocked ? escapeHtml(fill(L.cartLunchPickup, {
-          windows: lunchWindows(), evening: eveningStart() || '18:00'
-        })) : '') +
+        (blocked ? escapeHtml(fill(L.cartDeliveryLater, { from: deliveryFrom() })) : '') +
       '</p>' +
       payHtml();
   }
@@ -2765,18 +2769,18 @@
       leadTimeHours: b.leadTimeHours,
       discount: CFG.order.directDiscountPercent,
       businessPickupDiscount: CFG.order.businessPickupDiscountPercent,
-      // Empty while lunch delivers or has not started, so copy that promises
-      // delivery can carry the midday exception without ever inventing one.
-      // Filled here rather than left to the pass below: a value substituted
-      // into copy is not rescanned for placeholders of its own.
-      // PUBLISHED, not running. The moment the site starts advertising a lunch
-      // service it also starts promising free delivery over the threshold in
-      // the same section — and until the service begins, nothing connected the
-      // two. A guest read "new lunch service from Wednesday" next to "free
-      // delivery from 100 €" and had no way to know the first excludes the
-      // second. The caveat now appears as soon as lunch is mentioned at all.
-      lunchClause: (lunchPublished() && !lunchDelivers())
-        ? fill(t().lunchClause, { evening: eveningStart() || '18:00' })
+      /* Empty when a driver is out for the whole opening, so copy that promises
+         delivery carries the restriction only while there is one to carry, and
+         falls silent by itself the day a midday driver exists. Filled here
+         rather than left to the pass below: a value substituted into copy is
+         not rescanned for placeholders of its own.
+
+         The caveat has to appear wherever delivery is promised, not only in the
+         hours block. A guest reading "free delivery from 100 €" has no way to
+         know that nothing is delivered before 18:00 unless the sentence that
+         promises it says so. */
+      deliveryClause: deliveryFrom()
+        ? fill(t().deliveryClause, { from: deliveryFrom() })
         : '',
       // How far we deliver, counted from the zone list rather than written
       // into the copy as "over 30" and left to rot when a postcode is added.
@@ -2812,7 +2816,7 @@
       });
     });
 
-    renderLunchNotice();
+    renderDeliveryNotice();
     renderAllergens();
     renderPaymentNote();
     renderBusinessHours();
@@ -2838,95 +2842,34 @@
     }
   }
 
-  // Consecutive days sharing a window collapse into "Mo – Fr 11:30 – 14:30".
-  function groupWindows(pick) {
-    var short = {
-      de: ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'],
-      en: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-      ar: ['الاثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت', 'الأحد']
-    }[lang()];
-    var runs = [];
-    DAY_KEYS.forEach(function (key, i) {
-      var day = (CFG.hours.days || {})[key];
-      var win = (!day || day.closed) ? null : pick(day);
-      var text = win ? win[0] + ' – ' + win[1] : null;
-      var last = runs[runs.length - 1];
-      if (last && last.text === text) last.to = i;
-      else runs.push({ from: i, to: i, text: text });
-    });
-    return runs.filter(function (r) { return r.text; }).map(function (r) {
-      return (r.from === r.to ? short[r.from] : short[r.from] + ' – ' + short[r.to]) + ' ' + r.text;
-    });
-  }
-
-  /* --- what the page says about lunch -------------------------------------
-     One sentence, built from config, printed everywhere lunch is mentioned:
-     the corporate section, under the opening hours, in the delivery area and
-     in the FAQ. Three places that each described the service in their own
-     words is how a site ends up promising delivery in one paragraph and
-     collection in the next.
+  /* --- what the page says about delivery times ----------------------------
+     One sentence, built from config, printed everywhere the delivery shift is
+     mentioned: the corporate section, under the opening hours, in the delivery
+     area and in the FAQ. Three places that each described it in their own words
+     is how a site ends up promising delivery in one paragraph and refusing it
+     in the next.
   ------------------------------------------------------------------------- */
 
-  function lunchWindows() {
-    return groupWindows(function (d) { return d.lunch; }).join(' · ');
+  /* Silent by itself when a driver is out for the whole opening. That is the
+     point: the day a midday driver is hired, `deliveryFrom` is emptied at
+     /admin and every sentence describing the restriction disappears from the
+     site at once, rather than being hunted down in four files. */
+  function deliveryNotice() {
+    var from = deliveryFrom();
+    if (!from) return '';
+    return fill(t().deliveryNotice, { from: from });
   }
 
-  // The first day lunch actually happens: the start date, or the next day
-  // after it that has a lunch window. Announcing "from Monday" when Monday is
-  // one of our closed days is exactly the kind of small lie a guest notices.
-  function firstLunchDate() {
-    var starts = lunchStartsOn();
-    if (!starts) return null;
-    var p = starts.split('-');
-    var d = new Date(Date.UTC(+p[0], +p[1] - 1, +p[2]));
-    if (isNaN(d.getTime())) return null;
-    for (var i = 0; i < 14; i++) {
-      var day = (CFG.hours.days || {})[DAY_KEYS[(d.getUTCDay() + 6) % 7]];
-      if (day && !day.closed && day.lunch) return d;
-      d.setUTCDate(d.getUTCDate() + 1);
-    }
-    return null;
-  }
-
-  // "Mittwoch, 5. August" / "Wednesday, 5 August" — formatted in UTC because
-  // the date carries no time of day and must not shift across a timezone.
-  function longDate(date) {
-    try {
-      return new Intl.DateTimeFormat(DATE_LOCALE[lang()], {
-        weekday: 'long', day: 'numeric', month: 'long', timeZone: 'UTC'
-      }).format(date);
-    } catch (e) {
-      return date.toISOString().slice(0, 10);
-    }
-  }
-
-  function lunchNotice() {
-    if (!lunchPublished()) return '';
-    var L = t();
-    var windows = lunchWindows();
-    if (!windows) return '';
-    var evening = eveningStart() || '18:00';
-    var head = lunchRunning()
-      ? fill(L.lunchNow, { windows: windows })
-      : fill(L.lunchSoon, {
-          windows: windows,
-          date: firstLunchDate() ? longDate(firstLunchDate()) : lunchStartsOn()
-        });
-    return head + ' ' + (lunchDelivers()
-      ? L.lunchWithDelivery
-      : fill(L.lunchPickupOnly, { evening: evening }));
-  }
-
-  // `.lunch-note` carries the sentence; `[data-requires="lunch"]` is the
+  // `.delivery-note` carries the sentence; `[data-requires="delivery"]` is the
   // container that disappears entirely when there is nothing to say — an FAQ
   // entry with an empty answer would otherwise sit there looking broken, and
   // would be picked up by the FAQ structured data.
-  function renderLunchNotice() {
-    var text = lunchNotice();
-    [].forEach.call(document.querySelectorAll('.lunch-note'), function (el) {
+  function renderDeliveryNotice() {
+    var text = deliveryNotice();
+    [].forEach.call(document.querySelectorAll('.delivery-note'), function (el) {
       el.textContent = text;
     });
-    [].forEach.call(document.querySelectorAll('[data-requires="lunch"]'), function (el) {
+    [].forEach.call(document.querySelectorAll('[data-requires="delivery"]'), function (el) {
       el.hidden = !text;
     });
   }
@@ -3092,19 +3035,15 @@
     if (!host) return;
     var L = t();
 
-    var labelled = lunchRunning();
     var lines = DAY_KEYS.map(function (key) {
       var slots = slotsFor(key);
       return L.days[key] + ': ' + (slots.length
-        ? slots.map(function (s) {
-            return (labelled ? L[s.kind] + ' ' : '') + s.from + '–' + s.to +
-              (s.pickupOnly ? ' (' + L.pickupOnly + ')' : '');
-          }).join(', ')
+        ? slots.map(function (s) { return s.from + '–' + s.to; }).join(', ')
         : L.closed);
     });
 
     host.textContent = L.faqHoursLead + lines.join(' · ') + '. ' +
-      (lunchNotice() ? lunchNotice() + ' ' : '') + L.faqHoursTail;
+      (deliveryNotice() ? deliveryNotice() + ' ' : '') + L.faqHoursTail;
   }
 
   // FAQPage built from the rendered <details>, so an edited answer updates the
@@ -3138,14 +3077,14 @@
     node.textContent = data ? JSON.stringify(data, null, 2) : '';
   }
 
-  // The lunch windows themselves are stated by the notice at the top of the
+  // The delivery shift itself is stated by the notice at the top of the
   // section, so this line only adds what the notice does not: that anything
-  // outside those windows is still possible, by arrangement.
+  // outside those hours is still possible, by arrangement.
   function renderBusinessHours() {
     var host = document.getElementById('businessHours');
     if (!host) return;
     var L = t();
-    host.textContent = lunchNotice() ? L.lunchByArrangement : L.businessByArrangement;
+    host.textContent = deliveryNotice() ? L.hoursByArrangement : L.businessByArrangement;
   }
 
   // The template asks for what actually decides the order — budget and time —

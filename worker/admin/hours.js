@@ -59,10 +59,7 @@ export async function save(request, env, url) {
 
   const written = await writeHours(env, {
     days,
-    lunch: {
-      enabled: form.get('lunch_enabled') === '1',
-      delivery: form.get('lunch_delivery') === '1'
-    }
+    deliveryFrom: String(form.get('delivery_from') || '').trim()
   });
 
   // Refused rather than half-saved: settings.js returns null for anything that
@@ -137,8 +134,8 @@ function render({ nonce, hours, hoursAreCustom, saved, failed }) {
           <input type="checkbox" name="${key}_closed" value="1" ${day.closed ? 'checked' : ''}>
           Closed all day
         </label>
-        ${times(`${key}_lunch`, 'Lunch', day.lunch)}
-        ${times(`${key}_evening`, 'Evening', day.evening)}
+        ${times(`${key}_lunch`, 'Open', day.lunch)}
+        ${times(`${key}_evening`, 'Second window', day.evening)}
       </div>
     </fieldset>`;
   }).join('');
@@ -148,24 +145,28 @@ function render({ nonce, hours, hoursAreCustom, saved, failed }) {
 opening hours Google reads, and in the basket.</div>
 
 ${saved ? '<p class="msg">Saved. Live now.</p>' : ''}
-${failed ? `<p class="msg bad">Not saved. Every time must be HH:MM and each closing time
-  must come after its opening time — the previous hours are still in force.</p>` : ''}
+${failed ? `<p class="msg bad">Not saved. Every time must be HH:MM, each closing time
+  must come after its opening time, and a second window must start after the first
+  one ends — the previous hours are still in force.</p>` : ''}
 
 <p class="src">${hoursAreCustom
   ? 'Using the hours saved here.'
   : 'Using the default hours from <code>config.js</code>.'}</p>
 
 <form method="post" action="/admin/hours">
-  <fieldset><legend>Lunch service</legend>
+  <fieldset><legend>Deliveries</legend>
     <div class="day">
-      <label class="tick full">
-        <input type="checkbox" name="lunch_enabled" value="1" ${hours.lunch.enabled ? 'checked' : ''}>
-        Offer a lunch service
-      </label>
-      <label class="tick full">
-        <input type="checkbox" name="lunch_delivery" value="1" ${hours.lunch.delivery ? 'checked' : ''}>
-        Deliver at lunchtime too (otherwise collection only)
-      </label>
+      <p class="note full" style="margin:0 0 2px">Collection runs for the whole
+      opening below. This is the time a driver starts — before it, the website
+      offers collection only. Leave it empty to deliver from the moment you
+      open.</p>
+      <div>
+        <p class="cap">Deliveries from</p>
+        <div class="times">
+          <input type="time" step="300" name="delivery_from"
+                 value="${esc(hours.deliveryFrom || '')}" aria-label="Deliveries from">
+        </div>
+      </div>
     </div>
   </fieldset>
 
@@ -174,8 +175,8 @@ ${failed ? `<p class="msg bad">Not saved. Every time must be HH:MM and each clos
       <p class="note full" style="margin:0 0 2px">Fill these in and every day not
       marked “Closed all day” gets these times. Leave a pair empty to remove
       that window everywhere.</p>
-      ${times('all_lunch', 'Lunch', null)}
-      ${times('all_evening', 'Evening', null)}
+      ${times('all_lunch', 'Open', null)}
+      ${times('all_evening', 'Second window', null)}
       <label class="tick full">
         <input type="checkbox" name="apply_all" value="1">
         Apply these to every open day

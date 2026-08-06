@@ -184,11 +184,7 @@ export async function openOrdering(env) {
 function defaultHours() {
   const h = (CONFIG && CONFIG.hours) || {};
   return {
-    lunch: {
-      enabled: !!(h.lunch && h.lunch.enabled),
-      startsOn: (h.lunch && h.lunch.startsOn) || '',
-      delivery: !!(h.lunch && h.lunch.delivery)
-    },
+    deliveryFrom: TIME.test(String(h.deliveryFrom || '')) ? String(h.deliveryFrom) : '',
     days: DAYS.reduce((out, key) => {
       const day = (h.days && h.days[key]) || {};
       const lunch = window2(day.lunch);
@@ -244,23 +240,40 @@ export function normaliseHours(value) {
     // window2: silently reading it as "closed" is how a typo shuts the shop.
     if (lunch === false || evening === false) return null;
 
+    /* The two windows are also checked AGAINST EACH OTHER, not only each on its
+       own. Two windows that overlap are not two windows, and the damage is not
+       cosmetic: the day publishes two overlapping OpeningHoursSpecification
+       entries to the crawlers that feed the Google and Apple place cards, while
+       the table prints two rows that contradict each other. It reads as valid
+       to every check that looks at one window at a time, which is exactly why
+       it has to be caught here — a second window that starts before the first
+       has ended is the same class of mistake as one that ends before it starts,
+       and is refused the same way. */
+    if (lunch && evening && evening[0] < lunch[1]) return null;
+
     const closed = day.closed === true || (!lunch && !evening);
     days[key] = { closed, lunch: closed ? null : lunch, evening: closed ? null : evening };
   }
 
-  const lunch = value.lunch || {};
-  const fallback = (CONFIG && CONFIG.hours && CONFIG.hours.lunch) || {};
-  return {
-    days,
-    lunch: {
-      enabled: lunch.enabled !== false,
-      // Never editable from the admin page: it is the launch-announcement
-      // mechanism, it is spent, and re-arming it by accident would put "new
-      // from …" back on a page that has been serving lunch for months.
-      startsOn: fallback.startsOn || '',
-      delivery: lunch.delivery === true
-    }
-  };
+  /* An empty delivery time is a real answer — "a driver is out whenever we are
+     open" — so it is kept, and only a value that was typed and is not a time
+     refuses the save. Reading a mistyped "1800" as "delivers all day" would
+     promise a midday driver that does not exist, which is the same silent-
+     publication failure window2() exists to prevent.
+
+     ABSENT is not the same as empty, and the difference is what makes this
+     change safe to deploy. A row saved before `deliveryFrom` existed carries no
+     such key, and reading that as "" would silently put a driver on the road at
+     11:00 the moment this ships — the restriction lifted by an upgrade, which
+     is precisely the kind of quiet publication nothing here is allowed to do.
+     So an absent key falls back to config.js, exactly as the hours themselves
+     do, and only a form that actually submitted an empty box clears it. */
+  const fallback = (CONFIG && CONFIG.hours && CONFIG.hours.deliveryFrom) || '';
+  const raw = value.deliveryFrom === undefined ? fallback : value.deliveryFrom;
+  const from = String(raw == null ? '' : raw).trim();
+  if (from && !TIME.test(from)) return null;
+
+  return { days, deliveryFrom: from };
 }
 
 export async function writeHours(env, value) {

@@ -276,8 +276,14 @@ test('hours saved in the admin reach the markup a crawler reads', async ({ page 
   await page.goto('/admin/hours');
 
   await page.locator('input[name="wed_closed"]').uncheck();
-  await page.fill('input[name="wed_evening_from"]', '17:15');
-  await page.fill('input[name="wed_evening_to"]', '22:45');
+  /* The day's opening is the FIRST window; the second exists only for a
+     kitchen that shuts in the afternoon. Filling the second while the first
+     still runs to 23:00 is now refused as an overlap, which is the point of
+     that check — so this sets the one window the day actually has. */
+  await page.fill('input[name="wed_lunch_from"]', '17:15');
+  await page.fill('input[name="wed_lunch_to"]', '22:45');
+  await page.fill('input[name="wed_evening_from"]', '');
+  await page.fill('input[name="wed_evening_to"]', '');
   await page.click('button.save-btn');
   await expect(page.locator('.msg')).toContainText('Saved');
 

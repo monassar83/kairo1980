@@ -174,7 +174,19 @@ test('a very large order still produces a URL WhatsApp will open', async ({ page
   expect(url.length, 'the URL must stay openable').toBeLessThanOrEqual(3500);
   expect(sent).toContain('Gesamt');
   expect(sent).toContain('Grossbestellung Test');
-  expect(sent.trimEnd().endsWith('€') || /[.*\d]$/.test(sent.trimEnd())).toBe(true);
+
+  /* "Not severed" is a statement about the LAST LINE, not about the last
+     character. Every line the builder can end on is either a labelled
+     "Feld: Wert" or a bolded warning, so a message cut short by URL length
+     shows up here as a trailing fragment that is neither.
+
+     This used to assert the final character was a digit, a full stop or "€",
+     which passed only because the run happened to fall in the closed
+     afternoon and end on the pre-order warning. Open straight through, the
+     order ends on "Wunschtermin: So schnell wie möglich" — a complete message
+     that the old check called severed. */
+  const last = sent.trimEnd().split('\n').pop();
+  expect(last, 'the message must end on a whole line').toMatch(/^(\*!.+\*|[^:\n]+: .+)$/);
 
   // Whatever went in the URL, the full order is still copyable from the page.
   await expect(page.locator('.cart-sent')).toBeVisible();

@@ -45,25 +45,46 @@ const SCHEMA_DAY = {
 
 const LABEL = {
   closed: ['Geschlossen', 'Closed', 'مغلق'],
-  lunch: ['Mittag', 'Lunch', 'الغداء'],
-  evening: ['Abend', 'Evening', 'المساء']
+  // The rows are labelled by SERVICE, not by time of day. A kitchen open
+  // straight through has no "Mittag" and no "Abend" to point at, but it always
+  // has an opening and a delivery shift, and those are the two things a guest
+  // is actually trying to tell apart.
+  pickup: ['Abholung', 'Pickup', 'الاستلام'],
+  delivery: ['Lieferung', 'Delivery', 'التوصيل']
 };
 
 const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' };
 const esc = (v) => String(v == null ? '' : v).replace(/[&<>"]/g, (c) => ESC[c]);
 
-/** The service windows of one day. Mirrors slotsFor() in order.js and asks the
- *  same two config values by the same names, so the table the Worker draws and
- *  the table the browser draws cannot disagree. */
+/** The opening windows of one day. Mirrors slotsFor() in order.js and reads the
+ *  same config values by the same names, so the table the Worker draws and the
+ *  table the browser draws cannot disagree.
+ *
+ *  Two windows that TOUCH are one window. 11:00–18:00 followed by 18:00–23:00
+ *  is not an afternoon break, it is a day the restaurant typed in two boxes
+ *  because the form has two boxes — and printing it as two rows tells a guest
+ *  something closes at 18:00 when nothing does. */
 export function slotsFor(hours, key) {
   const day = (hours.days || {})[key];
   if (!day || day.closed) return [];
   const out = [];
-  if (day.lunch && hours.lunch && hours.lunch.enabled) {
-    out.push({ kind: 'lunch', from: day.lunch[0], to: day.lunch[1] });
+  for (const win of [day.lunch, day.evening]) {
+    if (!win) continue;
+    const last = out[out.length - 1];
+    if (last && last.to === win[0]) last.to = win[1];
+    else out.push({ from: win[0], to: win[1] });
   }
-  if (day.evening) out.push({ kind: 'evening', from: day.evening[0], to: day.evening[1] });
   return out;
+}
+
+/** The windows a driver actually goes out in: the opening, clipped to start no
+ *  earlier than `deliveryFrom`. A window that ends before the shift starts
+ *  drops out entirely — that is the collection-only part of the day. */
+export function deliveryFor(hours, key) {
+  const from = hours.deliveryFrom || '';
+  return slotsFor(hours, key)
+    .filter((s) => !from || from < s.to)
+    .map((s) => ({ from: from && from > s.from ? from : s.from, to: s.to }));
 }
 
 function schemaHours(hours) {
@@ -85,16 +106,32 @@ function schemaHours(hours) {
    fallback and the rendered table are the same table. Every visible word
    carries all three languages: this is the markup a reader without JavaScript
    is left with, and the language switch is JavaScript. */
+const span = (wins) => wins.map((w) => `${w.from} – ${w.to}`).join(' & ');
+
+/* One labelled line — "Abholung 11:00 – 23:00". The label is omitted entirely
+   when there is nothing to distinguish, because a single row reading "Abholung"
+   on a day that also delivers throughout is a label that asks a question it
+   then does not answer. */
+function line(labelKey, wins) {
+  const label = labelKey ? LABEL[labelKey] : null;
+  return '<span class="hslot">' +
+    (label ? `<span class="hslot-label t" data-de="${esc(label[0])}" data-en="${esc(label[1])}" data-ar="${esc(label[2])}">${esc(label[0])}</span>` : '') +
+    `<span class="hslot-time">${esc(span(wins))}</span></span>`;
+}
+
 function hoursTable(hours) {
   return DAYS.map(([key, de, en, ar]) => {
-    const slots = slotsFor(hours, key);
-    const cells = slots.length
-      ? `<span class="hslots">${slots.map((s) => {
-          const [ld, le, la] = LABEL[s.kind];
-          return '<span class="hslot">' +
-            `<span class="hslot-label t" data-de="${esc(ld)}" data-en="${esc(le)}" data-ar="${esc(la)}">${esc(ld)}</span>` +
-            `<span class="hslot-time">${esc(s.from)} – ${esc(s.to)}</span></span>`;
-        }).join('')}</span>`
+    const open = slotsFor(hours, key);
+    const del = deliveryFor(hours, key);
+    // Labelled only when the driver's day is genuinely shorter than the shop's.
+    const split = open.length && span(del) !== span(open);
+
+    const cells = open.length
+      ? `<span class="hslots">${
+          split
+            ? line('pickup', open) + (del.length ? line('delivery', del) : '')
+            : line(null, open)
+        }</span>`
       : `<span class="hclosed t" data-de="${LABEL.closed[0]}" data-en="${LABEL.closed[1]}" data-ar="${LABEL.closed[2]}">${LABEL.closed[0]}</span>`;
 
     return `<div class="hrow"><span class="day t" data-de="${esc(de)}" data-en="${esc(en)}" data-ar="${esc(ar)}">${esc(de)}</span>${cells}</div>`;

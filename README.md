@@ -13,7 +13,7 @@ in the delivery spreadsheet. Neither needs a developer.
 | I want to change… | Edit | Then |
 | --- | --- | --- |
 | Opening hours, per day | `config.js` → `hours.days` | commit |
-| Turn lunch service on/off | `config.js` → `hours.lunch.enabled` | commit |
+| When a driver starts delivering | `/admin` → Opening hours, or `config.js` → `hours.deliveryFrom` | live at once / commit |
 | Free-delivery threshold (every order) | `config.js` → `business.freeDeliveryFrom` | commit |
 | Who the minimum order applies to | `config.js` → `order.minimumOrder` | commit |
 | Lead time for large orders | `config.js` → `business.leadTimeHours` | commit |
@@ -32,17 +32,33 @@ Pushing to `main` deploys automatically. Nothing else is required.
 `config.js` holds one entry per weekday:
 
 ```js
+wed: { closed: false, lunch: ['11:00', '23:00'], evening: null },
 tue: { closed: false, lunch: ['11:30', '14:30'], evening: ['18:00', '23:00'] },
-sat: { closed: false, lunch: null,               evening: ['18:00', '23:00'] },
 mon: { closed: true,  lunch: null,               evening: null }
 ```
 
-`lunch: null` means no lunch service that day. `closed: true` closes the day
-outright and any times on it are ignored.
+A day has up to **two opening windows**, so a kitchen that shuts in the
+afternoon can say so. The keys are named `lunch` and `evening` for historical
+reasons and mean nothing more than "the first window" and "the second" — nothing
+is labelled by time of day. `closed: true` closes the day outright and any times
+on it are ignored. Two windows that **touch** are one opening and are printed as
+one: `11:00–18:00` and `18:00–23:00` render as `11:00 – 23:00`. Two that
+**overlap** are refused outright, because they would publish two contradictory
+`OpeningHoursSpecification` entries.
 
-Lunch windows are only shown while `hours.lunch.enabled` is `true`. It ships
-**off**, because the lunch trial is not decided yet — the times already in the
-file are a placeholder, not a promise. Flip the flag when you are ready.
+### When a driver goes out
+
+Collection runs for the whole opening. Delivery starts at `hours.deliveryFrom`:
+
+```js
+deliveryFrom: '18:00',   // collection from 11:00, delivery from 18:00
+deliveryFrom: '',        // a driver is out whenever the door is open
+```
+
+That one value dims the delivery button before the shift, writes the note that
+names the alternative, and adds the caveat to every sentence that promises free
+delivery. Empty it and all of that disappears at once — there is no copy to hunt
+down. It is editable at `/admin` without a deploy.
 
 The visible table, the "open now" badge and the `openingHoursSpecification`
 that Google reads are all generated from this one object, so they cannot

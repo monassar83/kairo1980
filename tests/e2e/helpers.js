@@ -21,13 +21,13 @@ export async function choosePickup(page) {
   await page.locator('[data-type="pickup"]').click();
 }
 
-/* Delivery is not on offer at every hour: midday is collection only while
-   there is no driver (config.js -> hours.lunch.delivery), so between 11:00 and
-   14:30 the delivery button is deliberately dim. A test about fees, zones or
-   minimums is not a test about the clock, and it must not pass or fail
-   according to what time CI happens to start — so when delivery is withheld,
-   this schedules the next window that does deliver, exactly as the note under
-   the dimmed button tells a guest to.
+/* Delivery is not on offer at every hour: a driver's shift starts later than
+   the door opens (config.js -> hours.deliveryFrom), so before that time the
+   delivery button is deliberately dim. A test about fees, zones or minimums is
+   not a test about the clock, and it must not pass or fail according to what
+   time CI happens to start — so when delivery is withheld, this schedules the
+   next moment that does deliver, exactly as the note under the dimmed button
+   tells a guest to.
 
    The moment is read out of the page's own `KAIRO_CONFIG`, never typed here.
    A time written into a test is a second copy of the opening hours, and it is
@@ -40,7 +40,7 @@ export async function chooseDelivery(page) {
     const slot = await page.evaluate(() => {
       const hours = window.KAIRO_CONFIG.hours;
       const KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
-      const lunchDelivers = !!(hours.lunch && hours.lunch.enabled && hours.lunch.delivery);
+      const from = hours.deliveryFrom || '';
       const now = new Date();
 
       for (let i = 0; i < 14; i++) {
@@ -48,9 +48,15 @@ export async function chooseDelivery(page) {
         const day = hours.days[KEYS[(d.getDay() + 6) % 7]];
         if (!day || day.closed) continue;
 
+        // The opening, clipped to the delivery shift — the same arithmetic
+        // deliverySlotsFor() does in order.js, and for the same reason: the
+        // window that delivers is not a window anybody wrote down.
         const windows = [];
-        if (day.lunch && lunchDelivers) windows.push(day.lunch);
-        if (day.evening) windows.push(day.evening);
+        for (const w of [day.lunch, day.evening]) {
+          if (!w) continue;
+          if (from && from >= w[1]) continue;
+          windows.push([from && from > w[0] ? from : w[0], w[1]]);
+        }
 
         for (const w of windows) {
           const [h, m] = w[0].split(':').map(Number);

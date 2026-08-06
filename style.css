@@ -814,8 +814,8 @@ summary:focus-visible {
   color: rgba(240,220,170,0.72);
   max-width: 620px; margin: 0 0 52px;
 }
-/* The lunch service in one sentence: when it starts, when it runs, and that it
-   is collection only. It sits above the four cards because it qualifies all of
+/* The delivery shift in one sentence: that collection runs all day and when a
+   driver goes out. It sits above the four cards because it qualifies all of
    them — the first card promises free delivery, and a guest must not read that
    as a promise for midday. Gold rule rather than a coloured box: this is the
    restaurant stating a fact, not a warning. */
@@ -1086,14 +1086,6 @@ summary:focus-visible {
   letter-spacing: 0.16em; text-transform: uppercase; color: #b8914a;
 }
 .hslot-time { font-variant-numeric: tabular-nums; }
-/* A window we are open for but do not drive out of. It sits with the times
-   rather than under the table, because "11:00 – 14:30" on its own is a promise
-   of delivery to anyone who has read the rest of the page. */
-.hslot-note {
-  font-family: 'Cinzel', serif; font-size: 8px;
-  letter-spacing: 0.14em; text-transform: uppercase; color: #a07838;
-  white-space: nowrap;
-}
 .hclosed { color: #9a8050; }
 
 .hours-note {
@@ -1609,7 +1601,6 @@ a.cart-send-wa {
 :root[lang="ar"] .area-fee.is-free,
 :root[lang="ar"] .hrow .day em,
 :root[lang="ar"] .hslot-label,
-:root[lang="ar"] .hslot-note,
 :root[lang="ar"] .cart-type,
 :root[lang="ar"] .cart-label,
 :root[lang="ar"] .cart-send,

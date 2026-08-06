@@ -195,21 +195,38 @@ test('a window that runs past midnight is refused rather than reversed', () => {
   assert.equal(normaliseHours(WEEK({ wed: { closed: false, evening: ['18:00', '03:00'] } })), null);
 });
 
-test('the lunch service can be switched off and back on without touching a day', () => {
-  const off = normaliseHours({ ...WEEK(), lunch: { enabled: false, delivery: false } });
-  assert.equal(off.lunch.enabled, false);
-  assert.equal(off.days.wed.evening[0], '18:00', 'the evening is untouched');
+test('the delivery shift can be set and cleared without touching a day', () => {
+  const later = normaliseHours({ ...WEEK(), deliveryFrom: '18:00' });
+  assert.equal(later.deliveryFrom, '18:00');
+  assert.equal(later.days.wed.evening[0], '18:00', 'the opening is untouched');
 
-  const delivers = normaliseHours({ ...WEEK(), lunch: { enabled: true, delivery: true } });
-  assert.equal(delivers.lunch.delivery, true);
+  // Empty is a real answer — "a driver is out whenever we are open" — and is
+  // the one word to change the day a midday driver exists.
+  const allDay = normaliseHours({ ...WEEK(), deliveryFrom: '' });
+  assert.equal(allDay.deliveryFrom, '');
 });
 
-test('the launch announcement cannot be re-armed from the admin page', () => {
-  /* `startsOn` published "new from Wednesday the 5th" before the service
-     began. It is spent. Letting the hours form set it would put that sentence
-     back on a page that has been serving lunch for months. */
-  const hours = normaliseHours({
-    ...WEEK(), lunch: { enabled: true, delivery: false, startsOn: '2027-01-01' }
-  });
-  assert.equal(hours.lunch.startsOn, '', 'taken from config, never from the form');
+test('a delivery time that is not a time refuses the whole save', () => {
+  /* Reading a mistyped "1800" as "delivers all day" would promise a midday
+     driver that does not exist — the same silent publication the window checks
+     exist to prevent, so it is refused the same way. */
+  assert.equal(normaliseHours({ ...WEEK(), deliveryFrom: '1800' }), null);
+  assert.equal(normaliseHours({ ...WEEK(), deliveryFrom: '25:00' }), null);
+});
+
+test('two opening windows that overlap are refused', () => {
+  /* Saved cleanly before this check existed, and published two overlapping
+     OpeningHoursSpecification entries to the crawlers that feed the place
+     cards, while the table printed two rows contradicting each other. Each
+     window is valid alone, which is exactly why they have to be compared. */
+  assert.equal(normaliseHours(WEEK({
+    wed: { closed: false, lunch: ['11:00', '23:00'], evening: ['18:00', '23:00'] }
+  })), null);
+
+  // Touching is not overlapping: 11:00-18:00 then 18:00-23:00 is one opening
+  // typed into two boxes, and stays perfectly legal.
+  const touching = normaliseHours(WEEK({
+    wed: { closed: false, lunch: ['11:00', '18:00'], evening: ['18:00', '23:00'] }
+  }));
+  assert.ok(touching, 'adjacent windows are a normal week');
 });

@@ -55,10 +55,12 @@ Sunday        11:00–14:30, 18:00–23:00
 > Siri we are closed at noon. Change the hours in `config.js` and that block
 > changes with them.
 >
-> Midday is **collection only** (`hours.lunch.delivery: false`). No directory
-> has a field for that, so it belongs in the description or a Showcase, never
-> in the hours: the shop *is* open at midday. Do not let a platform's delivery
-> hours claim otherwise where they can be set separately.
+> Before a driver's shift starts, it is **collection only**
+> (`hours.deliveryFrom`, currently `18:00`). No directory has a field for that,
+> so it belongs in the description or a Showcase, never in the hours: the shop
+> *is* open from 11:00. Do not let a platform's delivery hours claim otherwise
+> where they can be set separately — and where a platform DOES have a separate
+> delivery-hours field, that is the one place the 18:00 belongs.
 
 ---
 

@@ -72,7 +72,7 @@ into a second file, stop — that is the bug this architecture exists to prevent
 
 | Fact | Single source |
 | --- | --- |
-| Hours, lunch start date, lunch delivery | `config.js` → `hours` |
+| Hours, and when a driver starts | `config.js` → `hours` (overridden by `/admin`) |
 | Payment on arrival, the online switch | `config.js` → `payment` |
 | PayPal credentials, which online methods are live | Cloudflare secrets + `wrangler.jsonc` vars, served by `/api/payments/config` |
 | Postcodes, fees, minimums | `data/delivery_zones.xlsx` → `zones.js` |
@@ -143,7 +143,7 @@ are only the no-JavaScript fallback — update both or neither.
   cannot each reach their own verdict.
 - **A rule that qualifies a number is printed with it, from the rule.**
   `{minimumClause}` and `{freeDeliveryAll}` are written by `applyConfig()` the
-  way `{lunchClause}` is, and fall silent by themselves when the rule they
+  way `{deliveryClause}` is, and fall silent by themselves when the rule they
   describe no longer needs saying. Never type "gilt nur für private
   Lieferbestellungen" into copy: that is the sentence that goes stale the day
   the rule changes, in the one place nobody thinks to look.
@@ -221,21 +221,33 @@ are only the no-JavaScript fallback — update both or neither.
   but the guest's own chat: no name, address or phone number is ever sent to
   our server, and the payment API receives only the basket and the postcode.
   What ties a payment to an order is the short reference printed in both.
-- **A service that has not started yet is advertised, not opened.**
-  `hours.lunch.startsOn` publishes the lunch service as marketing copy while
-  keeping it out of the opening-hours table, the "open now" badge, the indexed
-  `openingHoursSpecification` and every orderable slot. On that date it becomes
-  an ordinary window by itself — launch day needs no edit and no deploy. The
-  announced day is the first day at or after `startsOn` that actually has a
-  lunch window, so it can never name one of the closed days.
-- **Lunch delivery is one word, and one word only.**
-  `hours.lunch.delivery: false` makes midday collection-only. It disables the
-  delivery button for a lunch slot, corrects `form.type`, and rewrites the
-  business section, the hours rows, the delivery area, the FAQ and the corporate
-  answer from the same sentence (`lunchNotice()`). Never write the restriction
-  into copy by hand — that is how the site ends up promising delivery in one
+- **A day has up to two opening windows, and they are not times of day.** The
+  keys are still called `lunch` and `evening` because stored settings rows use
+  them, but they mean "first window" and "second window" and nothing is labelled
+  from them. Two that **touch** are one opening and print as one — `11:00–18:00`
+  plus `18:00–23:00` is `11:00 – 23:00`, because a restaurant that types its day
+  into two boxes has not closed at 18:00. Two that **overlap** refuse the whole
+  save: each is valid alone, which is exactly why they must be compared, and
+  accepting them publishes two contradictory `OpeningHoursSpecification` entries
+  to the crawlers behind the Google and Apple place cards.
+- **The hours table is labelled by service, never by time of day.** `Abholung` /
+  `Lieferung`, and only when the two differ — a day whose driver is out for the
+  whole opening gets one unlabelled range, because a lone "Abholung" raises the
+  question of when delivery runs and then does not answer it.
+- **The delivery shift is a time, not a switch.** `hours.deliveryFrom` ('18:00',
+  or '' for a driver out all day) is the single fact. It dims the delivery
+  button before the shift, corrects `form.type`, and rewrites the business
+  section, the hours rows, the delivery area, the FAQ and the corporate answer
+  from the same sentence (`deliveryNotice()`). Never write the restriction into
+  copy by hand — that is how the site ends up promising delivery in one
   paragraph and refusing it in the next. The public wording states the fact
   only; the reason is nobody's business but ours.
+  It replaced `hours.lunch.delivery`, a boolean that could only express the
+  restriction by pointing at a named window — which worked while midday and
+  evening were separated by a closed afternoon, and could say nothing at all
+  once the kitchen opened straight through. "Open 11:00–23:00, delivering from
+  18:00" is not a fact about lunch. **Never ask which window a moment falls in
+  to decide whether it delivers**; ask `deliversAt()`, which compares times.
 - **The delivery button is dimmed, never removed.** It is the one place
   validation withholds anything, and it withholds an option, not an order: a
   missing button reads as a broken page, so it stays visible with the note that

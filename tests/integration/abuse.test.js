@@ -674,7 +674,8 @@ test('half-understood hours are refused rather than half-saved', async (t) => {
   assert.match(res.headers.get('location') || '', /failed/);
 
   const { hours, } = await (await worker.fetch(get('/api/status'), env, ctx())).json();
-  assert.deepEqual(hours.days.wed.evening, ['18:00', '23:00'], 'the old hours still stand');
+  assert.deepEqual(hours.days.wed.lunch, ['11:00', '23:00'], 'the old hours still stand');
+  assert.equal(hours.days.wed.evening, null, 'and nothing was half-written');
 });
 
 test('the hours page and the switch are behind the login like everything else', async (t) => {
