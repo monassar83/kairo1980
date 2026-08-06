@@ -19,11 +19,19 @@
 
     // A matching static asset is normally served without the Worker running
     // at all, which is exactly what should happen for the menu, the styles
-    // and the fonts. The ordering page is the one exception: it is the only
-    // page allowed to load the checkout SDK, and that permission has to be
-    // set on the response (see CHECKOUT_CSP in worker/index.js). So the
-    // Worker runs first for this path and hands back the asset itself.
-    "run_worker_first": ["/"]
+    // and the fonts. Two paths are exceptions, for two different reasons.
+    //
+    // "/" is the only page allowed to load the checkout SDK, and that
+    // permission has to be set on the response (see CHECKOUT_CSP in
+    // worker/index.js).
+    //
+    // Both are pages that STATE the opening hours, and the hours live in the
+    // database now that the restaurant can change them. The Worker writes them
+    // into the markup on the way out, so a crawler that does not run
+    // JavaScript still reads the hours actually kept (see page-render.js).
+    // Without this line, /firmencatering would be served straight from the
+    // file and would publish whatever config.js said on the day it shipped.
+    "run_worker_first": ["/", "/firmencatering"]
   },
 
   // Payment provenance. Created once with `npx wrangler d1 create

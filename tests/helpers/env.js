@@ -17,12 +17,38 @@ export function menuHtml(items) {
     </div>`).join('\n');
 }
 
-/** An env whose ASSETS binding serves a menu of exactly these dishes. */
+/** An env whose ASSETS binding serves a menu of exactly these dishes.
+ *
+ *  The page around the menu is not decoration. worker/page-render.js rewrites
+ *  the opening hours into three places before a page is sent — the JSON-LD,
+ *  the no-JavaScript table and a data island — and it finds them by markers.
+ *  A stub without those markers would let every one of those rewrites quietly
+ *  do nothing while the tests passed. The markers here are the same strings
+ *  index.html carries, and `the published pages still carry the markers…` in
+ *  abuse.test.js is what keeps the two from drifting apart. */
 export function menuStub(items) {
-  const html = `<html><body>${menuHtml(items)}</body></html>`;
+  const html = `<!doctype html><html lang="de"><head>
+<title>Test</title>
+<script id="restaurantSchema" type="application/ld+json">
+${JSON.stringify({
+    '@context': 'https://schema.org', '@type': 'Restaurant', name: 'KAIRO 1980',
+    openingHoursSpecification: [{
+      '@type': 'OpeningHoursSpecification',
+      dayOfWeek: ['Wednesday'], opens: '18:00', closes: '23:00'
+    }]
+  })}
+</script>
+</head><body>
+<div id="hoursTable"><!--hours:start--><div class="hrow">placeholder</div><!--hours:end--></div>
+${menuHtml(items)}
+</body></html>`;
+
   return {
     ASSETS: {
-      fetch: async () => new Response(html, { status: 200, headers: { 'Content-Type': 'text/html' } })
+      fetch: async () => new Response(html, {
+        status: 200,
+        headers: { 'Content-Type': 'text/html', ETag: '"stub-1"' }
+      })
     }
   };
 }

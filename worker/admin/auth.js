@@ -156,6 +156,53 @@ export async function hasSession(env, request) {
   }
 }
 
+/* --- slowing down whoever is guessing --------------------------------------
+   The password is what protects this page, and a long random one cannot be
+   guessed at any rate. This exists for the case where it is not: a password
+   reused from another site, which is the attack that needs no flaw here at
+   all — someone else gets breached, the list gets tried against every domain,
+   and nothing on this end is broken.
+
+   Five wrong answers from one address buys a fifteen-minute wait. Deliberately
+   crude: it counts failures already written to `payment_events`, which is
+   append-only and indexed, so there is no new table and nothing to clean up.
+   A distributed attempt from many addresses walks around it — that is what the
+   password's own length is for. This closes the cheap door, not every door. */
+
+const MAX_FAILURES = 8;
+const LOCKOUT_MINUTES = 15;
+
+export async function tooManyFailures(env, ip) {
+  if (!ip) return false;
+  try {
+    const row = await env.DB.prepare(
+      `SELECT COUNT(*) AS n FROM login_failures
+        WHERE ip = ?1 AND at > datetime('now', ?2)`
+    ).bind(ip, `-${LOCKOUT_MINUTES} minutes`).first();
+    return !!row && row.n >= MAX_FAILURES;
+  } catch {
+    /* A counter that cannot be read must never lock the restaurant out of its
+       own switch. Failing open is the right trade here: the password still
+       stands between an attacker and the page, and the alternative is a locked
+       door on the evening it is needed. */
+    return false;
+  }
+}
+
+export async function recordFailure(env, ip) {
+  if (!ip) return;
+  try {
+    // Old rows are worth nothing once the window has passed, so the write
+    // pays for the cleanup and the table never grows.
+    await env.DB.prepare(
+      `DELETE FROM login_failures WHERE at <= datetime('now', ?1)`
+    ).bind(`-${LOCKOUT_MINUTES} minutes`).run();
+    await env.DB.prepare('INSERT INTO login_failures (ip) VALUES (?1)').bind(ip).run();
+  } catch (err) {
+    console.error('could not record a failed login', err && err.message);
+  }
+}
+
 function readCookie(request, name) {
   const header = request.headers.get('cookie') || '';
   for (const part of header.split(';')) {

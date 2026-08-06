@@ -7,9 +7,14 @@
    and nothing else — not a redirect that leaks where you were going, not a
    partial page. A page that is not rendered cannot leak what is on it. */
 
-import { checkCredentials, configured, hasSession, issueSession, clearSession } from './auth.js';
+import {
+  checkCredentials, configured, hasSession, issueSession, clearSession,
+  tooManyFailures, recordFailure
+} from './auth.js';
 import { loginPage, dashboardPage, newNonce, adminHeaders } from './pages.js';
 import * as ordersView from './orders.js';
+import * as hoursView from './hours.js';
+import { readSettings, closeOrdering, openOrdering } from '../settings.js';
 
 /* Long enough to make scripted guessing tedious, short enough that a mistyped
    password does not feel like a broken page. It is not a defence against a
@@ -30,14 +35,39 @@ export async function handle(request, env, url) {
 
   if (path === '/admin' && method === 'GET') {
     const nonce = newNonce();
-    return html(dashboardPage({ nonce }), nonce);
+    const { ordering, hoursAreCustom } = await readSettings(env);
+    return html(dashboardPage({ nonce, ordering, hoursAreCustom }), nonce);
   }
 
+  if (path === '/admin/ordering' && method === 'POST') return setOrdering(request, env);
+  if (path === '/admin/hours' && method === 'GET') return hoursView.page(request, env, url);
+  if (path === '/admin/hours' && method === 'POST') return hoursView.save(request, env, url);
   if (path === '/admin/orders' && method === 'GET') return ordersView.page(request, env, url);
 
   return new Response('Not found.', {
     status: 404,
     headers: { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' }
+  });
+}
+
+/* The emergency switch. Closing always carries an end with it — the time given,
+   or the end of the day — so a shop closed on Saturday night is taking orders
+   again on Sunday without anybody remembering to come back here. */
+async function setOrdering(request, env) {
+  const form = await request.formData();
+  if (form.get('open') === '1') {
+    await openOrdering(env);
+  } else {
+    await closeOrdering(env, {
+      reason: form.get('reason'),
+      untilDate: form.get('untilDate'),
+      untilTime: form.get('untilTime')
+    });
+  }
+
+  return new Response(null, {
+    status: 303,
+    headers: { Location: '/admin', 'Cache-Control': 'no-store' }
   });
 }
 
@@ -49,10 +79,21 @@ async function login(request, env, url) {
     return loginResponse(env, { error: true, status: 400 });
   }
 
+  const ip = request.headers.get('cf-connecting-ip') || '';
+
+  /* Checked before the password is, and answered exactly as a wrong password
+     is. Telling a guesser they have been locked out tells them the lockout
+     exists and how long to wait; saying nothing new tells them nothing. */
+  if (await tooManyFailures(env, ip)) {
+    await new Promise((resolve) => setTimeout(resolve, FAILED_LOGIN_DELAY_MS));
+    return loginResponse(env, { error: true, status: 401 });
+  }
+
   const ok = await checkCredentials(env, form.get('username'), form.get('password'));
   if (!ok) {
     // Worth seeing in the log: a run of these is somebody trying.
-    console.warn('admin login failed', request.headers.get('cf-connecting-ip') || 'unknown');
+    console.warn('admin login failed', ip || 'unknown');
+    await recordFailure(env, ip);
     await new Promise((resolve) => setTimeout(resolve, FAILED_LOGIN_DELAY_MS));
     return loginResponse(env, { error: true, status: 401, next: safeNext(form.get('next')) });
   }

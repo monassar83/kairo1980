@@ -21,6 +21,46 @@
   var CFG = window.KAIRO_CONFIG;
   if (!CFG) return;
 
+  /* --- what is true right now ---------------------------------------------
+     The opening hours and the ordering switch are things the restaurant
+     changes from its phone, so they live in the database rather than in
+     config.js. The Worker writes them into the page as a JSON island before
+     it is sent (worker/page-render.js), which is why this is read here and
+     not fetched: a fetch would mean the guest watches last week's hours
+     repaint into this week's a moment after the page appears, and would leave
+     a crawler that does not run JavaScript reading whatever config.js shipped
+     with.
+
+     config.js is the fallback and nothing more. If the island is missing —
+     an old cached page, a Worker that could not reach the database — the site
+     publishes the hours it launched with and keeps working. */
+  var LIVE = readLiveData();
+  if (LIVE.hours && LIVE.hours.days) CFG.hours = LIVE.hours;
+
+  function readLiveData() {
+    var node = document.getElementById('kairoLive');
+    var out = { hours: null, ordering: { open: true, resumesAt: null } };
+    if (!node) return out;
+    try {
+      var data = JSON.parse(node.textContent);
+      out.hours = data.hours || null;
+      if (data.ordering && data.ordering.open === false) {
+        out.ordering = { open: false, resumesAt: data.ordering.resumesAt || null };
+      }
+    } catch (e) { /* the defaults are a complete answer */ }
+    return out;
+  }
+
+  /* Closing is always temporary and always carries its own end. Asking the
+     clock rather than trusting the flag is what lets a tab left open since
+     yesterday evening start taking orders again by itself at midnight, with
+     no reload and nothing to switch back. */
+  function orderingOpen() {
+    if (LIVE.ordering.open) return true;
+    var at = Date.parse(LIVE.ordering.resumesAt || '');
+    return isFinite(at) && Date.now() >= at;
+  }
+
   // v2 stores { savedAt, items } instead of a bare id -> qty map, so a basket
   // can expire. v1 keys are removed on sight rather than migrated: they carry
   // no timestamp, so there is no way to tell a five-minute-old basket from a
@@ -47,6 +87,20 @@
       businessByArrangement: 'Liefertermine für Firmenbestellungen nach Absprache — sagen Sie uns einfach, wann Sie es brauchen.',
       cartLunchPickup: 'Mittags ({windows}) bieten wir ausschließlich Abholung an. Für eine Lieferung wählen Sie unter „Wunschtermin“ bitte eine Zeit ab {evening} Uhr.',
       warnLunchSoon: 'Der Mittagsservice startet erst am {date}. Bis dahin sind wir abends ab {evening} Uhr für Sie da — senden Sie die Bestellung gern trotzdem, wir antworten im Chat.',
+      /* The ordering switch. Three sentences, assembled: why (or nothing),
+         when we are back (or nothing), and how to reach a person. Each part
+         can fall silent on its own, which is what lets one switch produce a
+         message that reads properly whether or not a reason was given and
+         whether or not an end was named. */
+      offNone: 'Wir nehmen zurzeit keine Bestellungen an.',
+      offDemand: 'Wir haben gerade außergewöhnlich viele Bestellungen und nehmen vorübergehend keine neuen an.',
+      offEmergency: 'Wir mussten die Bestellannahme kurzfristig unterbrechen.',
+      offHoliday: 'Wir haben Betriebsferien und nehmen zurzeit keine Bestellungen an.',
+      offBackAt: 'Ab {time} Uhr sind wir wieder für Sie da.',
+      offBackOn: 'Ab {date} sind wir wieder für Sie da.',
+      offBackSoon: 'Bitte schauen Sie etwas später noch einmal vorbei.',
+      offContact: 'Bei Fragen erreichen Sie uns unter {phone}.',
+      ordersOffShort: 'Bestellungen pausiert',
       openNow: 'Jetzt geöffnet', closedNow: 'Zurzeit geschlossen',
       until: 'bis', opensAgain: 'öffnet wieder',
       today: 'Heute',
@@ -186,6 +240,15 @@
       businessByArrangement: 'Delivery times for corporate orders by arrangement — just tell us when you need it.',
       cartLunchPickup: 'At lunchtime ({windows}) we offer pickup only. For a delivery, pick a time from {evening} under "Preferred time".',
       warnLunchSoon: 'The lunch service only starts on {date}. Until then we are open in the evening from {evening} — do send the order anyway and we will reply in the chat.',
+      offNone: 'We are not taking orders at the moment.',
+      offDemand: 'We have an unusually high number of orders right now and are not taking new ones for the moment.',
+      offEmergency: 'We have had to stop taking orders at short notice.',
+      offHoliday: 'We are closed for our annual holiday and are not taking orders at the moment.',
+      offBackAt: 'We are back from {time}.',
+      offBackOn: 'We are back from {date}.',
+      offBackSoon: 'Please check back a little later.',
+      offContact: 'If you have any questions, reach us on {phone}.',
+      ordersOffShort: 'Ordering paused',
       openNow: 'Open now', closedNow: 'Currently closed',
       until: 'until', opensAgain: 'opens again',
       today: 'Today',
@@ -316,6 +379,15 @@
       businessByArrangement: 'مواعيد توصيل طلبات الشركات بالاتفاق — قول لنا بس محتاجها إمتى.',
       cartLunchPickup: 'وقت الغداء ({windows}) عندنا استلام من المطعم بس. لو عايز توصيل، اختار تحت «الموعد المطلوب» وقت من الساعة {evening}.',
       warnLunchSoon: 'خدمة الغداء بتبدأ يوم {date}. لحد ساعتها إحنا معاك بالليل من الساعة {evening} — ابعت الطلب عادي وهنرد عليك في الشات.',
+      offNone: 'مش بنستقبل طلبات دلوقتي.',
+      offDemand: 'عندنا طلبات كتير جداً دلوقتي، فمش بنستقبل طلبات جديدة مؤقتاً.',
+      offEmergency: 'اضطرينا نوقف استقبال الطلبات فجأة.',
+      offHoliday: 'إحنا في أجازة ومش بنستقبل طلبات دلوقتي.',
+      offBackAt: 'هنرجع من الساعة {time}.',
+      offBackOn: 'هنرجع من {date}.',
+      offBackSoon: 'تعالى بصّ تاني بعد شوية.',
+      offContact: 'لو عندك أي استفسار كلّمنا على {phone}.',
+      ordersOffShort: 'الطلبات متوقفة',
       openNow: 'مفتوح دلوقتي', closedNow: 'مغلق دلوقتي',
       until: 'لحد', opensAgain: 'هنفتح تاني',
       today: 'النهارده',
@@ -1572,6 +1644,19 @@
 
     btn.textContent = outside ? L.sendRequest : (obliges ? L.orderLiable : L.send);
     btn.classList.toggle('is-request', outside);
+
+    /* The button's state belongs to the one function that owns the button.
+       renderOrdering() sets this too, but the panel is rebuilt on every
+       repaint and on every open — and a button rebuilt after that call came
+       back enabled with the notice above it still saying we are closed. One
+       owner, applied wherever the button is drawn. */
+    var off = !orderingOpen();
+    btn.disabled = off;
+    var note = document.getElementById('cartOrderOff');
+    if (note) {
+      note.textContent = off ? orderingNotice() : '';
+      note.hidden = !off;
+    }
   }
 
   function paintZone() {
@@ -1790,6 +1875,7 @@
         // Label left empty on purpose: paintSendButton() below is the single
         // place that decides the wording, because the wording is a legal
         // statement about what pressing it does. Two places would drift.
+        '<p class="order-off" id="cartOrderOff" hidden></p>' +
         '<button type="submit" class="cart-send" id="cartSend"></button>' +
         '<p class="cart-privacy">' + L.privacy + '</p>' +
       '</form>';
@@ -1837,6 +1923,14 @@
     // The panel stays open when the last line is removed — it shows the empty
     // state, which is clearer than the drawer vanishing under the guest.
     if (els.panel && !els.panel.hidden) { rememberForm(); paintPanel(); }
+
+    /* Last, and not only at boot. The basket's copy of the notice and the send
+       button both live inside a panel that does not exist until buildPanel()
+       has run and is rewritten every time the basket is repainted — so a
+       renderOrdering() called once at startup dressed a page that had no
+       basket in it yet, and the send button came back enabled on the next
+       repaint. Found by tests/e2e/ordering-switch.spec.js, which pressed it. */
+    renderOrdering();
   }
 
   /* --- how the guest pays -------------------------------------------------
@@ -2177,6 +2271,15 @@
 
   function submitOrder(e) {
     e.preventDefault();
+
+    /* The one thing on this site that refuses an order outright, and it is not
+       validation — it is the restaurant saying it cannot cook right now. A
+       basket built before the switch was thrown is still sitting in an open
+       tab, and letting it through would send a WhatsApp message nobody can
+       answer. Everything else stays: the basket is kept, the notice says when
+       we are back, and the phone number is right there. */
+    if (!orderingOpen()) { renderOrdering(); return; }
+
     syncType();
     syncPay();
 
@@ -2501,7 +2604,12 @@
       if (btn) {
         var id = btn.getAttribute('data-id');
         if (!items[id]) return;
-        setQty(id, (cart[id] || 0) + (btn.getAttribute('data-act') === 'inc' ? 1 : -1));
+        var adding = btn.getAttribute('data-act') === 'inc';
+        // The CSS dims these while ordering is paused, but the switch can be
+        // thrown while the page is open — and taking something OFF an order
+        // must never be blocked, whatever the state.
+        if (adding && !orderingOpen()) { renderOrdering(); return; }
+        setQty(id, (cart[id] || 0) + (adding ? 1 : -1));
         return;
       }
       var type = e.target.closest('[data-type]');
@@ -2792,6 +2900,94 @@
     });
   }
 
+  /* --- the ordering switch -------------------------------------------------
+     One sentence, in the guest's own language, wherever an order would have
+     started. It says three things and no more: that we are not taking orders,
+     when we will be, and how to reach a person now. Why the kitchen stopped is
+     nobody's business but ours.
+  ------------------------------------------------------------------------- */
+
+  // '4917679906621' -> '+49 176 79906621'. Built from the one number in
+  // config.js rather than typed again: a number written twice is a number that
+  // will be right in one of the two places.
+  function phoneDisplay() {
+    var n = String((CFG.whatsapp && CFG.whatsapp.number) || '').replace(/\D/g, '');
+    return n.length > 5 ? '+' + n.slice(0, 2) + ' ' + n.slice(2, 5) + ' ' + n.slice(5) : n;
+  }
+
+  function berlinClock(ms) {
+    try {
+      return new Intl.DateTimeFormat('de-DE', {
+        timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit', hour12: false
+      }).format(new Date(ms));
+    } catch (e) { return ''; }
+  }
+
+  function berlinDay(ms) {
+    try {
+      return new Date(ms).toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+    } catch (e) { return ''; }
+  }
+
+  // "Montag, 17. August" / "Monday, 17 August" / Arabic — in the reader's own
+  // language, which a bare date string could never be.
+  function berlinDate(ms) {
+    try {
+      return new Intl.DateTimeFormat(DATE_LOCALE[lang()], {
+        timeZone: 'Europe/Berlin', weekday: 'long', day: 'numeric', month: 'long'
+      }).format(new Date(ms));
+    } catch (e) { return berlinDay(ms); }
+  }
+
+  var OFF_REASON = {
+    demand: 'offDemand', emergency: 'offEmergency', holiday: 'offHoliday'
+  };
+
+  /* Three sentences, each able to fall silent: why, when we are back, and how
+     to reach a person. Assembled rather than written out in every combination,
+     so a new reason is one string in three dictionaries and nothing else. */
+  function orderingNotice() {
+    if (orderingOpen()) return '';
+    var L = t();
+    var off = LIVE.ordering;
+    var at = Date.parse(off.resumesAt || '');
+
+    var why = L[OFF_REASON[off.reason]] || L.offNone;
+
+    var when = L.offBackSoon;
+    if (off.namedEnd && isFinite(at)) {
+      /* Today gets a clock, another day gets a date. Naming a weekday for
+         something six hours away reads as evasive; naming a time for something
+         eleven days away reads as nonsense. */
+      when = berlinDay(at) === berlinNow().iso
+        ? fill(L.offBackAt, { time: berlinClock(at) })
+        : fill(L.offBackOn, { date: berlinDate(at) });
+    }
+
+    return why + ' ' + when + ' ' + fill(L.offContact, { phone: phoneDisplay() });
+  }
+
+  /* `.order-off` carries the sentence; the attribute on <html> is what dims
+     the buttons. The Worker sets that attribute too, before the page is sent,
+     so the buttons are never live for the moment it takes this to run. */
+  function renderOrdering() {
+    var off = !orderingOpen();
+    var text = orderingNotice();
+
+    document.documentElement.setAttribute('data-ordering', off ? 'off' : 'on');
+    [].forEach.call(document.querySelectorAll('.order-off'), function (el) {
+      el.textContent = text;
+      el.hidden = !off;
+    });
+
+    var send = document.getElementById('cartSend');
+    if (send) {
+      send.disabled = off;
+      if (off) send.setAttribute('aria-describedby', 'cartOrderOff');
+      else send.removeAttribute('aria-describedby');
+    }
+  }
+
   // Visible delivery-area list. Same data as the basket, so a price change in
   // the spreadsheet updates the marketing copy and the checkout together.
   //
@@ -2922,6 +3118,7 @@
   function init() {
     applyConfig();
     renderHours();
+    renderOrdering();
 
     // The basket has no menu of its own — it reads the dishes out of the page.
     // A page that carries no menu (the corporate catering page) still wants
@@ -2944,12 +3141,18 @@
     // Language switch repaints everything that carries generated text.
     document.addEventListener('kairo:lang', function () {
       renderHours();
+      renderOrdering();
       applyConfig();
       if (CFG.order.cartEnabled && hasMenu) paint();
     });
 
-    // Keep "open now" honest on a tab left open across closing time.
-    setInterval(function () { renderStatus(berlinNow()); }, 60000);
+    // Keep "open now" honest on a tab left open across closing time — and the
+    // ordering switch too, which ends by the clock rather than by anybody
+    // coming back to release it.
+    setInterval(function () {
+      renderStatus(berlinNow());
+      renderOrdering();
+    }, 60000);
   }
 
   // Registered at module level, not inside init(): app.js fetches reviews.json

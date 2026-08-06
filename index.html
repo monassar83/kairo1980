@@ -345,6 +345,12 @@
     <h2 class="menu-title t" data-de="Unsere Gerichte" data-en="Our Dishes" data-ar="أطباقنا">Unsere Gerichte</h2>
     <p class="menu-legal t" data-de="Alle Preise sind Endpreise. Gemäß § 19 UStG erheben wir keine Umsatzsteuer und weisen diese daher nicht aus. Lieferkosten richten sich nach der Postleitzahl und werden im Warenkorb ausgewiesen. Kennzeichnungspflichtige Allergene sind bei jedem Gericht angegeben." data-en="All prices are total prices. Under § 19 UStG we do not charge VAT and therefore do not show it. Delivery costs depend on the postcode and are shown in the basket. Allergens requiring declaration are listed with every dish." data-ar="كل الأسعار نهائية. وطبقاً لـ § 19 UStG إحنا مش بنحصّل ضريبة قيمة مضافة وبالتالي مش بنوضّحها. ومصاريف التوصيل بتتحدد حسب الرمز البريدي وبتظهر في السلة. ومسببات الحساسية الواجب الإعلان عنها مكتوبة مع كل طبق.">Alle Preise sind Endpreise. Gemäß § 19 UStG erheben wir keine Umsatzsteuer und weisen diese daher nicht aus. Lieferkosten richten sich nach der Postleitzahl und werden im Warenkorb ausgewiesen. Kennzeichnungspflichtige Allergene sind bei jedem Gericht angegeben.</p>
 
+    <!-- Written by order.js when the restaurant has paused ordering, and empty
+         the rest of the time. The menu, the prices and the hours stay exactly
+         where they are: someone who cannot order tonight may still be deciding
+         where to eat tomorrow. -->
+    <p class="order-off" hidden></p>
+
     <div class="cat-head"><h3 class="cat-name t" data-de="Orientalische Vorspeisen" data-en="Oriental Starters" data-ar="مقبلات شرقية">Orientalische Vorspeisen</h3><div class="cat-line"></div></div>
 
     <div class="mitem" data-item="baba-ghanough" data-price="11.00" data-allergens="gluten milk sesame">
@@ -659,8 +665,14 @@
              schema.org opening hours can never disagree. The rows below are the
              no-JavaScript fallback and are replaced on load. -->
         <div id="hoursTable">
+          <!-- Everything between these two markers is REPLACED by the Worker
+               with the hours actually in force (worker/page-render.js), so a
+               crawler that runs no JavaScript still reads the real ones. Edit
+               the hours at /admin, or in config.js — never here. -->
+          <!--hours:start-->
           <div class="hrow"><span class="day t" data-de="Montag & Dienstag" data-en="Monday & Tuesday" data-ar="الاثنين والثلاثاء">Montag &amp; Dienstag</span><span class="hclosed t" data-de="Geschlossen" data-en="Closed" data-ar="مغلق">Geschlossen</span></div>
           <div class="hrow"><span class="day t" data-de="Mittwoch – Sonntag" data-en="Wednesday – Sunday" data-ar="الأربعاء – الأحد">Mittwoch – Sonntag</span><span class="t" data-de="11:00 – 14:30 &amp; 18:00 – 23:00 Uhr" data-en="11:00 AM – 2:30 PM &amp; 6:00 PM – 11:00 PM" data-ar="11:00 – 14:30 و 18:00 – 23:00">11:00 – 14:30 &amp; 18:00 – 23:00 Uhr</span></div>
+          <!--hours:end-->
         </div>
         <p class="hours-note lunch-note" data-requires="lunch" hidden></p>
         <!-- One primary way to order, and the platforms named honestly as an
@@ -669,6 +681,7 @@
              basket, only without the order in it. -->
         <div class="contact-order">
           <span class="info-eyebrow t" data-de="Jetzt bestellen" data-en="Order now" data-ar="اطلب دلوقتي">Jetzt bestellen</span>
+          <p class="order-off" hidden></p>
           <div class="order-links">
             <a href="#speisekarte" class="order-btn is-direct t" data-de="Speisekarte & Warenkorb" data-en="Menu & basket" data-ar="المنيو والسلة">Speisekarte &amp; Warenkorb</a>
           </div>

@@ -82,34 +82,34 @@ export function render({ day, orders, orphans, totals, nonce }) {
     return `<tr class="${flagged ? 'flag' : ''}">
       <td class="ref">${esc(o.reference)}</td>
       <td>${clock(o.captured_at)}</td>
-      <td>${o.order_type === 'pickup' ? 'Abholung' : 'Lieferung'}</td>
+      <td>${o.order_type === 'pickup' ? 'Pickup' : 'Delivery'}</td>
       <td class="items">${items}</td>
       <td class="amt">${money(o.amount)}</td>
-      <td class="st">${flagged ? 'NICHT GESENDET' : (o.status === 'pending' ? 'in Prüfung' : 'ok')}</td>
+      <td class="st">${flagged ? 'NOT SENT' : (o.status === 'pending' ? 'under review' : 'ok')}</td>
     </tr>`;
   };
 
-  const head = `<thead><tr><th>Nr.</th><th>Zeit</th><th>Art</th><th>Inhalt</th>
-    <th class="amt">Betrag</th><th>Status</th></tr></thead>`;
+  const head = `<thead><tr><th>Ref.</th><th>Time</th><th>Type</th><th>Items</th>
+    <th class="amt">Amount</th><th>Status</th></tr></thead>`;
 
-  const body = `<h1>Bezahlte Bestellungen</h1>
-<div class="sub">${esc(day)} · Zahlungen, die der Anbieter tatsächlich abgerechnet hat</div>
+  const body = `<h1>Paid orders</h1>
+<div class="sub">${esc(day)} · payments the provider actually settled</div>
 
 <div class="cards">
-  <div class="card"><span>Bestellungen</span><b>${totals.orders}</b></div>
-  <div class="card"><span>Netto</span><b>${money(totals.net)}</b></div>
-  <div class="card"><span>Nicht gesendet</span><b>${orphans.length}</b></div>
+  <div class="card"><span>Orders</span><b>${totals.orders}</b></div>
+  <div class="card"><span>Net</span><b>${money(totals.net)}</b></div>
+  <div class="card"><span>Not sent</span><b>${orphans.length}</b></div>
 </div>
 
 ${orphans.length ? `<table>${head}<tbody>${orphans.map((o) => row(o, true)).join('')}</tbody></table>
-<p class="note"><b>Nicht gesendet</b> heißt: bezahlt, aber die WhatsApp-Nachricht wurde nie abgeschickt. Die Bestellung ist bezahlt und der Gast wartet darauf. Nummer notieren — der Gast nennt sie, wenn er sich meldet.</p>` : ''}
+<p class="note"><b>Not sent</b> means: paid for, but the WhatsApp message was never sent. The order is paid and the guest is waiting for it. Note the reference — the guest will quote it when they get in touch.</p>` : ''}
 
 ${orders.length ? `<table class="${orphans.length ? 'spaced' : ''}">${head}<tbody>${orders.map((o) => row(o, false)).join('')}</tbody></table>`
-  : `<div class="empty">Heute noch keine Online-Zahlung.</div>`}
+  : `<div class="empty">No online payments yet today.</div>`}
 
-<p class="note">Name, Telefon und Adresse stehen bewusst nicht hier — die stehen nur in der WhatsApp-Nachricht. Diese Seite ist die Gegenprobe, keine Bestellliste.</p>`;
+<p class="note">Name, phone and address are deliberately not here — they exist only in the WhatsApp message. This page is the cross-check, not an order queue.</p>`;
 
   return layout({
-    title: 'Bezahlte Bestellungen', nonce, body, logout: true, back: '/admin', extraCss: CSS
+    title: 'Paid orders', nonce, body, logout: true, back: '/admin', extraCss: CSS
   });
 }

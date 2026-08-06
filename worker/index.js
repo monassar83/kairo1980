@@ -17,6 +17,8 @@ import * as store from './payments/store.js';
 import { providerFor, providerForMethod, availableMethods, publicKeys } from './payments/providers.js';
 import { ProviderError } from './payments/errors.js';
 import * as admin from './admin/index.js';
+import { readSettings } from './settings.js';
+import { withLiveData, liveETag } from './page-render.js';
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
@@ -37,7 +39,7 @@ export default {
     const isAdmin = url.pathname === '/admin' || url.pathname.startsWith('/admin/');
 
     if (!isAdmin && !url.pathname.startsWith('/api/')) {
-      return withPolicy(url, await env.ASSETS.fetch(request));
+      return withPolicy(url, await asset(request, env, url));
     }
 
     try {
@@ -57,6 +59,7 @@ async function route(request, env, ctx, url) {
   const path = url.pathname;
   const method = request.method.toUpperCase();
 
+  if (path === '/api/status' && method === 'GET') return status(env);
   if (path === '/api/payments/config' && method === 'GET') return paymentConfig(env, url);
   if (path === '/api/payments/quote' && method === 'POST') return quoteOnly(request, env);
   if (path === '/api/payments' && method === 'POST') return createPayment(request, env, url);
@@ -77,6 +80,26 @@ async function route(request, env, ctx, url) {
   if (show && method === 'GET') return showPayment(env, show[1]);
 
   return fail(404, 'not_found', 'No such endpoint.');
+}
+
+/* --- what is true right now ----------------------------------------------
+   The two facts the restaurant can change from its phone: whether orders are
+   being taken at all, and what the opening hours are. Everything the page says
+   about either is built from this answer, so there is one verdict rather than
+   one per section.
+
+   Never cached. This is the endpoint whose whole purpose is to be right within
+   seconds of a switch being thrown, and a CDN holding it for five minutes
+   would keep a shut kitchen taking orders. The read behind it is cached in the
+   isolate for a few seconds instead, which costs the database nothing and
+   still answers inside the window a person would call "immediately". */
+
+async function status(env) {
+  const settings = await readSettings(env);
+  return json({
+    ordering: settings.ordering,
+    hours: settings.hours
+  });
 }
 
 /* --- what the browser is allowed to know ---------------------------------
@@ -141,6 +164,14 @@ async function quoteOnly(request, env) {
 async function createPayment(request, env, url) {
   if (!(CONFIG.payment && CONFIG.payment.prepayOnline)) {
     return fail(503, 'payments_off', 'Online payment is switched off.');
+  }
+  /* Dimming the buttons is not enough. A tab opened before the switch was
+     thrown still has a live checkout in it, and taking money for an order the
+     kitchen has already said it cannot cook is the one failure here that costs
+     a refund and a phone call. The browser is told; the server decides. */
+  const { ordering } = await readSettings(env);
+  if (!ordering.open) {
+    return fail(503, 'ordering_closed', 'The restaurant is not taking orders right now.');
   }
   // Hiding the buttons is not enough: the route itself must refuse, or a
   // hand-made request could still start a payment nobody can complete.
@@ -584,6 +615,60 @@ const CHECKOUT_CSP = [
   "object-src 'none'",
   'upgrade-insecure-requests'
 ].join('; ');
+
+/* --- serving a page --------------------------------------------------------
+   Every path that is not /api/ or /admin is still a static file, handed back
+   byte for byte — with one exception, and it is the reason `run_worker_first`
+   names these two paths. The pages that STATE the opening hours get them
+   written in from the database on the way out, so that a crawler which does
+   not run JavaScript still reads the hours the restaurant actually keeps.
+
+   Conditional requests are answered here rather than by the asset server,
+   because the asset is no longer the whole answer: the same file plus
+   different settings is a different page. So the request goes upstream
+   unconditionally, and the 304 is decided against an ETag that includes what
+   the settings say. */
+
+const LIVE_PAGES = new Set(['/', '/firmencatering']);
+
+async function asset(request, env, url) {
+  if (!LIVE_PAGES.has(url.pathname)) return env.ASSETS.fetch(request);
+
+  const bare = new Request(request);
+  bare.headers.delete('if-none-match');
+  bare.headers.delete('if-modified-since');
+
+  const response = await env.ASSETS.fetch(bare);
+  if (!(response.headers.get('content-type') || '').includes('text/html')) return response;
+
+  const settings = await readSettings(env);
+  const etag = liveETag(response.headers.get('etag'), settings);
+
+  if (matches(request.headers.get('if-none-match'), etag)) {
+    return new Response(null, {
+      status: 304,
+      headers: {
+        ETag: etag,
+        'Cache-Control': response.headers.get('cache-control') || 'public, max-age=0, must-revalidate'
+      }
+    });
+  }
+
+  const out = new Response(withLiveData(await response.text(), settings), response);
+  out.headers.set('ETag', etag);
+  // The body no longer matches the file's own length or hash.
+  out.headers.delete('content-length');
+  out.headers.delete('last-modified');
+  return out;
+}
+
+function matches(header, etag) {
+  if (!header) return false;
+  return header.split(',').some((candidate) => {
+    const one = candidate.trim().replace(/^W\//, '');
+    return one === etag.replace(/^W\//, '');
+  });
+}
 
 // Only '/'. Cloudflare redirects /index.html here, so this is the single URL
 // that ever serves the ordering page.

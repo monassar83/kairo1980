@@ -7,6 +7,10 @@ import { defineConfig, devices } from '@playwright/test';
 
 const PORT = 8788;
 
+/* Specs that write settings shared by the whole run — see the `switch` project
+   below for why they are kept out of everything else. */
+const SHARED_STATE = /ordering-switch\.spec\.js/;
+
 export default defineConfig({
   testDir: './tests/e2e',
   timeout: 30000,
@@ -30,8 +34,25 @@ export default defineConfig({
   projects: [
     // A phone is the primary target, so it runs first and its failures are
     // the ones read first.
-    { name: 'mobile', use: { ...devices['Pixel 7'] } },
-    { name: 'desktop', use: { ...devices['Desktop Chrome'] } },
+    { name: 'mobile', use: { ...devices['Pixel 7'] }, testIgnore: SHARED_STATE },
+    { name: 'desktop', use: { ...devices['Desktop Chrome'] }, testIgnore: SHARED_STATE },
+
+    /* The ordering switch and the opening hours are one row in one database
+       shared by every test in the run. A test that closes the shop closes it
+       for whatever else is mid-flight — which is not a flaky test, it is two
+       tests writing the same value.
+
+       So they run alone: last, one at a time, after every other project has
+       finished. `dependencies` is what keeps them from overlapping the suites
+       that assume the shop is open, and the file itself is serial so they do
+       not overlap each other. */
+    {
+      name: 'switch',
+      testMatch: SHARED_STATE,
+      fullyParallel: false,
+      dependencies: ['mobile', 'desktop'],
+      use: { ...devices['Pixel 7'] }
+    },
 
     // iPhone matters — it is most of the traffic a restaurant sees — but
     // Playwright's WebKit build hangs on clicks on Windows hosts, which is a
@@ -40,7 +61,7 @@ export default defineConfig({
     // would only ever produce false failures.
     ...(process.platform === 'win32'
       ? []
-      : [{ name: 'mobile-safari', use: { ...devices['iPhone 14'] } }])
+      : [{ name: 'mobile-safari', use: { ...devices['iPhone 14'] }, testIgnore: SHARED_STATE }])
   ],
 
   webServer: {

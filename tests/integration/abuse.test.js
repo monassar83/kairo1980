@@ -301,8 +301,8 @@ test('the admin area is closed to every wrong username and every wrong password'
     assert.equal(res.status, 401, JSON.stringify(fields));
     assert.equal(cookie, '', 'no session may be issued');
     const body = await res.text();
-    assert.ok(body.includes('Passwort ist falsch'), 'says no, without saying which half');
-    assert.ok(!body.includes('Bezahlte Bestellungen') || body.includes('form'),
+    assert.ok(body.includes('Wrong username or password'), 'says no, without saying which half');
+    assert.ok(!body.includes('Paid orders') || body.includes('form'),
       'never renders what is behind the door');
   }
 
@@ -334,7 +334,7 @@ test('no session, no page — and a forged cookie is not a session', async (t) =
       const res = await worker.fetch(get(path, value ? { cookie: value } : {}), env, ctx());
       const body = await res.text();
       assert.ok(body.includes('name="password"'), `${path} must show the login form: ${value}`);
-      assert.ok(!body.includes('Bezahlte Bestellungen'), 'and nothing behind it');
+      assert.ok(!body.includes('Paid orders'), 'and nothing behind it');
     }
   }
 });
@@ -346,7 +346,7 @@ test('a session dies when the password changes, with nothing to clean up', async
 
   const { cookie } = await signIn(env);
   const before = await worker.fetch(get('/admin', { cookie }), env, ctx());
-  assert.ok((await before.text()).includes('Bezahlte Bestellungen'), 'signed in');
+  assert.ok((await before.text()).includes('Paid orders'), 'signed in');
 
   // The signing key is derived from the credentials, so changing either one
   // invalidates every cookie ever issued — a phone lost on Friday is logged
@@ -363,7 +363,7 @@ test('with no credentials configured the admin area opens for nobody', async (t)
 
   const res = await worker.fetch(get('/admin'), env, ctx());
   const body = await res.text();
-  assert.ok(body.includes('noch nicht eingerichtet'), 'says so plainly');
+  assert.ok(body.includes('not set up yet'), 'says so plainly');
   assert.ok(!body.includes('name="password"'), 'and offers nothing to guess at');
 
   // An unconfigured lock is not an unlocked door.
@@ -521,4 +521,232 @@ test('an error never hands the provider\'s words to the browser', async (t) => {
   assert.ok(!text.includes('abc123'));
   assert.ok(!text.includes('credential'));
   assert.ok(!text.includes('merchant 4XYZ'));
+});
+
+/* --- the switch and the hours ---------------------------------------------
+   Two things the restaurant changes from its phone. One stops money moving;
+   the other decides what the site tells Google. */
+
+test('a closed shop refuses a payment, however the request is made', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const paypal = fakePayPal({ '/v2/checkout/orders': () => orderResponse({}) });
+  t.after(() => paypal.restore());
+
+  const { cookie } = await signIn(env);
+  await worker.fetch(form('/admin/ordering', { open: '0', reason: 'demand' }, { cookie }), env, ctx());
+
+  // A tab opened before the switch was thrown still has a live checkout in it.
+  const res = await worker.fetch(post('/api/payments', BASKET), env, ctx());
+  assert.equal(res.status, 503);
+  assert.equal((await res.json()).error.code, 'ordering_closed');
+
+  await worker.fetch(form('/admin/ordering', { open: '1' }, { cookie }), env, ctx());
+  const after = await worker.fetch(post('/api/payments', BASKET), env, ctx());
+  assert.equal(after.status, 201, 'and taking orders again the moment it is released');
+});
+
+test('closing always carries its own end, and the default is today', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const { cookie } = await signIn(env);
+  await worker.fetch(form('/admin/ordering', { open: '0' }, { cookie }), env, ctx());
+
+  const { ordering } = await (await worker.fetch(get('/api/status'), env, ctx())).json();
+  assert.equal(ordering.open, false);
+  assert.equal(ordering.reason, null, 'no reason given is a valid choice');
+
+  // The shop that stays shut because nobody came back to release it is the
+  // failure this guards against.
+  const resumes = Date.parse(ordering.resumesAt);
+  assert.ok(resumes > Date.now(), 'in the future');
+  assert.ok(resumes - Date.now() <= 24 * 3600 * 1000, 'and never more than a day away');
+  assert.equal(ordering.namedEnd, false, 'because nobody named it');
+});
+
+test('a closure that has run its course is simply over', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  // Written straight to the row: this is the state a browser meets the morning
+  // after somebody stopped the till at midnight. Nothing runs to release it.
+  await env.DB.prepare(
+    `INSERT INTO settings (key, value, updated_at) VALUES ('ordering', ?1, datetime('now'))`
+  ).bind(JSON.stringify({
+    open: false, reason: 'demand', namedEnd: false,
+    resumesAt: new Date(Date.now() - 60000).toISOString()
+  })).run();
+
+  const { ordering } = await (await worker.fetch(get('/api/status'), env, ctx())).json();
+  assert.equal(ordering.open, true, 'expired by the clock, with nothing swept');
+  assert.equal(ordering.resumesAt, null);
+});
+
+test('a date chosen for reopening survives, and is marked as chosen', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const { cookie } = await signIn(env);
+  const iso = new Date(Date.now() + 9 * 86400000).toISOString().slice(0, 10);
+  await worker.fetch(form('/admin/ordering',
+    { open: '0', reason: 'holiday', untilDate: iso }, { cookie }), env, ctx());
+
+  const { ordering } = await (await worker.fetch(get('/api/status'), env, ctx())).json();
+  assert.equal(ordering.reason, 'holiday');
+  assert.equal(ordering.namedEnd, true, 'so the page says a date, not "later"');
+
+  /* The date asked for, read back as a date in Hockenheim. Asserting on a
+     duration instead would be a test that fails at some hours of the day and
+     not others — the first version of this one did exactly that, because
+     "nine days from 01:20 in the morning" and "the 14th at midnight" are not
+     the same distance apart. The default is "tomorrow"; what matters is that
+     it did not win. */
+  const berlin = new Date(Date.parse(ordering.resumesAt))
+    .toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+  assert.equal(berlin, iso, 'reopens on the day that was chosen');
+});
+
+test('an invented reason is not published as if it were one of ours', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const { cookie } = await signIn(env);
+  await worker.fetch(form('/admin/ordering',
+    { open: '0', reason: '<script>alert(1)</script>' }, { cookie }), env, ctx());
+
+  const { ordering } = await (await worker.fetch(get('/api/status'), env, ctx())).json();
+  assert.equal(ordering.reason, null, 'falls back to the plain sentence');
+});
+
+test('saved hours are what the site publishes, in the markup itself', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const { cookie } = await signIn(env);
+  const fields = { lunch_enabled: '1', mon_closed: '1', tue_closed: '1' };
+  for (const day of ['wed', 'thu', 'fri', 'sat', 'sun']) {
+    fields[`${day}_evening_from`] = '17:00';
+    fields[`${day}_evening_to`] = '22:00';
+  }
+  const saved = await worker.fetch(form('/admin/hours', fields, { cookie }), env, ctx());
+  assert.equal(saved.status, 303);
+
+  const { hours } = await (await worker.fetch(get('/api/status'), env, ctx())).json();
+  assert.deepEqual(hours.days.wed.evening, ['17:00', '22:00']);
+  assert.equal(hours.days.mon.closed, true);
+
+  /* The point of the whole exercise: a crawler that runs no JavaScript has to
+     read the hours the restaurant actually keeps. Applebot and Bingbot feed
+     the Apple Maps and Bing place cards, and neither renders reliably. */
+  const html = await (await worker.fetch(get('/'), env, ctx())).text();
+  assert.ok(html.includes('"opens":"17:00"') || html.includes('"opens": "17:00"'),
+    'the structured data carries the saved hours');
+  assert.ok(!html.includes('"opens":"18:00"'), 'and not the ones config.js shipped with');
+  assert.ok(html.includes('id="kairoLive"'), 'and the browser gets them without a fetch');
+});
+
+test('half-understood hours are refused rather than half-saved', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const { cookie } = await signIn(env);
+  const bad = { wed_evening_from: '18:00', wed_evening_to: '09:00' };  // ends before it starts
+  const res = await worker.fetch(form('/admin/hours', bad, { cookie }), env, ctx());
+  assert.match(res.headers.get('location') || '', /failed/);
+
+  const { hours, } = await (await worker.fetch(get('/api/status'), env, ctx())).json();
+  assert.deepEqual(hours.days.wed.evening, ['18:00', '23:00'], 'the old hours still stand');
+});
+
+test('the hours page and the switch are behind the login like everything else', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const page = await worker.fetch(get('/admin/hours'), env, ctx());
+  assert.ok((await page.text()).includes('name="password"'));
+
+  // And a POST from a stranger changes nothing.
+  await worker.fetch(form('/admin/ordering', { open: '0' }), env, ctx());
+  const { ordering } = await (await worker.fetch(get('/api/status'), env, ctx())).json();
+  assert.equal(ordering.open, true, 'still taking orders');
+});
+
+/* The rewrite in worker/page-render.js finds its three targets by marker: the
+   `restaurantSchema` id, the hours:start/end comment pair, and `</head>`. Every
+   other test here proves the rewrite works against a stub that has them. This
+   one proves the published files still do — the one way the whole mechanism
+   can fail silently, in production, with a green suite. */
+test('the published pages still carry the markers the rewrite needs', async () => {
+  const { readFileSync } = await import('node:fs');
+  const index = readFileSync(new URL('../../index.html', import.meta.url), 'utf8');
+
+  assert.match(index, /<script id="restaurantSchema"/, 'the JSON-LD block');
+  assert.match(index, /<!--hours:start-->[\s\S]*<!--hours:end-->/, 'the hours fallback');
+  assert.ok(index.includes('</head>'), 'somewhere to put the data island');
+
+  // Both live pages go through the Worker, or one of them publishes whatever
+  // config.js said on the day it shipped.
+  const wrangler = readFileSync(new URL('../../wrangler.jsonc', import.meta.url), 'utf8');
+  for (const path of ['"/"', '"/firmencatering"']) {
+    assert.ok(wrangler.includes(path), `run_worker_first must name ${path}`);
+  }
+});
+
+test('a page is not re-sent when nothing it says has changed, and is when it has', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const first = await worker.fetch(get('/'), env, ctx());
+  const etag = first.headers.get('etag');
+  assert.ok(etag, 'the page is taggable');
+
+  const again = await worker.fetch(get('/', { 'if-none-match': etag }), env, ctx());
+  assert.equal(again.status, 304, 'unchanged, so not re-sent');
+
+  // Now change what the page SAYS without changing the file behind it. The
+  // asset's own ETag cannot notice this; that is the whole reason ours exists.
+  const { cookie } = await signIn(env);
+  await worker.fetch(form('/admin/ordering', { open: '0', reason: 'demand' }, { cookie }), env, ctx());
+
+  const after = await worker.fetch(get('/', { 'if-none-match': etag }), env, ctx());
+  assert.equal(after.status, 200, 'changed, so sent in full');
+  const html = await after.text();
+  assert.match(html, /<html[^>]*data-ordering="off"/, 'and says so before any script runs');
+});
+
+test('guessing is throttled, and the throttle says nothing new to the guesser', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const from = { 'cf-connecting-ip': '203.0.113.9' };
+  const guess = (fields, headers = from) =>
+    worker.fetch(form('/admin/login', fields, headers), env, ctx());
+
+  for (let i = 0; i < 8; i++) {
+    const res = await guess({ username: CREDS.ADMIN_USER, password: `try-${i}` });
+    assert.equal(res.status, 401);
+  }
+
+  // Locked now — and the right password is refused too, which is the point.
+  const locked = await guess({ username: CREDS.ADMIN_USER, password: CREDS.ADMIN_PASSWORD });
+  assert.equal(locked.status, 401);
+  assert.equal(locked.headers.get('set-cookie'), null, 'no session while locked out');
+  // Same page, same words: a guesser must not learn that a lockout exists.
+  assert.ok((await locked.text()).includes('Wrong username or password'));
+
+  // Somebody else's connection is unaffected — a lockout must never become a
+  // way for a stranger to shut the restaurant out of its own switch.
+  const elsewhere = await guess(
+    { username: CREDS.ADMIN_USER, password: CREDS.ADMIN_PASSWORD },
+    { 'cf-connecting-ip': '198.51.100.4' });
+  assert.equal(elsewhere.status, 303, 'a different address still gets in');
 });

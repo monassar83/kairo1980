@@ -5,10 +5,17 @@
    have proved only that the mock agrees with itself. */
 
 import { DatabaseSync } from 'node:sqlite';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
-const SCHEMA = fileURLToPath(new URL('../../migrations/0001_payments.sql', import.meta.url));
+/* Every migration, in the order wrangler would apply them, read off disk
+   rather than listed here. A migration added to the folder and forgotten in
+   this file would give the tests a schema production does not have — which is
+   the one difference a test suite can never catch by testing harder. */
+const MIGRATIONS_DIR = fileURLToPath(new URL('../../migrations/', import.meta.url));
+const MIGRATIONS = readdirSync(MIGRATIONS_DIR)
+  .filter((name) => name.endsWith('.sql'))
+  .sort();
 
 class Statement {
   constructor(db, sql, args = []) {
@@ -42,7 +49,7 @@ class Statement {
 
 export function freshDatabase() {
   const db = new DatabaseSync(':memory:');
-  db.exec(readFileSync(SCHEMA, 'utf8'));
+  for (const name of MIGRATIONS) db.exec(readFileSync(MIGRATIONS_DIR + name, 'utf8'));
   return {
     prepare: (sql) => new Statement(db, sql),
     // Not part of D1's surface — the tests use it to look at raw rows.

@@ -1756,3 +1756,39 @@ a.cart-send-wa {
   font-family: 'Cairo', 'DM Sans', sans-serif;
   font-weight: 600; font-size: 13px; letter-spacing: normal; text-transform: none;
 }
+
+/* ===========================================================================
+   ORDERING PAUSED
+   The restaurant has stopped taking orders from /admin. The menu, the prices
+   and the opening hours all stay exactly where they are — somebody who cannot
+   order tonight may still be deciding where to eat tomorrow. Only the two
+   controls that actually start an order are withheld, and never silently:
+   `.order-off` carries the sentence that says why and when we are back.
+
+   The attribute is written by the Worker before the page is sent
+   (worker/page-render.js), not by script, so the buttons are never live for
+   the moment it takes order.js to run.
+   =========================================================================== */
+.order-off {
+  margin: 18px 0;
+  padding: 13px 16px;
+  border-inline-start: 3px solid #b8914a;
+  background: rgba(184, 145, 74, 0.08);
+  font-size: 13.5px;
+  line-height: 1.7;
+  color: #5a4020;
+}
+.order-off:empty { display: none; }
+
+/* Dimmed, never removed: a button that has vanished reads as a broken page,
+   and the note above already says what happened. */
+:root[data-ordering="off"] .qty-add,
+:root[data-ordering="off"] .cart-send {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+/* Inside the basket the note sits directly above the send button, where the
+   press was about to happen. */
+#cartOrderOff { margin: 0 0 12px; font-size: 13px; }
