@@ -763,3 +763,57 @@ test('guessing is throttled, and the throttle says nothing new to the guesser', 
     { 'cf-connecting-ip': '198.51.100.4' });
   assert.equal(elsewhere.status, 303, 'a different address still gets in');
 });
+
+test('a one-tap closure lasts the minutes it says, and no slip can extend it', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const { cookie } = await signIn(env);
+  const close = (fields) =>
+    worker.fetch(form('/admin/ordering', { open: '0', ...fields }, { cookie }), env, ctx());
+  const read = async () =>
+    (await (await worker.fetch(get('/api/status'), env, ctx())).json()).ordering;
+
+  await close({ minutes: '60' });
+  let now = await read();
+  assert.equal(now.open, false);
+  assert.equal(now.namedEnd, true, 'a chosen length is a named end');
+  const hour = Date.parse(now.resumesAt) - Date.now();
+  assert.ok(hour > 55 * 60000 && hour < 65 * 60000, `about an hour, got ${hour}ms`);
+
+  await close({ minutes: '30' });
+  const half = Date.parse((await read()).resumesAt) - Date.now();
+  assert.ok(half > 25 * 60000 && half < 35 * 60000, 'and thirty minutes is thirty');
+
+  /* A fat finger on a number field must not be able to shut the restaurant
+     until Christmas. Anything past a week is clamped to a week. */
+  await close({ minutes: '999999999' });
+  const capped = Date.parse((await read()).resumesAt) - Date.now();
+  assert.ok(capped <= 7 * 24 * 60 * 60000 + 60000, 'never more than a week');
+
+  // Nonsense falls back to the default, which is the end of today.
+  for (const minutes of ['', 'soon', '-90', 'NaN']) {
+    await close({ minutes });
+    const fallback = Date.parse((await read()).resumesAt) - Date.now();
+    assert.ok(fallback > 0 && fallback <= 24 * 60 * 60000,
+      `"${minutes}" falls back to today, got ${fallback}ms`);
+  }
+});
+
+test('the dashboard says what the hours say, not only what the switch says', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const { cookie } = await signIn(env);
+
+  // Every day closed: the switch is on, but the shop is not open.
+  const shut = { lunch_enabled: '1' };
+  for (const day of ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']) shut[`${day}_closed`] = '1';
+  await worker.fetch(form('/admin/hours', shut, { cookie }), env, ctx());
+
+  const page = await (await worker.fetch(get('/admin', { cookie }), env, ctx())).text();
+  assert.ok(page.includes('Taking orders'), 'the switch is on');
+  assert.ok(page.includes('Closed today'), 'and the hours say otherwise, in the same card');
+});

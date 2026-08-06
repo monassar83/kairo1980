@@ -148,19 +148,26 @@ function normaliseOrdering(value, now = Date.now()) {
  *  spends a Tuesday lunchtime wondering why nobody is ordering, because
  *  somebody stopped the till on Saturday and went home. The default is not
  *  "forever"; it is "today". */
-export async function closeOrdering(env, { reason, untilDate, untilTime } = {}) {
+export async function closeOrdering(env, { reason, untilDate, untilTime, minutes } = {}) {
   const date = DATE.test(String(untilDate || '')) ? String(untilDate) : null;
   const time = TIME.test(String(untilTime || '')) ? String(untilTime) : null;
 
-  const resumesAt = date ? instantOf(date, time || '00:00')
-    : time ? nextTimeOfDay(time)
-      : nextMidnight();
+  /* "For the next hour" is the commonest closure there is — the kitchen is
+     buried and wants to catch up — and it is the one nobody should have to
+     type a clock time for at the till. Capped at a week: a slip of the finger
+     on a number field must not be able to close the shop until Christmas. */
+  const forMinutes = Math.min(Math.max(Number(minutes) || 0, 0), 7 * 24 * 60);
+
+  const resumesAt = forMinutes ? Date.now() + forMinutes * 60000
+    : date ? instantOf(date, time || '00:00')
+      : time ? nextTimeOfDay(time)
+        : nextMidnight();
 
   const value = {
     open: false,
     reason: REASONS.includes(reason) ? reason : null,
     resumesAt: new Date(resumesAt).toISOString(),
-    namedEnd: !!(date || time)
+    namedEnd: !!(date || time || forMinutes)
   };
   await put(env, ORDERING, value);
   return normaliseOrdering(value);

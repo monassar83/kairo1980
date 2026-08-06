@@ -54,19 +54,33 @@ async function signIn(page) {
   await expect(page.locator('.switch')).toBeVisible();
 }
 
-async function setOrdering(page, { closed, reason = '', untilDate = '', untilTime = '' } = {}) {
+async function setOrdering(page,
+  { closed, reason = '', untilDate = '', untilTime = '', minutes = null } = {}) {
   await goAdmin(page);
+
   if (!closed) {
     const resume = page.locator('button.go2');
     if (await resume.count()) await resume.click();
     await expect(page.locator('.switch.off')).toHaveCount(0);
     return;
   }
+
   if (await page.locator('button.go2').count()) await page.locator('button.go2').click();
   await page.locator(`input[name="reason"][value="${reason}"]`).check();
-  if (untilDate) await page.fill('#untilDate', untilDate);
-  if (untilTime) await page.fill('#untilTime', untilTime);
-  await page.click('button.stop');
+
+  if (untilDate || untilTime) {
+    // The date fields live behind a disclosure: the common closure is one tap
+    // and should not be buried under a form nobody usually needs.
+    await page.locator('details summary').click();
+    if (untilDate) await page.fill('#untilDate', untilDate);
+    if (untilTime) await page.fill('#untilTime', untilTime);
+    await page.locator('button.stop.wide').click();
+  } else if (minutes != null) {
+    await page.locator(`button.stop[value="${minutes}"]`).click();
+  } else {
+    await page.locator('button.stop[name="minutes"][value=""]').click();   // rest of today
+  }
+
   await expect(page.locator('.switch.off')).toBeVisible();
 }
 

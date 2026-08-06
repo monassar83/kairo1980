@@ -35,8 +35,8 @@ export async function handle(request, env, url) {
 
   if (path === '/admin' && method === 'GET') {
     const nonce = newNonce();
-    const { ordering, hoursAreCustom } = await readSettings(env);
-    return html(dashboardPage({ nonce, ordering, hoursAreCustom }), nonce);
+    const { ordering, hours, hoursAreCustom } = await readSettings(env);
+    return html(dashboardPage({ nonce, ordering, hours, hoursAreCustom }), nonce);
   }
 
   if (path === '/admin/ordering' && method === 'POST') return setOrdering(request, env);
@@ -60,6 +60,7 @@ async function setOrdering(request, env) {
   } else {
     await closeOrdering(env, {
       reason: form.get('reason'),
+      minutes: form.get('minutes'),
       untilDate: form.get('untilDate'),
       untilTime: form.get('untilTime')
     });

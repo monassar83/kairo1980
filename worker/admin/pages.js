@@ -9,6 +9,8 @@
    while something else is going wrong. Big targets, no JavaScript at all, and
    nothing that has to load before it works. */
 
+import { slotsFor } from '../page-render.js';
+
 const ESCAPE = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 export const esc = (v) => String(v == null ? '' : v).replace(/[&<>"']/g, (c) => ESCAPE[c]);
 
@@ -137,28 +139,54 @@ export function loginPage({ nonce, error = false, unconfigured = false }) {
 const SWITCH_CSS = `
  .switch{background:#fff;border:1px solid #e6dcc9;padding:16px;margin-bottom:14px}
  .switch.off{border-color:#e8c9a0;background:#fdf0e0}
- .state{display:flex;align-items:center;gap:9px;margin-bottom:4px}
- .dot{width:10px;height:10px;border-radius:50%;background:#4c8a35;flex:none}
- .switch.off .dot{background:#c2410c}
- .state b{font-size:15px}
- .switch p{margin:0 0 14px;font-size:13px;color:#7a6030}
+ .state{display:flex;align-items:center;gap:10px}
+ .dot{width:11px;height:11px;border-radius:50%;background:#4c8a35;flex:none;
+      box-shadow:0 0 0 4px rgba(76,138,53,0.15)}
+ .switch.off .dot{background:#c2410c;box-shadow:0 0 0 4px rgba(194,65,12,0.15)}
+ .state b{font-size:17px;letter-spacing:-0.01em}
+ .sched{margin:6px 0 16px;font-size:13px;color:#7a6030;padding-inline-start:21px}
+ .sched.is-open{color:#3f6b2c}
+ .switch p{margin:0 0 12px;font-size:13.5px;color:#7a6030;line-height:1.6}
+ .switch p.lead{font-size:14.5px;color:#1c1409;margin-bottom:2px}
+ .switch p.lead b{font-weight:600}
+ .until{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;font-size:14px;
+        color:#1c1409;margin-bottom:16px}
+ .rel{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:#a04a00;
+      background:rgba(194,65,12,0.09);padding:2px 8px}
  .switch form{margin:0}
- .row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
- .row .grow{flex:1 1 120px}
- .row label{margin-bottom:4px}
- .row input{padding:10px;font-size:16px;border:1px solid #d8cbb0;background:#fffdf9;width:100%}
- button.stop{padding:13px 18px;font-size:15px;font-weight:600;border:0;background:#c2410c;
-             color:#fff;cursor:pointer;flex:1 1 100%}
- button.go2{padding:13px 18px;font-size:15px;font-weight:600;border:0;background:#2f6b1d;
+ .cap{font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#7a6030;margin:16px 0 7px}
+ .reasons{display:grid;gap:6px}
+ label.tick{display:flex;align-items:center;gap:10px;font-size:14px;letter-spacing:0;
+            text-transform:none;color:#1c1409;margin:0;padding:9px 11px;background:#fffdf9;
+            border:1px solid #e6dcc9;cursor:pointer}
+ label.tick input{width:19px;height:19px;flex:none;margin:0;accent-color:#b8914a}
+ label.tick input:checked + span{font-weight:600}
+
+ /* One tap per common closure. Two columns on a phone, so every button is a
+    comfortable target and none of them needs a clock time typed into it. */
+ .quick{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+ button.stop{padding:14px 10px;font-size:14.5px;font-weight:600;border:0;background:#c2410c;
+             color:#fff;cursor:pointer;line-height:1.2}
+ button.stop:active{background:#a03509}
+ button.stop.wide{width:100%;margin-top:4px}
+ button.go2{padding:14px 18px;font-size:15px;font-weight:600;border:0;background:#2f6b1d;
             color:#fff;cursor:pointer;width:100%}
- .cap{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7a6030;margin:14px 0 6px}
- .reasons{display:grid;gap:6px;margin-bottom:4px}
- label.tick{display:flex;align-items:center;gap:9px;font-size:14px;letter-spacing:0;
-            text-transform:none;color:#1c1409;margin:0;padding:7px 9px;background:#fffdf9;
-            border:1px solid #e6dcc9}
- label.tick input{width:19px;height:19px;flex:none;margin:0}
- .hint{margin:8px 0 14px;font-size:12.5px;color:#7a6030;line-height:1.55}
+ button.go2:active{background:#255716}
+
+ details{margin-top:14px;border-top:1px solid #e6dcc9;padding-top:12px}
+ summary{font-size:13.5px;color:#8a6a2a;cursor:pointer;list-style:none}
+ summary::-webkit-details-marker{display:none}
+ summary::before{content:"+ ";font-weight:700}
+ details[open] summary::before{content:"– "}
+ details .row{margin-top:12px}
+
+ .row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap}
+ .row .grow{flex:1 1 130px}
+ .row label{margin-bottom:5px}
+ .row input{padding:11px;font-size:16px;border:1px solid #d8cbb0;background:#fffdf9;width:100%}
+ .hint{margin:10px 0 0;font-size:12.5px;color:#7a6030;line-height:1.55}
 `;
+
 
 /* What the guest is told is chosen from a list, not typed. A sentence typed
    here would be one language only, and every guest-facing string on the site
@@ -173,62 +201,112 @@ const REASON_CHOICES = [
 ];
 const REASON_LABEL = Object.fromEntries(REASON_CHOICES.filter(([v]) => v));
 
+/* How long from now, in the words a person would use. "in 45 minutes" and
+   "tomorrow at 11:00" both tell you what you need; "2026-08-07T09:00:00.000Z"
+   does not, and an absolute time alone makes you do the subtraction. */
+function inWords(ms) {
+  const mins = Math.max(0, Math.round((ms - Date.now()) / 60000));
+  if (mins < 60) return `in ${mins} min`;
+  const hours = Math.floor(mins / 60);
+  const rest = mins % 60;
+  if (hours < 24) return rest ? `in ${hours} h ${rest} min` : `in ${hours} h`;
+  return `in ${Math.round(hours / 24)} days`;
+}
+
+const CLOCK = { timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit' };
+
+function whenText(ms) {
+  const d = new Date(ms);
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+  const day = d.toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+  const time = d.toLocaleTimeString('en-GB', CLOCK);
+  if (day === today) return `today at ${time}`;
+  return `${d.toLocaleDateString('en-GB', {
+    timeZone: 'Europe/Berlin', weekday: 'long', day: 'numeric', month: 'short'
+  })} at ${time}`;
+}
+
+/* What the opening hours say about right now — which is a different question
+   from what the switch says, and the dashboard has to answer both. A shop can
+   be "taking orders" and shut, or paused during service. Conflating the two is
+   how somebody closes a till that was never open. */
+function todayLine(hours) {
+  const KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+  const now = new Date();
+  const berlinNow = now.toLocaleTimeString('en-GB', CLOCK);
+  const key = KEYS[(new Date(now.toLocaleString('en-US', { timeZone: 'Europe/Berlin' })).getDay() + 6) % 7];
+
+  const slots = slotsFor(hours, key);
+  if (!slots.length) return { open: false, text: 'Closed today' };
+
+  const inside = slots.find((s) => berlinNow >= s.from && berlinNow <= s.to);
+  const windows = slots.map((s) => `${s.from}–${s.to}`).join(' · ');
+  return {
+    open: !!inside,
+    text: inside ? `Open now · ${windows}` : `Closed right now · today ${windows}`
+  };
+}
+
 /* The dashboard leads with the switch rather than a menu of pages, because the
    reason this page gets opened in a hurry is always the switch. */
-export function dashboardPage({ nonce, ordering, hoursAreCustom }) {
+export function dashboardPage({ nonce, ordering, hours, hoursAreCustom }) {
   const closed = !ordering.open;
-  const resumes = closed ? new Date(ordering.resumesAt) : null;
+  const resumesAt = closed ? Date.parse(ordering.resumesAt) : null;
+  const today = todayLine(hours);
 
-  // Said as a wall clock in the restaurant's own zone, because that is the
-  // clock the person reading it is standing next to.
-  const resumesText = resumes
-    ? resumes.toLocaleString('en-GB', {
-        timeZone: 'Europe/Berlin', weekday: 'long', day: 'numeric', month: 'short',
-        hour: '2-digit', minute: '2-digit'
-      })
-    : '';
+  const stopped = `<p class="lead">Reason: <b>${esc(REASON_LABEL[ordering.reason] || 'none given')}</b></p>
+    <p class="until">Reopens ${esc(whenText(resumesAt))}
+      <span class="rel">${esc(inWords(resumesAt))}</span></p>
+    <form method="post" action="/admin/ordering">
+      <input type="hidden" name="open" value="1">
+      <button class="go2" type="submit">Start taking orders again</button>
+    </form>
+    <p class="hint">It reopens on its own at that time — you do not have to come back.</p>`;
+
+  /* One tap per common closure. Several submit buttons in one form, each
+     carrying its own value: no JavaScript, and no clock time to type at the
+     till while the phone is ringing. */
+  const running = `<form method="post" action="/admin/ordering">
+      <input type="hidden" name="open" value="0">
+
+      <p class="cap">Why (optional — a guest sees this)</p>
+      <div class="reasons">
+        ${REASON_CHOICES.map(([value, label], i) => `<label class="tick">
+          <input type="radio" name="reason" value="${value}" ${i === 0 ? 'checked' : ''}>
+          <span>${label}</span></label>`).join('')}
+      </div>
+
+      <p class="cap">Stop taking orders…</p>
+      <div class="quick">
+        <button class="stop" name="minutes" value="30" type="submit">for 30 min</button>
+        <button class="stop" name="minutes" value="60" type="submit">for 1 hour</button>
+        <button class="stop" name="minutes" value="120" type="submit">for 2 hours</button>
+        <button class="stop" name="minutes" value="" type="submit">rest of today</button>
+      </div>
+
+      <details>
+        <summary>Until a specific date instead</summary>
+        <div class="row">
+          <div class="grow">
+            <label for="untilDate">Date</label>
+            <input id="untilDate" name="untilDate" type="date">
+          </div>
+          <div class="grow">
+            <label for="untilTime">Time</label>
+            <input id="untilTime" name="untilTime" type="time" step="300">
+          </div>
+        </div>
+        <button class="stop wide" type="submit">Stop until then</button>
+        <p class="hint">For a holiday. It stays closed until that moment and no longer.</p>
+      </details>
+    </form>`;
 
   const body = `<div class="switch ${closed ? 'off' : ''}">
   <div class="state"><span class="dot"></span><b>${closed
     ? 'Not taking orders'
     : 'Taking orders'}</b></div>
-  ${closed
-    ? `<p>Reason: ${esc(REASON_LABEL[ordering.reason] || 'none given')}.<br>
-       Reopens automatically on ${esc(resumesText)} — nothing has to happen
-       here for that.</p>
-       <form method="post" action="/admin/ordering">
-         <input type="hidden" name="open" value="1">
-         <button class="go2" type="submit">Start taking orders again</button>
-       </form>`
-    : `<p>Stops orders immediately. The menu, the prices and the opening hours
-       stay visible — only ordering is withheld, with a note beside it
-       explaining why.</p>
-       <form method="post" action="/admin/ordering">
-         <input type="hidden" name="open" value="0">
-
-         <p class="cap">Reason</p>
-         <div class="reasons">
-           ${REASON_CHOICES.map(([value, label], i) => `<label class="tick">
-             <input type="radio" name="reason" value="${value}" ${i === 0 ? 'checked' : ''}>
-             ${label}</label>`).join('')}
-         </div>
-
-         <p class="cap">Closed until</p>
-         <div class="row">
-           <div class="grow">
-             <label for="untilDate">Date</label>
-             <input id="untilDate" name="untilDate" type="date">
-           </div>
-           <div class="grow">
-             <label for="untilTime">Time</label>
-             <input id="untilTime" name="untilTime" type="time" step="300">
-           </div>
-         </div>
-         <p class="hint">Leave both empty and orders start again automatically the
-         next day. Setting a date overrides that — it stays closed until then.</p>
-
-         <button class="stop" type="submit">Stop taking orders</button>
-       </form>`}
+  <p class="sched ${today.open ? 'is-open' : ''}">${esc(today.text)}</p>
+  ${closed ? stopped : running}
 </div>
 
 <div class="tiles">

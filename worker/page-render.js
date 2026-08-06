@@ -55,7 +55,7 @@ const esc = (v) => String(v == null ? '' : v).replace(/[&<>"]/g, (c) => ESC[c]);
 /** The service windows of one day. Mirrors slotsFor() in order.js and asks the
  *  same two config values by the same names, so the table the Worker draws and
  *  the table the browser draws cannot disagree. */
-function slotsFor(hours, key) {
+export function slotsFor(hours, key) {
   const day = (hours.days || {})[key];
   if (!day || day.closed) return [];
   const out = [];
