@@ -650,7 +650,10 @@ test('saved hours are what the site publishes, in the markup itself', async (t) 
   assert.equal(saved.status, 303);
 
   const { hours } = await (await worker.fetch(get('/api/status'), env, ctx())).json();
-  assert.deepEqual(hours.days.wed.evening, ['17:00', '22:00']);
+  // Only the evening box was filled, so it normalises into the day's first
+  // window — one window is stored one way, whichever box it was typed into.
+  assert.deepEqual(hours.days.wed.lunch, ['17:00', '22:00']);
+  assert.equal(hours.days.wed.evening, null);
   assert.equal(hours.days.mon.closed, true);
 
   /* The point of the whole exercise: a crawler that runs no JavaScript has to

@@ -34,6 +34,18 @@
     "run_worker_first": ["/", "/firmencatering"]
   },
 
+  // The retention sweep: nulls the payer's identity 180 days after a payment,
+  // keeping the financial record for the ten years § 147 AO requires. Nightly
+  // at 03:17 UTC — a quiet hour, and deliberately not on the hour, where every
+  // cron on the platform starts at once.
+  //
+  // The Datenschutzerklärung states this period. That makes this line part of
+  // a published promise rather than housekeeping: if it is removed, the policy
+  // becomes untrue. See docs/data-retention.md and worker/retention.js.
+  "triggers": {
+    "crons": ["17 3 * * *"]
+  },
+
   // Payment provenance. Created once with `npx wrangler d1 create
   // kairo1980-payments`, in WEUR — the money and the restaurant are both in
   // Germany, so the ledger stays in Europe too.

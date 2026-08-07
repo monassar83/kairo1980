@@ -148,8 +148,9 @@ const WEEK = (over = {}) => ({
 test('a complete, ordinary week is accepted as given', () => {
   const hours = normaliseHours(WEEK());
   assert.equal(hours.days.mon.closed, true);
-  assert.deepEqual(hours.days.wed.evening, ['18:00', '23:00']);
-  assert.equal(hours.days.wed.lunch, null);
+  // One window is stored as the day's first, whichever box it was typed into.
+  assert.deepEqual(hours.days.wed.lunch, ['18:00', '23:00']);
+  assert.equal(hours.days.wed.evening, null);
 });
 
 test('a time that is not a time refuses the whole save', () => {
@@ -198,7 +199,8 @@ test('a window that runs past midnight is refused rather than reversed', () => {
 test('the delivery shift can be set and cleared without touching a day', () => {
   const later = normaliseHours({ ...WEEK(), deliveryFrom: '18:00' });
   assert.equal(later.deliveryFrom, '18:00');
-  assert.equal(later.days.wed.evening[0], '18:00', 'the opening is untouched');
+  // WEEK() gives each day a lone window, which normalises into the first slot.
+  assert.equal(later.days.wed.lunch[0], '18:00', 'the opening is untouched');
 
   // Empty is a real answer — "a driver is out whenever we are open" — and is
   // the one word to change the day a midday driver exists.
@@ -229,4 +231,25 @@ test('two opening windows that overlap are refused', () => {
     wed: { closed: false, lunch: ['11:00', '18:00'], evening: ['18:00', '23:00'] }
   }));
   assert.ok(touching, 'adjacent windows are a normal week');
+});
+
+test('a day with only a second window is stored as having one', () => {
+  /* The form has two boxes because an afternoon break needs two, and filling
+     only the lower pair reads naturally as "we open in the evening". It saved
+     and worked, but left the same shape stored two different ways — which is
+     how the Saturday and Sunday rows came to look broken next to Wednesday's. */
+  const hours = normaliseHours(WEEK({
+    sat: { closed: false, lunch: null, evening: ['18:00', '23:00'] }
+  }));
+  assert.deepEqual(hours.days.sat.lunch, ['18:00', '23:00'], 'promoted to the first window');
+  assert.equal(hours.days.sat.evening, null, 'and nothing left dangling');
+  assert.equal(hours.days.sat.closed, false, 'the day is still open');
+});
+
+test('a genuine afternoon break still keeps both windows', () => {
+  const hours = normaliseHours(WEEK({
+    wed: { closed: false, lunch: ['11:00', '14:30'], evening: ['18:00', '23:00'] }
+  }));
+  assert.deepEqual(hours.days.wed.lunch, ['11:00', '14:30']);
+  assert.deepEqual(hours.days.wed.evening, ['18:00', '23:00']);
 });

@@ -217,6 +217,17 @@ are only the no-JavaScript fallback — update both or neither.
   the lost-phone procedure, and it needs no session store to sweep. Secrets are
   `ADMIN_USER` and `ADMIN_PASSWORD`; set neither and the area opens for nobody,
   because an unconfigured lock is not an unlocked door. See `docs/admin.md`.
+- **We do not COLLECT a name; we do STORE what PayPal tells us.** Those are
+  different sentences and the privacy policy says both. Nothing here ever asks a
+  guest for a name — but `payment_events.payload` keeps the provider's words
+  verbatim, and a `CHECKOUT.ORDER.APPROVED` body carries `payer.name`. The
+  policy claimed a name was never stored, and that was false from the day
+  payments went live. **Before writing what is stored, look in the payload.**
+  Identity is nulled after 180 days (PayPal's dispute window) by a nightly cron;
+  the financial record stays ten years for § 147 AO. The period is published, so
+  the sweep failing makes the policy untrue — `worker/retention.js`,
+  `docs/data-retention.md`. Never delete a `payment_events` ROW: `event_key` is
+  the replay guard. Empty the payload instead.
 - **The basket hands over to WhatsApp.** The order itself still goes nowhere
   but the guest's own chat: no name, address or phone number is ever sent to
   our server, and the payment API receives only the basket and the postcode.

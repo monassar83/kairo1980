@@ -252,7 +252,21 @@ export function normaliseHours(value) {
     if (lunch && evening && evening[0] < lunch[1]) return null;
 
     const closed = day.closed === true || (!lunch && !evening);
-    days[key] = { closed, lunch: closed ? null : lunch, evening: closed ? null : evening };
+
+    /* A day with only a SECOND window has one window, and is stored as one.
+       The form offers two boxes because an afternoon break needs two, and it
+       is easy to fill the lower pair alone — "we open in the evening" reads
+       like the evening box. That saved and worked, but left the week stored
+       two different ways for the same shape, which is how a later reader
+       concludes the first box is broken. Canonical beats forgiving. */
+    const first = lunch || evening;
+    const second = lunch ? evening : null;
+
+    days[key] = {
+      closed,
+      lunch: closed ? null : first,
+      evening: closed ? null : second
+    };
   }
 
   /* An empty delivery time is a real answer — "a driver is out whenever we are

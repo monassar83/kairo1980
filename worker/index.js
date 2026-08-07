@@ -21,6 +21,7 @@ import { readSettings } from './settings.js';
 import { withLiveData, liveETag } from './page-render.js';
 import { dayOf, timeOf } from './berlin.js';
 import { sendOrderNotification } from './notify.js';
+import { runRetention } from './retention.js';
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
@@ -54,6 +55,16 @@ export default {
       if (err instanceof ProviderError) return fail(502, 'provider_unavailable', 'The payment provider could not be reached.');
       return fail(500, 'internal_error', 'Something went wrong.');
     }
+  },
+
+  /* The retention sweep. A deletion period that is written in the privacy
+     policy and not actually carried out is worse than none at all: it is a
+     statement about our own conduct that is untrue, and it is the kind that
+     gets checked. So it runs on a schedule rather than depending on anyone
+     remembering, and it is idempotent, so a missed night is caught up by the
+     next one with no special case. See worker/retention.js. */
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(runRetention(env));
   }
 };
 
