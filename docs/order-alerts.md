@@ -1,5 +1,12 @@
 # Being told an order exists
 
+> **Update, 7 August 2026.** The gap below is now closed for *every* order, not
+> only paid ones. Orders are recorded on this server (`worker/orders.js`,
+> `migrations/0004_orders.sql`) and read at `/admin/orders`, so a guest who pays
+> on arrival and never presses send in WhatsApp no longer vanishes. The alert
+> still carries no personal data — see "What it sends" below; the name, phone
+> and address live only behind the admin login.
+
 ## The hole this closes
 
 The money and the order have always travelled by different paths.
@@ -106,3 +113,24 @@ group's id — it is negative, e.g. `-1001234567890`.
 Covered by `tests/integration/payment-flow.test.js` — announced once, announced
 when the browser never comes back, not announced twice on a replay, harmless
 when it fails, and absent when unconfigured.
+
+## Cash orders
+
+An order paid on arrival never creates a payment, so there is no capture to hang
+an alert off. Those are announced from `/api/orders/announce` instead, which the
+browser calls as the guest presses send — deliberately **not** awaited, because
+awaiting it would spend the click's user gesture and the WhatsApp popup would be
+blocked, which has cost an order before.
+
+The route never blocks: a throttled caller, an unpriceable basket or a database
+that will not answer all return plainly and the handover proceeds as it always
+did. Losing an order to our own bookkeeping would be worse than the problem the
+route was added to solve.
+
+It is rate-limited (10 per address per 10 minutes) because, unlike the payment
+route, there is no cost to calling it and no payment to prove intent.
+
+End-to-end coverage is in `tests/e2e/ordering-switch.spec.js`: a cash order
+placed in a real browser appears on the kitchen page with its name, telephone
+number and items, and a delivery order carries the street address and a
+`tel:` link.

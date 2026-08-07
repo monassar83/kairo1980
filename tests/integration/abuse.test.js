@@ -434,7 +434,12 @@ test('signing in cannot be used to bounce a visitor off the site', async (t) => 
   assert.equal(inside.headers.get('location'), '/admin/orders', 'but a real one is honoured');
 });
 
-test('the kitchen page cannot show what the server never stored', async (t) => {
+/* Order details now DO reach this server — but only through /api/orders/announce,
+   and never from the payment provider. A payment on its own must still show no
+   contact details and no provider identifiers, because none of those belong to
+   us: PayPal's payer e-mail is not the guest's order, and a capture id is ours
+   to keep, not to print. */
+test('a payment alone shows no contact details and no provider identifiers', async (t) => {
   const env = workerEnv(MENU, CREDS);
   const c = ctx();
   let payment;
@@ -820,4 +825,53 @@ test('the dashboard says what the hours say, not only what the switch says', asy
   const page = await (await worker.fetch(get('/admin', { cookie }), env, ctx())).text();
   assert.ok(page.includes('Taking orders'), 'the switch is on');
   assert.ok(page.includes('Closed today'), 'and the hours say otherwise, in the same card');
+});
+
+test('the kitchen page shows the name, the phone number and the address', async (t) => {
+  /* The complaint that produced the orders table: "how will I know the customer
+     details for deliveries if I cannot see his phone number even to call him".
+     These four fields exist on this server for exactly one reason, and this is
+     the only page allowed to show them. */
+  const env = workerEnv(MENU, CREDS);
+  const c = ctx();
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const { reference } = await (await worker.fetch(post('/api/orders/announce', {
+    items: { koshari: 2 }, type: 'delivery', postcode: '68766',
+    time: 'Heute 19:30', name: 'Sherif Esmat', phone: '+49 176 79906621',
+    address: 'Hauptstrasse 12', notes: 'Bitte 2x klingeln'
+  }), env, c)).json();
+
+  const { cookie } = await signIn(env);
+  const html = await (await worker.fetch(get('/admin/orders', { cookie }), env, c)).text();
+
+  assert.ok(html.includes(reference), 'the code the guest will quote');
+  assert.ok(html.includes('Sherif Esmat'), 'the name');
+  assert.ok(html.includes('+49 176 79906621'), 'the number as typed');
+  assert.ok(html.includes('tel:+4917679906621'), 'and dialable in one tap');
+  assert.ok(html.includes('Hauptstrasse 12'), 'the address');
+  assert.ok(html.includes('Bitte 2x klingeln'), 'and the note');
+  assert.ok(html.includes('PAY ON ARRIVAL'), 'marked as still to be paid');
+});
+
+test('order details are behind the login like everything else', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const c = ctx();
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  await worker.fetch(post('/api/orders/announce', {
+    items: { koshari: 1 }, type: 'pickup', name: 'Sherif Esmat',
+    phone: '+49 176 79906621'
+  }), env, c);
+
+  /* No session gets the login form itself, not a redirect — a redirect would
+     leak which page was being asked for. What matters here is that the refusal
+     carries nothing: the form is the whole response. */
+  const res = await worker.fetch(get('/admin/orders'), env, c);
+  const html = await res.text();
+  assert.match(html, /name="password"/, 'the login form, not the orders');
+  assert.equal(html.includes('Sherif Esmat'), false, 'and no name leaks with it');
+  assert.equal(html.includes('79906621'), false, 'nor a telephone number');
 });

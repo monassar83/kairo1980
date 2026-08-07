@@ -2463,12 +2463,51 @@
      the confirmation screen and the emptying of the basket cannot disagree
      about what just happened. */
 
+  /* Tell our own server the order exists.
+     -----------------------------------------------------------------------
+     Deliberately NOT awaited, and that is the whole design of this call. The
+     handover opens WhatsApp with window.open, which browsers allow only while
+     the click that caused it is still being handled. Awaiting a fetch first
+     spends that gesture and the popup is blocked — which already happened in
+     production once, on the online-payment path, and cost an order.
+
+     So this is fired and forgotten. If it lands, the restaurant learns of the
+     order whether or not the guest ever presses send in WhatsApp. If it does
+     not, nothing is worse than it was: the chat is still the route, exactly as
+     before. An order must never be lost to our own bookkeeping. */
+  function announceOrder(data, payment) {
+    try {
+      fetch('/api/orders/announce', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        keepalive: true,   // survives the tab going to WhatsApp
+        body: JSON.stringify({
+          items: cart,
+          type: data.type,
+          business: !!data.business,
+          postcode: data.plz,
+          time: data.time,
+          name: data.name,
+          phone: data.phone,
+          address: data.address,
+          company: data.company,
+          notes: data.notes,
+          paymentId: payment && payment.id ? payment.id : null
+        })
+      }).catch(function () { /* the chat is still the route */ });
+    } catch (e) { /* never let this reach the guest */ }
+  }
+
   function handOver(payment) {
     if (!pending) return;
     var L = t();
     var data = pending.data;
     var outside = pending.outside;
     var paid = !!(payment && payment.status === 'captured');
+
+    /* An out-of-area enquiry is a question, not an order: there is no agreed
+       price and nothing to cook, so it is not recorded as one. */
+    if (!outside) announceOrder(data, payment);
 
     /* A wa.me link carries the whole order in its query string, and a very
        large order can outgrow what a browser or a mobile OS will follow —

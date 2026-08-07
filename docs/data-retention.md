@@ -22,9 +22,26 @@ to **the money**, not to **who paid it**.
 | --- | --- | --- |
 | `payments.payer_email`, `payments.payer_id` | **180 days**, then nulled | Art. 6(1)(f) — answering a payment dispute |
 | `payment_events.payload` (verbatim PayPal bodies) | **180 days**, then nulled | as above |
+| `orders` name, phone, address, company, notes | **to the end of the 3rd calendar year** after the order | Art. 6(1)(b)/(f) — fulfilment, then defending a claim |
 | Reference, amount, currency, order type, postcode, items, transaction ids, timestamps | **10 years** | § 147 AO, § 257 HGB |
 
-**Why 180 days:** it is PayPal's buyer-protection window. Up to that point a
+**Why the end of the third year, for order details:** §§ 195 and 199 BGB. The
+regular limitation period for a claim under the contract is three years, and it
+starts running at the *end of the calendar year* in which the claim arose — so an
+order placed in August 2026 can be litigated until 31 December 2029 and is
+scrubbed on 1 January 2030.
+
+There is **no statutory maximum** to reach for here. Art. 5(1)(e) sets a
+necessity test, not a ceiling; the limitation period is simply the last date on
+which those fields could still be needed for anything. Anything beyond it would
+be kept for a reason that cannot be stated, which is the definition of too long.
+
+`notes` is free text and is where a guest mentions an allergy, which can make it
+health data under Art. 9. That is a further reason it is never put in a
+notification, is readable only behind the admin login, and is purged with the
+rest.
+
+**Why 180 days, for the payer identity:** it is PayPal's buyer-protection window. Up to that point a
 guest can still dispute a payment and we have to be able to answer with the
 provider's own words. After it, the purpose is spent and the lawful basis with
 it. The number is not a guess and should not be changed without a reason of the
@@ -98,13 +115,15 @@ npx wrangler d1 execute kairo1980-payments --remote --command \
 `stale` must be `0`. If it is not, the cron is not running — check that
 `triggers.crons` survived the last deploy.
 
-## What is deliberately NOT stored
+## Where the details are allowed to go
 
-No name, address or telephone number is ever **collected**. Those reach the
-restaurant only in the guest's own WhatsApp message. That remains true and is
-the reason the Datenschutzerklärung is short and there is no cookie banner.
+Nowhere. They are read at `/admin/orders`, behind the login, on Cloudflare's EU
+region, and that is the only place they are ever rendered.
 
-Changing it — storing the full order server-side so that a cash order also
-reaches the restaurant without WhatsApp — is a larger decision with its own
-consequences, and is written up in `next-whatsapp-cloud-api.md`. It would need
-this document extended, not replaced.
+In particular they are **never put in a notification**. The Telegram alert
+carries a reference, a basket, an order type and a postcode, and stops there —
+because Telegram FZ-LLC sits in the UAE, which has no adequacy decision, and an
+address in that message would be a third-country transfer of personal data to
+solve a problem a link solves instead. `tests/integration/payment-flow.test.js`
+asserts the absence of the name, the telephone number, the address and the note
+in the message body, so this cannot regress quietly.

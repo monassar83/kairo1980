@@ -113,3 +113,62 @@ test('the sweep only touches what is expired, with both ages present', async () 
   assert.equal((await row(db, 'old')).payer_email, null);
   assert.equal((await row(db, 'recent')).payer_email, 'gast-recent@example.com');
 });
+
+/* --- the customer's own details ------------------------------------------
+   A different clock from the payer identity, and a longer one. §§ 195 and 199
+   BGB: the regular limitation period is three years and starts running at the
+   END of the year the claim arose, so an order placed in 2026 can still be
+   litigated until 31 December 2029. These are scrubbed the day after. */
+
+async function orderAged(db, id, yearsAgo) {
+  await db.prepare(
+    `INSERT INTO orders (id, reference, order_type, pay_method, postcode, lines,
+       subtotal, discount, fee, total, requested_time,
+       customer_name, customer_phone, customer_address, customer_company, notes,
+       created_at)
+     VALUES (?1, ?2, 'delivery', 'onsite', '68766', '[{"qty":2,"name":"Koshari"}]',
+             2900, 290, 0, 2610, 'Heute 19:30',
+             'Sherif Esmat', '+49 176 79906621', 'Hauptstrasse 12', 'KAIRO GmbH',
+             'Bitte 2x klingeln',
+             datetime('now', ?3))`
+  ).bind(id, 'REF-' + id, `-${yearsAgo} years`).run();
+}
+
+const order = (db, id) =>
+  db.prepare('SELECT * FROM orders WHERE id = ?1').bind(id).first();
+
+test('details survive the limitation period and are gone after it', async () => {
+  const db = freshDatabase();
+  await orderAged(db, 'stale', 4);     // comfortably past the year-end + 3
+  await orderAged(db, 'fresh', 1);     // still well inside it
+
+  const changed = await scrubExpiredIdentities({ DB: db });
+  assert.equal(changed.orders, 1, 'exactly the one that expired');
+
+  const gone = await order(db, 'stale');
+  assert.equal(gone.customer_name, null);
+  assert.equal(gone.customer_phone, null);
+  assert.equal(gone.customer_address, null);
+  assert.equal(gone.customer_company, null);
+  assert.equal(gone.notes, null, 'including a note that may mention an allergy');
+  assert.ok(gone.details_purged_at, 'and it says so, rather than looking like a bug');
+
+  // The order itself is not personal data and is not the sweep's to delete.
+  assert.equal(gone.total, 2610);
+  assert.equal(gone.reference, 'REF-stale');
+  assert.match(gone.lines, /Koshari/);
+
+  const kept = await order(db, 'fresh');
+  assert.equal(kept.customer_phone, '+49 176 79906621', 'a claim can still be answered');
+  assert.equal(kept.details_purged_at, null);
+});
+
+test('scrubbing order details twice changes nothing the second time', async () => {
+  const db = freshDatabase();
+  await orderAged(db, 'stale', 5);
+
+  const first = await scrubExpiredIdentities({ DB: db });
+  const second = await scrubExpiredIdentities({ DB: db });
+  assert.equal(first.orders, 1);
+  assert.equal(second.orders, 0, 'details_purged_at is the guard');
+});

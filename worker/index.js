@@ -20,8 +20,9 @@ import * as admin from './admin/index.js';
 import { readSettings } from './settings.js';
 import { withLiveData, liveETag } from './page-render.js';
 import { dayOf, timeOf } from './berlin.js';
-import { sendOrderNotification } from './notify.js';
+import { sendOrderNotification, sendCashOrderNotification } from './notify.js';
 import { runRetention } from './retention.js';
+import { recordOrder, getOrder } from './orders.js';
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
@@ -79,6 +80,8 @@ async function route(request, env, ctx, url) {
   const hook = path.match(/^\/api\/webhooks\/(\w+)$/);
   if (hook && method === 'POST') return webhook(request, env, ctx, hook[1]);
   if (path === '/api/reports/settlement' && method === 'GET') return settlement(request, env, url);
+
+  if (path === '/api/orders/announce' && method === 'POST') return announceOrder(request, env, ctx);
 
   const capture = path.match(/^\/api\/payments\/([\w-]{8,64})\/capture$/);
   if (capture && method === 'POST') return capturePayment(request, env, capture[1], ctx);
@@ -318,6 +321,44 @@ async function capturePayment(request, env, id, ctx) {
 
   const after = await applyCaptureResult(env, payment, result, 'api', ctx);
   return json({ payment: store.publicView(after) });
+}
+
+/* --- the order itself -----------------------------------------------------
+   Called as the guest presses send, cash or card. Until this existed, an order
+   paid on arrival reached this server nowhere at all: the kitchen learned of it
+   only if the guest remembered to press send in WhatsApp, and one who did not
+   cost a real dinner on 6 August 2026.
+
+   THE CONTRACT IS THAT IT NEVER BLOCKS. Every failure below answers plainly and
+   the browser ignores the answer; the WhatsApp handover proceeds exactly as it
+   did before. A throttled caller, an unpriceable basket or a database that will
+   not answer must never be able to lose an order — that is the problem this
+   route was added to solve, not a new way to reproduce it. */
+async function announceOrder(request, env, ctx) {
+  const body = await readJson(request);
+  const ip = request.headers.get('CF-Connecting-IP') || '';
+
+  let stored;
+  try {
+    stored = await recordOrder(env, body, ip);
+  } catch (err) {
+    if (err instanceof PricingError) return fail(400, err.code, err.message);
+    throw err;
+  }
+  // Throttled. Not an error the guest should ever see or act on.
+  if (!stored) return json({ recorded: false }, 202);
+
+  if (stored.alerted) {
+    ctx.waitUntil((async () => {
+      const order = await getOrder(env, stored.id);
+      if (order) await sendCashOrderNotification(env, order);
+    })());
+  }
+
+  // The reference goes back so the WhatsApp message prints the same code the
+  // restaurant will read at /admin. A guest quoting a code nobody can find is
+  // worse than no code at all.
+  return json({ recorded: true, reference: stored.reference });
 }
 
 /* Tell the restaurant, once, that an order is real.

@@ -14,7 +14,7 @@
        somewhere, is still holding the closed state. */
 
 import { test, expect } from '@playwright/test';
-import { addItem, openBasket, choosePickup, fillContact, captureWhatsApp } from './helpers.js';
+import { addItem, openBasket, choosePickup, chooseDelivery, fillContact, captureWhatsApp } from './helpers.js';
 
 /* One switch, one database, one restaurant. Two of these running at once would
    be two tests writing the same row — which reads as flakiness and is not. */
@@ -321,4 +321,75 @@ test('resuming clears every trace of the closure', async ({ page }) => {
   await addItem(page, 'hummus', 1);
   await openBasket(page);
   await expect(page.locator('#cartSend')).toBeEnabled();
+});
+
+/* --- the order reaches the restaurant on its own -------------------------
+   The failure this closes: a guest picks "pay on arrival", the order goes
+   nowhere but their own WhatsApp draft, and if they never press send the
+   kitchen never learns of it. That cost a real dinner. The whole loop is
+   asserted here — basket in the browser, order in the restaurant's own page —
+   because the two halves passing separately is exactly what was true before. */
+
+test('a cash order reaches the kitchen page without WhatsApp being sent', async ({ page }) => {
+  /* A unique guest per run. The dev database is not reset between runs, and an
+     assertion of "exactly one" against a name every previous run also used is
+     a test that passes once and then reports its own history as a failure. */
+  const who = `E2E Barzahler ${Date.now()}`;
+  const whatsapp = await captureWhatsApp(page);
+  await page.goto('/?lang=de');
+
+  await addItem(page, 'hummus', 2);
+  await openBasket(page);
+  await choosePickup(page);
+  await fillContact(page, { name: who, phone: '+49 176 5550000' });
+  await page.locator('#cartSend').click();
+
+  // The handover still happens exactly as before — this must not have replaced
+  // the WhatsApp route, only stopped being the only one.
+  const url = await whatsapp();
+  expect(url).toContain('wa.me');
+
+  await expect(page.locator('.cart-sent')).toBeVisible();
+
+  /* The announce is fired without being awaited, so the popup keeps its user
+     gesture. That means the row may land a moment after the screen does —
+     poll the kitchen page rather than assuming it is already there. */
+  await signIn(page);
+  await expect(async () => {
+    await goAdmin(page, '/admin/orders');
+    await expect(page.locator('.order', { hasText: who })).toHaveCount(1);
+  }).toPass({ timeout: 10000 });
+
+  const card = page.locator('.order', { hasText: who }).first();
+  await expect(card).toContainText('+49 176 5550000');
+  await expect(card).toContainText('PAY ON ARRIVAL');
+  await expect(card).toContainText('Hummus');
+});
+
+test('a delivery order carries the address the driver needs', async ({ page }) => {
+  const who = `E2E Lieferung ${Date.now()}`;
+  const whatsapp = await captureWhatsApp(page);
+  await page.goto('/?lang=de');
+
+  await addItem(page, 'hummus', 1);
+  await openBasket(page);
+  await chooseDelivery(page);
+  await fillContact(page, {
+    name: who, phone: '+49 176 5550001',
+    address: 'Teststrasse 7', postcode: '68766'
+  });
+  await page.locator('#cartSend').click();
+  await whatsapp();
+
+  await signIn(page);
+  await expect(async () => {
+    await goAdmin(page, '/admin/orders');
+    await expect(page.locator('.order', { hasText: who })).toHaveCount(1);
+  }).toPass({ timeout: 10000 });
+
+  const card = page.locator('.order', { hasText: who }).first();
+  await expect(card).toContainText('Teststrasse 7');
+  await expect(card).toContainText('68766');
+  // The number has to be dialable from the phone the restaurant reads this on.
+  await expect(card.locator('a[href^="tel:"]')).toHaveAttribute('href', 'tel:+491765550001');
 });

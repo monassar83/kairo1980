@@ -228,9 +228,19 @@ are only the no-JavaScript fallback — update both or neither.
   the sweep failing makes the policy untrue — `worker/retention.js`,
   `docs/data-retention.md`. Never delete a `payment_events` ROW: `event_key` is
   the replay guard. Empty the payload instead.
-- **The basket hands over to WhatsApp.** The order itself still goes nowhere
-  but the guest's own chat: no name, address or phone number is ever sent to
-  our server, and the payment API receives only the basket and the postcode.
+- **The order is recorded here; the details never travel.** `/api/orders/announce`
+  stores every order — cash included — because an order that exists only in the
+  guest's WhatsApp draft is an order that is lost when they do not press send.
+  Name, phone, address, company and notes are the ONLY personal data this site
+  collects, are rendered at `/admin/orders` and nowhere else, and are **never
+  put in a notification**: Telegram FZ-LLC is in the UAE with no adequacy
+  decision, so the alert carries a reference, a basket and a postcode and stops.
+  Purged at the end of the third calendar year (§§ 195, 199 BGB).
+  **The announce call is never awaited.** Awaiting it spends the click's user
+  gesture and the WhatsApp popup is blocked — that has cost an order before. And
+  it never blocks: throttled, unpriceable or unreachable, the handover proceeds.
+- **The basket still hands over to WhatsApp.** That route is unchanged and the
+  guest's chat still carries the order — it simply stopped being the only copy.
   What ties a payment to an order is the short reference printed in both.
 - **A day has up to two opening windows, and they are not times of day.** The
   keys are still called `lunch` and `evening` because stored settings rows use

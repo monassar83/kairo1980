@@ -93,8 +93,54 @@ export function composeOrderMessage(payment) {
   }
 
   lines.push('');
-  lines.push('Der Gast sendet die Bestellung ggf. zusätzlich per WhatsApp.');
+  lines.push('Details (Name, Telefon, Adresse): kairo1980.de/admin/orders');
   return lines.join('\n');
+}
+
+/** The same message for an order that has NOT been paid online — the one that
+ *  used to reach nobody at all unless the guest remembered to press send.
+ *
+ *  It carries a reference and a basket and stops there. The name, the phone
+ *  number and the address are deliberately absent: Telegram FZ-LLC sits in the
+ *  UAE, which has no adequacy decision, so an address in this message would be
+ *  a third-country transfer of personal data to solve a problem that a link
+ *  solves instead. The details are one tap away, behind the admin login, on a
+ *  server in the EU. */
+export function composeCashOrderMessage(order) {
+  const lines = [];
+  lines.push('NEUE BESTELLUNG — ZAHLUNG BEI ERHALT');
+  lines.push('');
+  lines.push(`Referenz: ${order.reference}`);
+
+  const type = order.order_type === 'pickup' ? 'Abholung' : 'Lieferung';
+  lines.push(`Art:      ${type}${order.postcode ? ` — ${order.postcode}` : ''}`);
+  lines.push(`Betrag:   ${money(order.total, order.currency)} (noch offen)`);
+  if (order.requested_time) lines.push(`Termin:   ${order.requested_time}`);
+  lines.push('');
+
+  let items = [];
+  try {
+    items = JSON.parse(order.lines || '[]');
+  } catch {
+    items = [];
+  }
+  if (items.length) {
+    for (const item of items) lines.push(`${item.qty}x ${item.name}`);
+  } else {
+    lines.push('(Positionen konnten nicht gelesen werden — siehe /admin)');
+  }
+
+  lines.push('');
+  lines.push('Details (Name, Telefon, Adresse): kairo1980.de/admin/orders');
+  return lines.join('\n');
+}
+
+/** Send a cash order. Same contract as the paid one: never throws, never
+ *  rejects, and by the time it runs the guest has already been handed to
+ *  WhatsApp — so a failure here costs a notification, never an order. */
+export async function sendCashOrderNotification(env, order) {
+  if (!notifyConfigured(env) || !order) return false;
+  return post(env, composeCashOrderMessage(order));
 }
 
 /** Send it. Never throws, never returns a rejected promise: a notification is
@@ -102,14 +148,18 @@ export function composeOrderMessage(payment) {
  *  runs the money is already taken. Every failure is logged and swallowed. */
 export async function sendOrderNotification(env, payment) {
   if (!notifyConfigured(env) || !payment) return false;
+  return post(env, composeOrderMessage(payment));
+}
 
+/** The one place that talks to Telegram. Never throws, never rejects. */
+async function post(env, text) {
   try {
     const res = await fetch(`${API}/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         chat_id: env.TELEGRAM_CHAT_ID,
-        text: composeOrderMessage(payment),
+        text,
         disable_web_page_preview: true
       })
     });

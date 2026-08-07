@@ -847,3 +847,146 @@ test('with no token configured the site behaves exactly as it did before', async
   assert.equal((await res.json()).payment.status, 'captured');
   assert.equal(paypal.calls.some((k) => k.path.includes('sendMessage')), false);
 });
+
+/* --- the order itself ----------------------------------------------------
+   Until /api/orders/announce existed, an order paid on arrival reached this
+   server nowhere at all: the kitchen learned of it only if the guest remembered
+   to press send in WhatsApp. These tests hold the route to the three things
+   that make it worth having — the order is recorded, the restaurant is told,
+   and nothing about it can lose an order that would otherwise have been fine. */
+
+const CASH_ORDER = {
+  items: { koshari: 2 },
+  type: 'delivery',
+  business: false,
+  postcode: '68766',
+  time: 'Heute 19:30',
+  name: 'Sherif Esmat',
+  phone: '+49 176 79906621',
+  address: 'Hauptstrasse 12',
+  notes: 'Bitte 2x klingeln'
+};
+
+const orderRow = (env, ref) => env.DB
+  .prepare('SELECT * FROM orders WHERE reference = ?1').bind(ref).first();
+
+test('a cash order is recorded and the restaurant is told', async (t) => {
+  const env = workerEnv(MENU, TELEGRAM);
+  const c = ctx();
+  const paypal = fakePayPal({ [SEND]: () => ({ ok: true }) });
+  t.after(() => paypal.restore());
+
+  const res = await worker.fetch(post('/api/orders/announce', CASH_ORDER), env, c);
+  assert.equal(res.status, 200);
+  const body = await res.json();
+  assert.equal(body.recorded, true);
+  assert.ok(body.reference, 'the chat and the kitchen quote the same code');
+  await c.settled();
+
+  const row = await orderRow(env, body.reference);
+  assert.equal(row.customer_name, 'Sherif Esmat');
+  assert.equal(row.customer_phone, '+49 176 79906621');
+  assert.equal(row.customer_address, 'Hauptstrasse 12');
+  assert.equal(row.notes, 'Bitte 2x klingeln');
+  assert.equal(row.pay_method, 'onsite');
+  assert.equal(row.order_type, 'delivery');
+
+  // Priced by the server from the published menu, never from the body.
+  assert.equal(row.subtotal, 2900);
+  assert.equal(row.total, 2610 + row.fee);
+
+  const calls = sent(paypal);
+  assert.equal(calls.length, 1, 'the restaurant was told');
+  assert.match(calls[0].body.text, /ZAHLUNG BEI ERHALT/);
+  assert.ok(calls[0].body.text.includes(body.reference));
+});
+
+test('the alert never carries the customer\'s name, phone or address', async (t) => {
+  /* Telegram FZ-LLC is in the UAE, which has no adequacy decision. The details
+     stay in D1 and are read at /admin; the message carries a reference and a
+     basket, and that is the whole reason this split exists. */
+  const env = workerEnv(MENU, TELEGRAM);
+  const c = ctx();
+  const paypal = fakePayPal({ [SEND]: () => ({ ok: true }) });
+  t.after(() => paypal.restore());
+
+  await worker.fetch(post('/api/orders/announce', CASH_ORDER), env, c);
+  await c.settled();
+
+  const text = sent(paypal)[0].body.text;
+  assert.equal(text.includes('Sherif Esmat'), false, 'no name');
+  assert.equal(text.includes('79906621'), false, 'no telephone number');
+  assert.equal(text.includes('Hauptstrasse'), false, 'no address');
+  assert.equal(text.includes('klingeln'), false, 'and no free-text note');
+  assert.match(text, /68766/, 'the postcode is enough to know the trip');
+});
+
+test('an order paid online is recorded but not announced twice', async (t) => {
+  const env = workerEnv(MENU, TELEGRAM);
+  const c = ctx();
+  const paypal = fakePayPal({
+    '/v2/checkout/orders': () => orderResponse({ id: 'PP-ORDER-9' }),
+    '/v2/checkout/orders/PP-ORDER-9/capture': () => captureOk(payment.id, payment.reference),
+    [SEND]: () => ({ ok: true })
+  });
+  t.after(() => paypal.restore());
+
+  var payment = await createPayment(env, c, BASKET, 'PP-ORDER-9');
+  await worker.fetch(post(`/api/payments/${payment.id}/capture`), env, c);
+  await c.settled();
+  assert.equal(sent(paypal).length, 1, 'announced once, on capture');
+
+  const res = await worker.fetch(
+    post('/api/orders/announce', { ...CASH_ORDER, paymentId: payment.id }), env, c);
+  await c.settled();
+  const body = await res.json();
+
+  assert.equal(sent(paypal).length, 1, 'and not a second time on handover');
+  assert.equal(body.reference, payment.reference, 'the payment keeps its own code');
+
+  const row = await orderRow(env, payment.reference);
+  assert.equal(row.pay_method, 'online');
+  assert.equal(row.customer_name, 'Sherif Esmat', 'but the details did arrive');
+});
+
+test('a flood of announcements is throttled without refusing the first ones', async (t) => {
+  const env = workerEnv(MENU, TELEGRAM);
+  const c = ctx();
+  const paypal = fakePayPal({ [SEND]: () => ({ ok: true }) });
+  t.after(() => paypal.restore());
+
+  const from = { 'CF-Connecting-IP': '203.0.113.55' };
+  let recorded = 0;
+  for (let i = 0; i < 14; i++) {
+    const res = await worker.fetch(post('/api/orders/announce', CASH_ORDER, from), env, c);
+    if ((await res.json()).recorded) recorded++;
+  }
+  await c.settled();
+
+  assert.ok(recorded >= 8 && recorded <= 10, `real orders got through (${recorded})`);
+  assert.ok(recorded < 14, 'and the flood did not');
+});
+
+test('an announcement that fails never costs the guest their order', async (t) => {
+  /* By the time this route is called the guest has pressed send. Every failure
+     here has to be survivable, because the WhatsApp handover is already under
+     way and losing an order to our own bookkeeping would be worse than the
+     problem this route was added to solve. */
+  const env = workerEnv(MENU, TELEGRAM);
+  const c = ctx();
+  const paypal = fakePayPal({
+    [SEND]: () => ({ status: 500, body: { ok: false } })
+  });
+  t.after(() => paypal.restore());
+
+  const res = await worker.fetch(post('/api/orders/announce', CASH_ORDER), env, c);
+  await c.settled();
+  assert.equal(res.status, 200, 'the order is still recorded');
+  assert.equal((await res.json()).recorded, true);
+
+  // An unknown dish is the guest's basket disagreeing with the menu, which is
+  // a plain 400 rather than a 500 the browser would treat as a crash.
+  const bad = await worker.fetch(
+    post('/api/orders/announce', { ...CASH_ORDER, items: { caviar: 1 } }), env, c);
+  assert.equal(bad.status, 400);
+});

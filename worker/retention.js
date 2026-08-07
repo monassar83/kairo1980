@@ -39,6 +39,19 @@
 /** How long an identity outlives the order it belongs to. */
 export const IDENTITY_DAYS = 180;
 
+/* How long a customer's own details survive: to the end of the third calendar
+   year after the order. §§ 195 and 199 BGB — the regular limitation period is
+   three years and it starts running at the end of the year the claim arose, so
+   a claim from an order placed in 2026 can be brought until 31 December 2029
+   and the details are scrubbed on 1 January 2030.
+
+   This is deliberately the LONGEST defensible answer rather than the shortest.
+   There is no statutory maximum to reach for — Art. 5(1)(e) sets a necessity
+   test, not a ceiling — and the limitation period is the last date on which
+   these fields could still be needed for anything. Anything beyond it is kept
+   for no reason that can be stated, which is the definition of too long. */
+const DETAILS_CUTOFF = "datetime('now', 'start of year', '-3 years')";
+
 /* Both tables are timestamped with the same `datetime('now')` text format, so
    the cutoff is a string comparison in SQLite and needs no date parsing. */
 const CUTOFF = `datetime('now', '-${IDENTITY_DAYS} day')`;
@@ -71,9 +84,22 @@ export async function scrubExpiredIdentities(env) {
         AND payload IS NOT NULL`
   ).run();
 
+  /* The customer's own details, on their own clock. `details_purged_at` is
+     stamped rather than inferred, so the admin page can say "these were
+     deleted on the 1st" instead of leaving a blank that reads like a bug. */
+  const orders = await env.DB.prepare(
+    `UPDATE orders
+        SET customer_name = NULL, customer_phone = NULL,
+            customer_address = NULL, customer_company = NULL, notes = NULL,
+            details_purged_at = datetime('now')
+      WHERE created_at < ${DETAILS_CUTOFF}
+        AND details_purged_at IS NULL`
+  ).run();
+
   return {
     payments: payments.meta?.changes || 0,
-    events: events.meta?.changes || 0
+    events: events.meta?.changes || 0,
+    orders: orders.meta?.changes || 0
   };
 }
 
@@ -83,8 +109,9 @@ export async function scrubExpiredIdentities(env) {
 export async function runRetention(env) {
   try {
     const changed = await scrubExpiredIdentities(env);
-    if (changed.payments || changed.events) {
-      console.log('retention: scrubbed', changed.payments, 'payments,', changed.events, 'event payloads');
+    if (changed.payments || changed.events || changed.orders) {
+      console.log('retention: scrubbed', changed.payments, 'payments,',
+        changed.events, 'event payloads,', changed.orders, 'order details');
     }
     return changed;
   } catch (err) {
