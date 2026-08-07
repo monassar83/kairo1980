@@ -346,7 +346,9 @@ test('a session dies when the password changes, with nothing to clean up', async
 
   const { cookie } = await signIn(env);
   const before = await worker.fetch(get('/admin', { cookie }), env, ctx());
-  assert.ok((await before.text()).includes('Paid orders'), 'signed in');
+  // Any dashboard content proves the session; "Opening hours" is the one label
+  // that is not going to be reworded next time the page is.
+  assert.ok((await before.text()).includes('Opening hours'), 'signed in');
 
   // The signing key is derived from the credentials, so changing either one
   // invalidates every cookie ever issued — a phone lost on Friday is logged
@@ -874,4 +876,63 @@ test('order details are behind the login like everything else', async (t) => {
   assert.match(html, /name="password"/, 'the login form, not the orders');
   assert.equal(html.includes('Sherif Esmat'), false, 'and no name leaks with it');
   assert.equal(html.includes('79906621'), false, 'nor a telephone number');
+});
+
+test('the alert channel can be tested from the admin, and says why it failed', async (t) => {
+  /* The bug this exists for: a real paid order arrived, the alert was sent,
+     Telegram refused it, and the only trace was a console line nobody reads —
+     so the restaurant learned of the failure from the customer. A channel that
+     can fail invisibly is worse than none, because it is trusted. */
+  const env = workerEnv(MENU, {
+    ...CREDS, TELEGRAM_BOT_TOKEN: 'bot-token', TELEGRAM_CHAT_ID: '4242'
+  });
+  const c = ctx();
+  const paypal = fakePayPal({
+    '/botbot-token/sendMessage': () =>
+      ({ status: 401, body: { ok: false, description: 'Unauthorized' } })
+  });
+  t.after(() => paypal.restore());
+
+  const { cookie } = await signIn(env);
+  const res = await worker.fetch(
+    new Request('https://kairo1980.de/admin/test-alert', { method: 'POST', headers: { cookie } }),
+    env, c);
+
+  assert.equal(res.status, 303);
+  const to = res.headers.get('location') || '';
+  assert.match(to, /alert=fail/, 'a refusal is reported as one');
+  assert.match(decodeURIComponent(to), /Unauthorized/, "in Telegram's own words");
+
+  // And the reason reaches the page, rather than a shrug.
+  const html = await (await worker.fetch(get('/admin' + to.slice(to.indexOf('?')), { cookie }), env, c)).text();
+  assert.ok(html.includes('Unauthorized'), 'printed where it will be read');
+  assert.ok(html.includes('bot token is wrong'), 'with what to do about it');
+});
+
+test('a working alert channel reports success', async (t) => {
+  const env = workerEnv(MENU, {
+    ...CREDS, TELEGRAM_BOT_TOKEN: 'bot-token', TELEGRAM_CHAT_ID: '4242'
+  });
+  const c = ctx();
+  const paypal = fakePayPal({ '/botbot-token/sendMessage': () => ({ ok: true }) });
+  t.after(() => paypal.restore());
+
+  const { cookie } = await signIn(env);
+  const res = await worker.fetch(
+    new Request('https://kairo1980.de/admin/test-alert', { method: 'POST', headers: { cookie } }),
+    env, c);
+  assert.match(res.headers.get('location') || '', /alert=ok/);
+});
+
+test('an unconfigured alert channel says so instead of pretending', async (t) => {
+  const env = workerEnv(MENU, CREDS);          // no TELEGRAM_* at all
+  const c = ctx();
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const { cookie } = await signIn(env);
+  const res = await worker.fetch(
+    new Request('https://kairo1980.de/admin/test-alert', { method: 'POST', headers: { cookie } }),
+    env, c);
+  assert.match(decodeURIComponent(res.headers.get('location') || ''), /not set/);
 });

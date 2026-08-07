@@ -139,7 +139,7 @@ export function composeCashOrderMessage(order) {
  *  rejects, and by the time it runs the guest has already been handed to
  *  WhatsApp — so a failure here costs a notification, never an order. */
 export async function sendCashOrderNotification(env, order) {
-  if (!notifyConfigured(env) || !order) return false;
+  if (!notifyConfigured(env) || !order) return { ok: false, error: 'not configured' };
   return post(env, composeCashOrderMessage(order));
 }
 
@@ -147,11 +147,20 @@ export async function sendCashOrderNotification(env, order) {
  *  the last thing that may be allowed to fail a payment, and by the time this
  *  runs the money is already taken. Every failure is logged and swallowed. */
 export async function sendOrderNotification(env, payment) {
-  if (!notifyConfigured(env) || !payment) return false;
+  if (!notifyConfigured(env) || !payment) return { ok: false, error: 'not configured' };
   return post(env, composeOrderMessage(payment));
 }
 
-/** The one place that talks to Telegram. Never throws, never rejects. */
+/** The one place that talks to Telegram. Never throws, never rejects.
+ *
+ *  Returns WHY it failed, not just that it did. An earlier version logged to
+ *  console.error and returned false, which meant a wrong token produced a
+ *  restaurant that heard nothing and a log nobody reads — a paid order arrived,
+ *  the alert never sent, and the only symptom was silence. A notification
+ *  channel that can fail invisibly is worse than none, because it is trusted.
+ *
+ *  @returns {Promise<{ok: boolean, error: string|null}>}
+ */
 async function post(env, text) {
   try {
     const res = await fetch(`${API}/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -165,14 +174,33 @@ async function post(env, text) {
     });
 
     if (!res.ok) {
-      // The body names the cause — a revoked token, a chat the bot was removed
-      // from — and none of it is a secret worth withholding from our own logs.
-      console.error('order notification refused', res.status, (await res.text()).slice(0, 300));
-      return false;
+      /* Telegram names the cause plainly — "Unauthorized" for a bad token,
+         "chat not found" for a bad chat id — and that sentence is the whole
+         diagnosis. It is carried back so /admin can print it instead of
+         leaving somebody to guess which half is wrong. */
+      let why = `HTTP ${res.status}`;
+      try {
+        const body = await res.json();
+        if (body && body.description) why = `${res.status}: ${body.description}`;
+      } catch { /* keep the status */ }
+      console.error('order notification refused', why);
+      return { ok: false, error: why };
     }
-    return true;
+    return { ok: true, error: null };
   } catch (err) {
-    console.error('order notification failed', err && err.message);
-    return false;
+    const why = (err && err.message) || 'network error';
+    console.error('order notification failed', why);
+    return { ok: false, error: why };
   }
+}
+
+/** Prove the channel works, on demand, from /admin. One tap, and the answer is
+ *  the truth about this Worker's own credentials rather than a guess. */
+export async function sendTestNotification(env) {
+  if (!notifyConfigured(env)) {
+    return { ok: false, error: 'TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID are not set' };
+  }
+  return post(env,
+    'KAIRO 1980 — Test.\n\nDie Bestellbenachrichtigung funktioniert. ' +
+    'Diese Nachricht wurde im internen Bereich ausgelöst.');
 }

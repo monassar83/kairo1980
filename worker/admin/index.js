@@ -12,6 +12,7 @@ import {
   tooManyFailures, recordFailure
 } from './auth.js';
 import { loginPage, dashboardPage, newNonce, adminHeaders } from './pages.js';
+import { sendTestNotification } from '../notify.js';
 import * as ordersView from './orders.js';
 import * as hoursView from './hours.js';
 import { readSettings, closeOrdering, openOrdering } from '../settings.js';
@@ -36,7 +37,29 @@ export async function handle(request, env, url) {
   if (path === '/admin' && method === 'GET') {
     const nonce = newNonce();
     const { ordering, hours, hoursAreCustom } = await readSettings(env);
-    return html(dashboardPage({ nonce, ordering, hours, hoursAreCustom }), nonce);
+    return html(dashboardPage({
+      nonce, ordering, hours, hoursAreCustom,
+      // Set by the test below, carried in the URL so a reload does not resend.
+      alert: url.searchParams.get('alert'),
+      alertError: url.searchParams.get('why')
+    }), nonce);
+  }
+
+  /* Prove the notification channel works, on demand.
+
+     This exists because it did NOT work and nothing said so. A paid order
+     arrived, the alert was sent, Telegram refused it, and the only trace was a
+     console line nobody reads — so the restaurant learned of the failure from a
+     customer. A channel that can fail invisibly is worse than no channel,
+     because it is trusted. One tap now answers the question, and the answer
+     includes Telegram's own words when it says no. */
+  if (path === '/admin/test-alert' && method === 'POST') {
+    const result = await sendTestNotification(env);
+    const query = result.ok ? 'alert=ok' : `alert=fail&why=${encodeURIComponent(result.error || '')}`;
+    return new Response(null, {
+      status: 303,
+      headers: { Location: '/admin?' + query, 'Cache-Control': 'no-store' }
+    });
   }
 
   if (path === '/admin/ordering' && method === 'POST') return setOrdering(request, env);

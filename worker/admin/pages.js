@@ -137,6 +137,14 @@ export function loginPage({ nonce, error = false, unconfigured = false }) {
 }
 
 const SWITCH_CSS = `
+ .alertbox{background:#fff;border:1px solid #e6dcc9;padding:12px 14px;margin:0 0 14px}
+ .alertbox .msg{padding:9px 11px;border:1px solid #bcd8b0;background:#eef6ea;color:#31601f;
+                font-size:13.5px;margin:0 0 10px}
+ .alertbox .msg.bad{border-color:#e8c9a0;background:#fdf0e0;color:#a04a00}
+ .alertbox .hint{font-size:12.5px;color:#7a6030;margin:8px 0 0;line-height:1.5}
+ button.test{width:100%;padding:12px;font-size:14px;border:1px solid #d8cbb0;background:#faf7f2;
+             color:#1c1409;cursor:pointer;font-weight:600}
+
  .switch{background:#fff;border:1px solid #e6dcc9;padding:16px;margin-bottom:14px}
  .switch.off{border-color:#e8c9a0;background:#fdf0e0}
  .state{display:flex;align-items:center;gap:10px}
@@ -249,7 +257,7 @@ function todayLine(hours) {
 
 /* The dashboard leads with the switch rather than a menu of pages, because the
    reason this page gets opened in a hurry is always the switch. */
-export function dashboardPage({ nonce, ordering, hours, hoursAreCustom }) {
+export function dashboardPage({ nonce, ordering, hours, hoursAreCustom, alert, alertError }) {
   const closed = !ordering.open;
   const resumesAt = closed ? Date.parse(ordering.resumesAt) : null;
   const today = todayLine(hours);
@@ -317,9 +325,27 @@ export function dashboardPage({ nonce, ordering, hours, hoursAreCustom }) {
       : 'Currently using the defaults from config.js.'}</span>
   </a>
   <a class="tile" href="/admin/orders">
-    <b>Paid orders</b>
-    <span>What the provider actually settled, and what was paid but never sent.</span>
+    <b>Orders</b>
+    <span>Every order placed through the website, with the name, telephone number and address.</span>
   </a>
+</div>
+
+<!-- The alert channel, and proof that it works.
+
+     This block exists because it once did not work and nothing said so: a paid
+     order arrived, Telegram refused the message, and the only trace was a log
+     line. The restaurant found out from the customer. One tap answers it now,
+     and a refusal prints Telegram's own words rather than a shrug. -->
+<div class="alertbox">
+  ${alert === 'ok' ? '<p class="msg good">Test message sent. If it did not arrive in Telegram, the chat id is wrong.</p>' : ''}
+  ${alert === 'fail' ? `<p class="msg bad"><b>Not sent.</b> ${esc(alertError || 'unknown error')}<br>
+    <span class="hint">&ldquo;Unauthorized&rdquo; means the bot token is wrong; &ldquo;chat not found&rdquo; means the chat id is,
+    or the bot has never been messaged.</span></p>` : ''}
+  <form method="post" action="/admin/test-alert">
+    <button class="test" type="submit">Send a test alert to Telegram</button>
+  </form>
+  <p class="hint">Orders alert you here automatically. Tap this after changing
+  anything, so a silent failure is never discovered by a customer.</p>
 </div>
 <p class="note">You stay signed in for 30 days. “Sign out” ends this session at once —
 and on every device, if you change the password afterwards.</p>`;
