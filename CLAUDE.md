@@ -291,6 +291,19 @@ are only the no-JavaScript fallback — update both or neither.
 - **The webhook is the source of truth, and is verified with PayPal before it
   is believed.** A browser redirect only says the guest came back; it does not
   say the money arrived.
+- **The server tells the restaurant an order exists; it does not wait for the
+  guest to.** The money is taken server-side, but the order is composed in the
+  guest's browser and handed to WhatsApp by the guest — so a guest who pays and
+  closes the tab bought food nobody was told to cook. That happened. A paid
+  order is now announced from the transition to `captured`, gated on `changed`
+  from `store.settle`, so the ledger's own replay guard is the thing that makes
+  it fire once. It carries no name, phone or address, because the server has
+  never held any — which is what keeps it clear of the privacy rewrite that
+  delivering the full order server-side would need. `worker/notify.js`,
+  `docs/order-alerts.md`. **A notification may never fail a payment**: by the
+  time it runs the money is taken.
+  Note that the "sent" tick on `/admin/orders` records that the guest TAPPED
+  send, not that a message arrived. Do not read it as proof of delivery.
 - **The basket expires.** `order.cartLifetimeMinutes` (120) is a sliding
   window: long enough to survive a reload, short enough that a guest returning
   tomorrow does not meet a stale order at last week's prices.

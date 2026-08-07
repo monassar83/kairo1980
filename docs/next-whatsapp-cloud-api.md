@@ -40,11 +40,28 @@ brings:
 restaurant already watches. Email was considered and rejected — too easy to miss
 mid-service. A kitchen page with a sound needs a device left open all evening.
 
+**A constraint discovered on 6 August 2026:** a number registered to the Cloud
+API **cannot also be signed in to the WhatsApp Business App**. Sending from
+`+49 176 79906621` would take the shop off the app it runs on during service.
+The way round it is a second number as the Cloud API *sender*, messaging the
+existing number — the order still lands in the normal WhatsApp. Business-
+initiated messages also need a pre-approved template.
+
 ## Sequence — do it in this order, nothing breaks at any point
 
 1. **Send in parallel.** Keep the customer-facing handover exactly as it is. Add
-   a Worker call that also sends the order to the restaurant via Cloud API after
-   a successful capture. Two messages arrive; compare them.
+   a Worker call that also sends the order to the restaurant after a successful
+   capture. Two messages arrive; compare them.
+
+   **Done, on 6 August 2026, over Telegram rather than Cloud API** — see
+   `order-alerts.md`. The Meta onboarding above is days; a real order had
+   already gone missing. `worker/notify.js` is the whole of it and the call site
+   is one function, so swapping the transport is a small change.
+
+   It also turned out that step 1 needs **no legal work at all**: the server
+   holds no name, phone or address, so what it sends is the reference, the
+   items, the amount and the postcode. The privacy inversion below is real but
+   it belongs to step 3, not to being told an order exists.
 2. **Confirm they always match**, over real service, for long enough to trust it.
    The `order.handed_over` event already records whether the customer sent
    theirs, so divergence is measurable rather than felt.

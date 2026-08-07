@@ -20,6 +20,7 @@ import * as admin from './admin/index.js';
 import { readSettings } from './settings.js';
 import { withLiveData, liveETag } from './page-render.js';
 import { dayOf, timeOf } from './berlin.js';
+import { sendOrderNotification } from './notify.js';
 
 const JSON_HEADERS = {
   'Content-Type': 'application/json; charset=utf-8',
@@ -69,7 +70,7 @@ async function route(request, env, ctx, url) {
   if (path === '/api/reports/settlement' && method === 'GET') return settlement(request, env, url);
 
   const capture = path.match(/^\/api\/payments\/([\w-]{8,64})\/capture$/);
-  if (capture && method === 'POST') return capturePayment(request, env, capture[1]);
+  if (capture && method === 'POST') return capturePayment(request, env, capture[1], ctx);
 
   const handover = path.match(/^\/api\/payments\/([\w-]{8,64})\/handover$/);
   if (handover && method === 'POST') return markHandover(env, handover[1]);
@@ -274,7 +275,7 @@ function localeFor(lang) {
    actually moves the payment, and everyone else is simply told where it got
    to. */
 
-async function capturePayment(request, env, id) {
+async function capturePayment(request, env, id, ctx) {
   const payment = await store.get(env.DB, id);
   if (!payment) return fail(404, 'unknown_payment', 'No such payment.');
 
@@ -304,14 +305,35 @@ async function capturePayment(request, env, id) {
     throw err;
   }
 
-  const after = await applyCaptureResult(env, payment, result, 'api');
+  const after = await applyCaptureResult(env, payment, result, 'api', ctx);
   return json({ payment: store.publicView(after) });
+}
+
+/* Tell the restaurant, once, that an order is real.
+
+   Hung off `changed` and nothing else. `store.settle` moves a payment only from
+   a status it may legally come from, in one conditional UPDATE, so `changed` is
+   true exactly once per payment however many times this is reached — a double
+   click, a provider retry and a replayed webhook all arrive here and only the
+   first one notifies. That is the same fact the ledger relies on, asked the
+   same way, rather than a second guard that could disagree with it.
+
+   `ctx.waitUntil` where there is a ctx: the guest's browser must not wait for
+   Telegram, and the isolate must not be torn down before the send finishes.
+   Without one (reconciliation, tests) it is simply awaited. */
+function announcePaid(env, ctx, payment) {
+  const sending = sendOrderNotification(env, payment);   // never rejects
+  if (ctx && typeof ctx.waitUntil === 'function') {
+    ctx.waitUntil(sending);
+    return Promise.resolve();
+  }
+  return sending;
 }
 
 /** Turn a provider capture/read into a stored state. Shared by the browser
  *  path, the webhook path and the reconciliation path so all three can never
  *  interpret the same facts differently. */
-async function applyCaptureResult(env, payment, result, source) {
+async function applyCaptureResult(env, payment, result, source, ctx) {
   const common = {
     source,
     providerOrderId: result.providerOrderId,
@@ -354,8 +376,10 @@ async function applyCaptureResult(env, payment, result, source) {
       console.error('amount mismatch', payment.id, result.amount, payment.amount);
       return store.get(env.DB, payment.id);
     }
-    await store.settle(env.DB, payment.id, 'captured', common);
-    return store.get(env.DB, payment.id);
+    const settled = await store.settle(env.DB, payment.id, 'captured', common);
+    const after = await store.get(env.DB, payment.id);
+    if (settled.changed) await announcePaid(env, ctx, after);
+    return after;
   }
 
   if (result.captureStatus === 'DECLINED' || result.status === 'VOIDED') {
@@ -515,12 +539,16 @@ async function handleEvent(env, provider, event) {
         });
         return;
       }
-      await store.settle(env.DB, payment.id, 'captured', {
+      const settled = await store.settle(env.DB, payment.id, 'captured', {
         source: 'webhook',
         captureId: ids.captureId,
         eventKey: `${provider.name}:captured:${event.id}`,
         payload: { event: event.id }
       });
+      // Already inside the webhook's own waitUntil, so this is awaited rather
+      // than handed to another one. This is the path that matters most: it
+      // fires whether or not the guest's browser ever came back.
+      if (settled.changed) await announcePaid(env, null, await store.get(env.DB, payment.id));
       return;
     }
 

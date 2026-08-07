@@ -711,3 +711,139 @@ test('malformed and oversized requests are refused politely', async (t) => {
   const huge = await worker.fetch(post('/api/payments', 'x'.repeat(20000)), env, ctx());
   assert.equal(huge.status, 400);
 });
+
+/* --- telling the restaurant ----------------------------------------------
+   A guest paid, closed the tab, and the restaurant heard nothing: the money is
+   taken server-side, but the ORDER was only ever composed in the guest's own
+   browser and handed to WhatsApp by the guest. These tests hold the server to
+   announcing a paid order itself — once, whatever path the capture arrives by,
+   and never at the cost of the payment. */
+
+const TELEGRAM = { TELEGRAM_BOT_TOKEN: 'bot-token', TELEGRAM_CHAT_ID: '4242' };
+const SEND = '/botbot-token/sendMessage';
+const sent = (paypal) => paypal.calls.filter((c) => c.path === SEND);
+
+test('a paid order is announced to the restaurant, with what it needs to cook it', async (t) => {
+  const env = workerEnv(MENU, TELEGRAM);
+  const c = ctx();
+  const paypal = fakePayPal({
+    '/v2/checkout/orders': () => orderResponse({ id: 'PP-ORDER-1' }),
+    '/v2/checkout/orders/PP-ORDER-1/capture': () => captureOk(payment.id, payment.reference),
+    [SEND]: () => ({ ok: true })
+  });
+  t.after(() => paypal.restore());
+
+  var payment = await createPayment(env, c);
+  await worker.fetch(post(`/api/payments/${payment.id}/capture`), env, c);
+  await c.settled();          // the send is handed to waitUntil, not awaited
+
+  const calls = sent(paypal);
+  assert.equal(calls.length, 1, 'announced exactly once');
+  assert.equal(calls[0].body.chat_id, '4242');
+
+  const text = calls[0].body.text;
+  assert.match(text, /26,10 €/, 'the amount the server computed');
+  assert.ok(text.includes(payment.reference), 'the reference printed in both');
+  assert.match(text, /2x Koshari/, 'enough to start cooking');
+  assert.match(text, /Abholung/, 'and to know whether to drive it out');
+
+  // The server has never held a name, a phone number or an address, and this
+  // must not become the first thing that does.
+  assert.equal(text.includes('@'), false, 'no contact details');
+});
+
+test('the order is announced even when the browser never comes back', async (t) => {
+  /* The failure that started this: the guest approves, the tab dies, and the
+     capture happens in the webhook. That is precisely the case where nobody
+     will ever press send, so it is the case the announcement matters most in. */
+  const env = workerEnv(MENU, TELEGRAM);
+  const c = ctx();
+  const paypal = fakePayPal({
+    '/v2/checkout/orders': () => orderResponse({ id: 'PP-ORDER-2' }),
+    '/v2/checkout/orders/PP-ORDER-2/capture': () => captureOk(payment.id, payment.reference),
+    '/v1/notifications/verify-webhook-signature': () => ({ verification_status: 'SUCCESS' }),
+    [SEND]: () => ({ ok: true })
+  });
+  t.after(() => paypal.restore());
+
+  var payment = await createPayment(env, c, BASKET, 'PP-ORDER-2');
+
+  const event = webhookEvent({
+    id: 'WH-APPROVED', type: 'CHECKOUT.ORDER.APPROVED',
+    paymentId: payment.id, reference: payment.reference, orderId: 'PP-ORDER-2'
+  });
+  await worker.fetch(post('/api/webhooks/paypal', event, webhookHeaders()), env, c);
+  await c.settled();
+
+  assert.equal(sent(paypal).length, 1, 'the webhook announced it');
+});
+
+test('a replayed webhook does not announce the same order twice', async (t) => {
+  /* PayPal retries for days. The announcement hangs off the same conditional
+     UPDATE the ledger does, so the replay guard is not a second mechanism that
+     could disagree with it — it is the same one. */
+  const env = workerEnv(MENU, TELEGRAM);
+  const c = ctx();
+  const paypal = fakePayPal({
+    '/v2/checkout/orders': () => orderResponse({ id: 'PP-ORDER-3' }),
+    '/v1/notifications/verify-webhook-signature': () => ({ verification_status: 'SUCCESS' }),
+    [SEND]: () => ({ ok: true })
+  });
+  t.after(() => paypal.restore());
+
+  var payment = await createPayment(env, c, BASKET, 'PP-ORDER-3');
+
+  for (const id of ['WH-CAP-1', 'WH-CAP-1', 'WH-CAP-2']) {
+    const event = webhookEvent({
+      id, type: 'PAYMENT.CAPTURE.COMPLETED',
+      paymentId: payment.id, reference: payment.reference,
+      amount: BASKET_TOTAL, orderId: 'PP-ORDER-3'
+    });
+    await worker.fetch(post('/api/webhooks/paypal', event, webhookHeaders()), env, c);
+    await c.settled();
+  }
+
+  assert.equal(sent(paypal).length, 1, 'one order, one announcement');
+});
+
+test('an announcement that fails never costs the guest their payment', async (t) => {
+  /* By the time this runs the money is taken. A revoked bot token, a Telegram
+     outage or a chat the bot was thrown out of must leave the payment exactly
+     as captured — the order is still in /admin, which is where it was before
+     any of this existed. */
+  const env = workerEnv(MENU, TELEGRAM);
+  const c = ctx();
+  const paypal = fakePayPal({
+    '/v2/checkout/orders': () => orderResponse({ id: 'PP-ORDER-4' }),
+    '/v2/checkout/orders/PP-ORDER-4/capture': () => captureOk(payment.id, payment.reference),
+    [SEND]: () => ({ status: 401, body: { ok: false, description: 'Unauthorized' } })
+  });
+  t.after(() => paypal.restore());
+
+  var payment = await createPayment(env, c, BASKET, 'PP-ORDER-4');
+  const res = await worker.fetch(post(`/api/payments/${payment.id}/capture`), env, c);
+  await c.settled();
+
+  assert.equal(res.status, 200);
+  assert.equal((await res.json()).payment.status, 'captured');
+});
+
+test('with no token configured the site behaves exactly as it did before', async (t) => {
+  // An unconfigured notifier is off, not broken — the same call the admin area
+  // makes about its own credentials.
+  const env = workerEnv(MENU);          // no TELEGRAM_* at all
+  const c = ctx();
+  const paypal = fakePayPal({
+    '/v2/checkout/orders': () => orderResponse({ id: 'PP-ORDER-5' }),
+    '/v2/checkout/orders/PP-ORDER-5/capture': () => captureOk(payment.id, payment.reference)
+  });
+  t.after(() => paypal.restore());
+
+  var payment = await createPayment(env, c, BASKET, 'PP-ORDER-5');
+  const res = await worker.fetch(post(`/api/payments/${payment.id}/capture`), env, c);
+  await c.settled();
+
+  assert.equal(res.status, 200);
+  assert.equal((await res.json()).payment.status, 'captured');
+  assert.equal(paypal.calls.some((k) => k.path.includes('sendMessage')), false);
+});
