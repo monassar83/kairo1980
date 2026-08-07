@@ -14,6 +14,7 @@ import {
 import { loginPage, dashboardPage, newNonce, adminHeaders } from './pages.js';
 import { sendTestNotification } from '../notify.js';
 import * as ordersView from './orders.js';
+import * as salesView from './sales.js';
 import * as hoursView from './hours.js';
 import { readSettings, closeOrdering, openOrdering } from '../settings.js';
 
@@ -66,6 +67,7 @@ export async function handle(request, env, url) {
   if (path === '/admin/hours' && method === 'GET') return hoursView.page(request, env, url);
   if (path === '/admin/hours' && method === 'POST') return hoursView.save(request, env, url);
   if (path === '/admin/orders' && method === 'GET') return ordersView.page(request, env, url);
+  if (path === '/admin/sales' && method === 'GET') return salesView.page(request, env, url);
 
   return new Response('Not found.', {
     status: 404,

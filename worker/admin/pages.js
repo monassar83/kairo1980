@@ -328,6 +328,10 @@ export function dashboardPage({ nonce, ordering, hours, hoursAreCustom, alert, a
     <b>Orders</b>
     <span>Every order placed through the website, with the name, telephone number and address.</span>
   </a>
+  <a class="tile" href="/admin/sales">
+    <b>Sales</b>
+    <span>What was taken, month by month — cash and card together.</span>
+  </a>
 </div>
 
 <!-- The alert channel, and proof that it works.

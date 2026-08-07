@@ -936,3 +936,99 @@ test('an unconfigured alert channel says so instead of pretending', async (t) =>
     env, c);
   assert.match(decodeURIComponent(res.headers.get('location') || ''), /not set/);
 });
+
+/* --- what the month says was taken ---------------------------------------
+   These figures go in the books, so the thing worth asserting is not that a
+   page renders but that money which never arrived is not counted as revenue. */
+
+async function orderRow(env, { ref, total, pay = 'onsite', type = 'delivery',
+                               paymentId = null, day = null }) {
+  await env.DB.prepare(
+    `INSERT INTO orders (id, reference, payment_id, order_type, business, pay_method,
+       postcode, lines, subtotal, discount, fee, total, requested_time, customer_name,
+       created_at)
+     VALUES (?1,?2,?3,?4,0,?5,'68766','[{"qty":1,"name":"Hummus"}]',?6,0,0,?6,'now','Gast',
+             COALESCE(?7, datetime('now')))`
+  ).bind(crypto.randomUUID(), ref, paymentId, type, pay, total, day).run();
+}
+
+test('the month counts cash and card together, and nothing that did not arrive', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const c = ctx();
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+  const month = today.slice(0, 7);
+
+  // Two cash orders: counted at their own total.
+  await orderRow(env, { ref: 'CASH-1', total: 1000 });
+  await orderRow(env, { ref: 'CASH-2', total: 2000, type: 'pickup' });
+
+  // A settled online order, refunded in part: counted net.
+  const captured = crypto.randomUUID();
+  await env.DB.prepare(
+    `INSERT INTO payments (id, reference, provider, status, amount, currency, subtotal,
+       order_type, lines, refunded_amount, created_at, updated_at, captured_at)
+     VALUES (?1,'PAID-1','paypal','captured',5000,'EUR',5000,'delivery','[]',500,
+             datetime('now'), datetime('now'), datetime('now'))`
+  ).bind(captured).run();
+  await orderRow(env, { ref: 'PAID-1', total: 5000, pay: 'online', paymentId: captured });
+
+  // An abandoned checkout: an order row exists, the money never arrived.
+  const abandoned = crypto.randomUUID();
+  await env.DB.prepare(
+    `INSERT INTO payments (id, reference, provider, status, amount, currency, subtotal,
+       order_type, lines, created_at, updated_at)
+     VALUES (?1,'DEAD-1','paypal','created',9900,'EUR',9900,'delivery','[]',
+             datetime('now'), datetime('now'))`
+  ).bind(abandoned).run();
+  await orderRow(env, { ref: 'DEAD-1', total: 9900, pay: 'online', paymentId: abandoned });
+
+  const { cookie } = await signIn(env);
+  const html = await (await worker.fetch(
+    get(`/admin/sales?month=${month}`, { cookie }), env, c)).text();
+
+  // 10,00 + 20,00 cash + (50,00 - 5,00) online = 75,00. The 99,00 never came.
+  assert.ok(html.includes('75,00 €'), 'cash and settled card, net of refunds');
+  assert.equal(html.includes('174,00'), false, 'the abandoned basket is not revenue');
+  assert.match(html, /not counted/, 'and it is said out loud rather than hidden');
+  assert.ok(html.includes('99,00 €'), 'with the value that is being left out');
+});
+
+test('a month with nothing in it says so instead of showing a zero table', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const c = ctx();
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const { cookie } = await signIn(env);
+  const html = await (await worker.fetch(
+    get('/admin/sales?month=2019-03', { cookie }), env, c)).text();
+  assert.match(html, /No orders through the website in March 2019/);
+});
+
+test('a nonsense month falls back to this one rather than erroring', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const c = ctx();
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const { cookie } = await signIn(env);
+  for (const bad of ['2026-13', 'yesterday', "' OR 1=1 --", '']) {
+    const res = await worker.fetch(
+      get('/admin/sales?month=' + encodeURIComponent(bad), { cookie }), env, c);
+    assert.equal(res.status, 200, `"${bad}" must not break the page`);
+  }
+});
+
+test('sales and orders are behind the login like everything else', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const c = ctx();
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const html = await (await worker.fetch(get('/admin/sales'), env, c)).text();
+  assert.match(html, /name="password"/, 'the login form, not the takings');
+  assert.equal(html.includes('Taken this month'), false);
+});

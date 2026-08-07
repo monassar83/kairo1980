@@ -81,6 +81,16 @@ export async function page(request, env, url) {
 }
 
 const CSS = `
+ .nav{display:flex;align-items:center;gap:10px;margin:0 0 12px}
+ .nav a{flex:none;display:block;padding:9px 14px;border:1px solid #d8cbb0;background:#fff;
+        color:#1c1409;text-decoration:none;font-size:18px;line-height:1}
+ .nav a.off{opacity:.35;pointer-events:none}
+ .nav b{flex:1;text-align:center;font-size:15px}
+ .jump{display:flex;gap:8px;margin:0 0 18px}
+ .jump input{flex:1;min-width:0;padding:9px;font-size:16px;border:1px solid #d8cbb0;
+             background:#fffdf9}
+ .jump button{flex:none;padding:9px 14px;border:1px solid #d8cbb0;background:#faf7f2;
+              cursor:pointer;font-size:13.5px}
  .cards{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
  .card{flex:1 1 120px;background:#fff;border:1px solid #e6dcc9;padding:10px 12px}
  .card b{display:block;font-size:20px}
@@ -109,7 +119,17 @@ const CSS = `
        font-size:13.5px;color:#a04a00}
 `;
 
+/** 'YYYY-MM-DD' + n days, in UTC so no local timezone can shift the date. */
+function shiftDay(day, n) {
+  const [y, m, d] = day.split('-').map(Number);
+  const date = new Date(Date.UTC(y, m - 1, d + n));
+  return date.toISOString().slice(0, 10);
+}
+
 export function render({ day, orders, orphans, totals, nonce }) {
+  const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
+  const prev = shiftDay(day, -1);
+  const next = shiftDay(day, 1);
   const itemsOf = (json) => {
     try {
       return JSON.parse(json || '[]').map((l) => `${l.qty}× ${esc(l.name)}`).join(', ');
@@ -166,7 +186,18 @@ export function render({ day, orders, orphans, totals, nonce }) {
   </div>`;
 
   const body = `<h1>Orders</h1>
-<div class="sub">${esc(day)} · every order placed through the website</div>
+<div class="sub">every order placed through the website</div>
+
+<div class="nav">
+  <a href="/admin/orders?day=${esc(prev)}" aria-label="Previous day">&lsaquo;</a>
+  <b>${esc(day)}${day === today ? ' · today' : ''}</b>
+  <a class="${next > today ? 'off' : ''}" href="/admin/orders?day=${esc(next)}" aria-label="Next day">&rsaquo;</a>
+</div>
+
+<form class="jump" method="get" action="/admin/orders">
+  <input type="date" name="day" value="${esc(day)}" aria-label="Jump to a day">
+  <button type="submit">Go</button>
+</form>
 
 <div class="cards">
   <div class="card"><span>Orders</span><b>${totals.orders}</b></div>
@@ -184,7 +215,8 @@ ${orders.length ? orders.map(card).join('')
 
 <p class="note">Orders reach this page whether or not the guest sent the WhatsApp
 message. Contact details are shown here only, never in a notification, and are
-deleted automatically once the limitation period has run.</p>`;
+deleted automatically once the limitation period has run.
+<a href="/admin/sales?month=${esc(day.slice(0, 7))}">Sales for this month</a>.</p>`;
 
   return layout({
     title: 'Orders', nonce, body, logout: true, back: '/admin', extraCss: CSS
