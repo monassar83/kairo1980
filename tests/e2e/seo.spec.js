@@ -234,3 +234,115 @@ for (const locale of ['en-GB', 'ar-EG']) {
     });
   });
 }
+
+/* --- what a search result actually looks like -----------------------------
+   Found by sweeping every page rather than by anyone reporting it: two titles
+   and two descriptions were long enough for Google to cut them off mid-word,
+   and the legal pages shared as a bare grey box because they carried no
+   og:image. None of it breaks a page, which is exactly why nobody notices. */
+
+const HEAD_LIMITS = { title: 65, description: 165 };
+
+test('no page has a title or description Google will truncate', async ({ page }) => {
+  const seen = { title: new Map(), description: new Map() };
+
+  for (const { path } of PAGES) {
+    await page.goto(path);
+    const head = await page.evaluate(() => ({
+      title: document.title,
+      description: (document.querySelector('meta[name="description"]') || {}).content || ''
+    }));
+
+    for (const key of ['title', 'description']) {
+      const value = head[key];
+      expect(value, `${path} has no ${key}`).not.toBe('');
+      expect(value.length,
+        `${path} ${key} is ${value.length} chars: "${value}"`)
+        .toBeLessThanOrEqual(HEAD_LIMITS[key]);
+      // Two pages competing on the same title is two pages competing for the
+      // same result.
+      expect(seen[key].get(value), `${path} duplicates the ${key} of ${seen[key].get(value)}`)
+        .toBeUndefined();
+      seen[key].set(value, path);
+    }
+  }
+});
+
+test('every page can be shared as a card, and names one h1', async ({ page }) => {
+  for (const { path, canonical } of PAGES) {
+    await page.goto(path);
+    const head = await page.evaluate(() => ({
+      h1: [...document.querySelectorAll('h1')].map((h) => h.textContent.trim()),
+      og: Object.fromEntries([...document.querySelectorAll('meta[property^="og:"]')]
+        .map((m) => [m.getAttribute('property'), m.getAttribute('content')])),
+      twitter: (document.querySelector('meta[name="twitter:card"]') || {}).content || '',
+      // alt="" is CORRECT for a decorative image — the hero sits behind the
+      // h1 and a screen reader should skip it. A MISSING alt is the fault.
+      noAlt: [...document.querySelectorAll('img')].filter((i) => i.getAttribute('alt') === null).length
+    }));
+
+    expect(head.h1.length, `${path} has ${head.h1.length} <h1>: ${JSON.stringify(head.h1)}`).toBe(1);
+    for (const tag of ['og:title', 'og:description', 'og:image', 'og:url']) {
+      expect(head.og[tag], `${path} has no ${tag}`).toBeTruthy();
+    }
+    expect(head.og['og:url'], `${path} og:url disagrees with its canonical`).toBe(canonical);
+    expect(head.twitter, `${path} has no twitter:card`).toBeTruthy();
+    expect(head.noAlt, `${path} has ${head.noAlt} <img> with no alt attribute`).toBe(0);
+  }
+});
+
+test('the .html twins move permanently, and the verification file does not move at all', async ({ request }) => {
+  /* A 307 says the old URL may come back, so a crawler keeps it, keeps asking
+     for it, and keeps the ranking split across two addresses. These pages have
+     lived at the extensionless paths since launch. */
+  for (const path of ['/index.html', '/impressum.html', '/datenschutz.html', '/firmencatering.html']) {
+    const res = await request.get(path, { maxRedirects: 0 });
+    expect(res.status(), `${path} should move permanently`).toBe(301);
+  }
+
+  // Google's own verification file. Redirecting it un-verifies the property.
+  const verify = await request.get('/googled7bbc73984e8deda.html', { maxRedirects: 0 });
+  expect(verify.status(), 'the Google verification file must be served where it is').toBe(200);
+});
+
+test('an unknown path is a real 404, not a soft one', async ({ request }) => {
+  // A soft 404 gets the page indexed as if it existed.
+  const res = await request.get('/no-such-page-' + Date.now(), { maxRedirects: 0 });
+  expect(res.status()).toBe(404);
+});
+
+test('every URL in the sitemap answers 200 without redirecting', async ({ request }) => {
+  const xml = await (await request.get('/sitemap.xml')).text();
+  const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+  expect(locs.length, 'the sitemap lists no URLs').toBeGreaterThan(0);
+
+  for (const loc of locs) {
+    const res = await request.get(loc.replace(SITE, '') || '/', { maxRedirects: 0 });
+    expect(res.status(), `${loc} is in the sitemap but answers ${res.status()}`).toBe(200);
+  }
+});
+
+test('no page leaves an unfilled {placeholder} on screen, in any language', async ({ page }) => {
+  /* applyConfig() fills {freeDeliveryFrom} and friends at runtime. One that
+     survives is a config value that no longer exists, and it reaches the guest
+     as literal curly braces in the middle of a sentence. */
+  for (const { path } of PAGES) {
+    for (const lang of ['de', 'en', 'ar']) {
+      // Cleared between languages: following a ?lang= link is remembered on
+      // purpose, and without this the next page inherits the last choice.
+      await page.goto(path);
+      await page.evaluate(() => localStorage.clear());
+      await page.goto(lang === 'de' ? path : `${path}?lang=${lang}`);
+
+      const state = await page.evaluate(() => ({
+        lang: document.documentElement.getAttribute('lang'),
+        dir: document.documentElement.getAttribute('dir'),
+        left: (document.body.innerText.match(/\{[a-zA-Z]+\}/g) || []).slice(0, 5)
+      }));
+
+      expect(state.lang, `${path}?lang=${lang}`).toBe(lang);
+      expect(state.dir, `${path}?lang=${lang}`).toBe(lang === 'ar' ? 'rtl' : 'ltr');
+      expect(state.left, `${path} in ${lang} shows unfilled placeholders`).toEqual([]);
+    }
+  }
+});

@@ -55,12 +55,13 @@
 
   function readLiveData() {
     var node = document.getElementById('kairoLive');
-    var out = { hours: null, ordering: { open: true, resumesAt: null }, soldOut: {} };
+    var out = { hours: null, ordering: { open: true, resumesAt: null }, soldOut: {}, extension: null };
     if (!node) return out;
     try {
       var data = JSON.parse(node.textContent);
       out.hours = data.hours || null;
       out.soldOut = data.soldOut || {};
+      out.extension = data.extension || null;
       if (data.ordering && data.ordering.open === false) {
         out.ordering = { open: false, resumesAt: data.ordering.resumesAt || null };
       }
@@ -122,6 +123,7 @@
     de: {
       days: { mon: 'Montag', tue: 'Dienstag', wed: 'Mittwoch', thu: 'Donnerstag', fri: 'Freitag', sat: 'Samstag', sun: 'Sonntag' },
       closed: 'Geschlossen',
+      openLater: 'Heute länger geöffnet — Bestellungen bis {until} Uhr.',
       soldOut: 'Ausverkauft',
       soldOutRemoved: '{dish} ist heute leider ausverkauft und wurde aus dem Warenkorb entfernt.',
       pickupLabel: 'Abholung', deliveryLabel: 'Lieferung',
@@ -274,6 +276,7 @@
     en: {
       days: { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' },
       closed: 'Closed',
+      openLater: 'Open later today — orders until {until}.',
       soldOut: 'Sold out',
       soldOutRemoved: '{dish} is sold out today and has been removed from your basket.',
       pickupLabel: 'Pickup', deliveryLabel: 'Delivery',
@@ -412,6 +415,7 @@
     ar: {
       days: { mon: 'الاثنين', tue: 'الثلاثاء', wed: 'الأربعاء', thu: 'الخميس', fri: 'الجمعة', sat: 'السبت', sun: 'الأحد' },
       closed: 'مغلق',
+      openLater: 'النهارده فاتحين لوقت متأخر — الطلبات لحد الساعة {until}.',
       soldOut: 'خلص',
       soldOutRemoved: '{dish} خلص النهارده للأسف واتشال من السلة.',
       pickupLabel: 'الاستلام', deliveryLabel: 'التوصيل',
@@ -579,13 +583,13 @@
 
   // The guest may sit in any timezone; the restaurant does not. Always judge
   // "open now" against Europe/Berlin.
-  function berlinNow() {
+  function berlinNow(at) {
     try {
       var parts = new Intl.DateTimeFormat('en-GB', {
         timeZone: 'Europe/Berlin', weekday: 'short',
         year: 'numeric', month: '2-digit', day: '2-digit',
         hour: '2-digit', minute: '2-digit', hour12: false
-      }).formatToParts(new Date());
+      }).formatToParts(at || new Date());
       var get = function (type) {
         var hit = parts.filter(function (p) { return p.type === type; })[0];
         return hit ? hit.value : '';
@@ -704,6 +708,14 @@
     deliverySlotsFor(key).forEach(function (s) {
       if (minutes >= hhmm(s.from) && minutes <= hhmm(s.to)) hit = true;
     });
+    /* Somebody who stays late to keep serving is also there to drive. The
+       shift's START still applies — an extension at the end of the evening is
+       always past it — so this only ever adds time, never brings delivery
+       forward into the collection-only part of the day. */
+    if (!hit && withinExtension(iso, minutes)) {
+      var from = deliveryFrom();
+      hit = !from || minutes >= hhmm(from) || minutes < 6 * 60;
+    }
     return hit;
   }
 
@@ -737,11 +749,55 @@
     slotsFor(key).forEach(function (s) {
       if (minutes >= hhmm(s.from) && minutes <= hhmm(s.to)) hit = s;
     });
+    /* An extended evening is a real window for everything that asks "can this
+       be served" — the basket, the badge, the delivery check — and for nothing
+       that asks "when are you open", which reads slotsFor() and never this. */
+    if (!hit && withinExtension(iso, minutes)) {
+      var ext = extensionWindow();
+      hit = { from: '00:00', to: ext.untilLabel, extended: true };
+    }
     return hit;
   }
 
+  /* --- staying open later than the hours say ------------------------------
+     The restaurant is still in the building. This makes "now" orderable past
+     the fixed closing time WITHOUT touching the published hours: the table and
+     the structured data state what happens every week, and a Saturday that ran
+     late is not a new Saturday. It expires by being read against the clock.
+
+     Compared in the same wall-clock space stamp() uses rather than against
+     epoch milliseconds, because every other time on this page is a Berlin wall
+     clock and mixing the two is how an hour goes missing twice a year. */
+  function extensionWindow() {
+    var raw = (LIVE && LIVE.extension) || null;
+    if (!raw) return null;
+    var until = Date.parse(raw.until || '');
+    if (!isFinite(until) || until <= Date.now()) return null;
+
+    var u = berlinNow(new Date(until));
+    if (!u) return null;
+    var fromAt = Date.parse(raw.from || '');
+    var f = isFinite(fromAt) ? berlinNow(new Date(fromAt)) : null;
+    return {
+      fromStamp: f ? stamp(f.iso, f.minutes) : -Infinity,
+      untilStamp: stamp(u.iso, u.minutes),
+      untilLabel: pad2(Math.floor(u.minutes / 60)) + ':' + pad2(u.minutes % 60)
+    };
+  }
+
+  function pad2(n) {
+    return (n < 10 ? '0' : '') + n;
+  }
+
+  function withinExtension(iso, minutes) {
+    var ext = extensionWindow();
+    if (!ext) return false;
+    var at = stamp(iso, minutes);
+    return at >= ext.fromStamp && at <= ext.untilStamp;
+  }
+
   function openAt(iso, minutes) {
-    return !!slotAt(iso, minutes);
+    return !!slotAt(iso, minutes) || withinExtension(iso, minutes);
   }
 
   function isOpenNow() {
@@ -826,7 +882,18 @@
 
     host.innerHTML = html;
     renderStatus(now);
+    renderExtensionNote();
     updateSchemaHours();
+  }
+
+  /* Said beneath the hours, never inside them. The rows and the structured
+     data state what happens every week; this states what is true tonight. */
+  function renderExtensionNote() {
+    var host = document.querySelector('.hours-extended');
+    if (!host) return;
+    var ext = extensionWindow();
+    host.textContent = ext ? fill(t().openLater, { until: ext.untilLabel }) : '';
+    host.hidden = !ext;
   }
 
   function renderStatus(now) {
@@ -835,10 +902,13 @@
     if (!now) { host.innerHTML = ''; return; }
 
     var L = t();
-    var open = null;
-    slotsFor(now.day).forEach(function (s) {
-      if (now.minutes >= hhmm(s.from) && now.minutes < hhmm(s.to)) open = s;
-    });
+    /* Asked through slotAt so the badge agrees with the basket. Reading
+       slotsFor() directly left the two able to disagree: on a night the
+       restaurant had extended, the page said "closed" while the send button
+       took the order. A badge that contradicts the button is worse than no
+       badge — it is the one thing on the page a guest checks before ordering. */
+    var open = slotAt(now.iso, now.minutes);
+    if (open && now.minutes >= hhmm(open.to)) open = null;
 
     if (open) {
       host.className = 'hours-status is-open';

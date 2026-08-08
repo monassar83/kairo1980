@@ -17,7 +17,9 @@ import * as ordersView from './orders.js';
 import * as salesView from './sales.js';
 import * as dishesView from './dishes.js';
 import * as hoursView from './hours.js';
-import { readSettings, closeOrdering, openOrdering } from '../settings.js';
+import {
+  readSettings, closeOrdering, openOrdering, extendHours, clearExtension
+} from '../settings.js';
 
 /* Long enough to make scripted guessing tedious, short enough that a mistyped
    password does not feel like a broken page. It is not a defence against a
@@ -38,9 +40,9 @@ export async function handle(request, env, url) {
 
   if (path === '/admin' && method === 'GET') {
     const nonce = newNonce();
-    const { ordering, hours, hoursAreCustom } = await readSettings(env);
+    const { ordering, hours, hoursAreCustom, extension } = await readSettings(env);
     return html(dashboardPage({
-      nonce, ordering, hours, hoursAreCustom,
+      nonce, ordering, hours, hoursAreCustom, extension,
       // Set by the test below, carried in the URL so a reload does not resend.
       alert: url.searchParams.get('alert'),
       alertError: url.searchParams.get('why')
@@ -65,6 +67,31 @@ export async function handle(request, env, url) {
   }
 
   if (path === '/admin/ordering' && method === 'POST') return setOrdering(request, env);
+
+  /* Staying open later than the fixed hours say. The opposite of the switch
+     above and deliberately the same shape: one tap, its own end, and no edit to
+     the week — a closing time changed on a Saturday night is a closing time
+     still wrong on Tuesday. */
+  if (path === '/admin/extend' && method === 'POST') {
+    const form = await request.formData();
+    if (form.get('clear')) {
+      await clearExtension(env);
+    } else {
+      const minutes = Math.min(Math.max(Number(form.get('minutes')) || 0, 0), 8 * 60);
+      const until = String(form.get('until') || '').trim();
+      if (minutes) {
+        await extendHours(env, Date.now() + minutes * 60000);
+      } else if (/^([01]\d|2[0-3]):[0-5]\d$/.test(until)) {
+        // A clock time means the next time it comes round — 01:00 typed at
+        // half past midnight is tonight, not tomorrow night.
+        const { nextTimeOfDay } = await import('../berlin.js');
+        await extendHours(env, nextTimeOfDay(until));
+      }
+    }
+    return new Response(null, {
+      status: 303, headers: { Location: '/admin', 'Cache-Control': 'no-store' }
+    });
+  }
   if (path === '/admin/hours' && method === 'GET') return hoursView.page(request, env, url);
   if (path === '/admin/hours' && method === 'POST') return hoursView.save(request, env, url);
   if (path === '/admin/orders' && method === 'GET') return ordersView.page(request, env, url);

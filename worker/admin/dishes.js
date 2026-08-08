@@ -25,15 +25,20 @@ import { menu } from '../site-data.js';
 export async function page(request, env, url) {
   const [{ soldOut }, dishes] = await Promise.all([readSettings(env), menu(env)]);
   const nonce = newNonce();
+  /* Grouped and ordered exactly as the printed menu is — NOT alphabetically.
+     Someone hunting for a dish mid-service looks where the menu puts it, and
+     `menu()` yields them in document order, so the groups fall out by simply
+     keeping the order they arrive in. */
+  const groups = [];
+  for (const [id, dish] of dishes) {
+    const name = dish.category || 'Weitere';
+    let group = groups.find((g) => g.name === name);
+    if (!group) groups.push((group = { name, dishes: [] }));
+    group.dishes.push({ id, name: dish.name, price: dish.price });
+  }
+
   return new Response(
-    render({
-      nonce,
-      soldOut,
-      dishes: [...dishes.entries()]
-        .map(([id, dish]) => ({ id, name: dish.name, price: dish.price }))
-        .sort((a, b) => a.name.localeCompare(b.name, 'de')),
-      saved: url.searchParams.has('saved')
-    }),
+    render({ nonce, soldOut, groups, saved: url.searchParams.has('saved') }),
     { headers: adminHeaders(nonce) }
   );
 }
@@ -78,6 +83,11 @@ const CSS = `
       font-size:13.5px;margin-bottom:14px}
  .warn{border:1px solid #e8c9a0;background:#fdf0e0;padding:10px 12px;margin-bottom:14px;
        font-size:13.5px;color:#a04a00}
+ h2.cat{font-family:'Cinzel',serif;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+        color:#7a6030;margin:20px 0 6px;display:flex;align-items:center;gap:8px}
+ h2.cat:first-of-type{margin-top:4px}
+ .cat-off{font-size:10px;letter-spacing:.06em;background:#fdf0e0;border:1px solid #e8c9a0;
+          color:#a04a00;padding:2px 6px;text-transform:none}
  ul.dishes{list-style:none;margin:0;padding:0;background:#fff;border:1px solid #e6dcc9}
  li.dish{border-bottom:1px solid #f0e8d8}
  li.dish:last-child{border-bottom:none}
@@ -95,11 +105,12 @@ const CSS = `
                  background:#1c1409;color:#f5e8cc;cursor:pointer}
 `;
 
-export function render({ nonce, dishes, soldOut, saved }) {
+export function render({ nonce, groups, soldOut, saved }) {
+  const dishes = groups.reduce((all, g) => all.concat(g.dishes), []);
   const off = dishes.filter((d) => soldOut[d.id]);
   const stale = off.filter((d) => hoursOff(soldOut[d.id]) > 24);
 
-  const rows = dishes.map((d) => {
+  const rowFor = (d) => {
     const markedAt = soldOut[d.id];
     return `<li class="dish ${markedAt ? 'off' : ''}">
       <label class="row">
@@ -110,6 +121,13 @@ export function render({ nonce, dishes, soldOut, saved }) {
         <span class="pr">${(d.price / 100).toFixed(2).replace('.', ',')} €</span>
       </label>
     </li>`;
+  };
+
+  const sections = groups.map((g) => {
+    const offHere = g.dishes.filter((d) => soldOut[d.id]).length;
+    return `<h2 class="cat">${esc(g.name)}
+      ${offHere ? `<span class="cat-off">${offHere} off</span>` : ''}</h2>
+      <ul class="dishes">${g.dishes.map(rowFor).join('')}</ul>`;
   }).join('');
 
   const body = `<h1>Sold out</h1>
@@ -123,7 +141,7 @@ ${stale.length ? `<div class="warn"><b>${stale.length} dish(es) have been off fo
   itself, and a dish left off is an order nobody can place.</div>` : ''}
 
 <form method="post" action="/admin/dishes">
-  <ul class="dishes">${rows}</ul>
+  ${sections}
   <div class="save">
     <button class="save-btn" type="submit">Save</button>
   </div>

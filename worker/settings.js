@@ -31,6 +31,7 @@ import { nextMidnight, nextTimeOfDay, instantOf } from './berlin.js';
 const ORDERING = 'ordering';
 const HOURS = 'hours';
 const SOLDOUT = 'soldout';
+const EXTENSION = 'extension';
 
 const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -65,6 +66,7 @@ export async function readSettings(env) {
       hours: defaultHours(),
       hoursAreCustom: false,
       soldOut: {},
+      extension: null,
       hoursVersion: '0',
       soldOutVersion: '0'
     };
@@ -97,6 +99,9 @@ export async function readSettings(env) {
        because somebody flipped it on a Saturday and went home, which is the
        same failure the ordering switch carries its own end to avoid. */
     soldOut: normaliseSoldOut(raw[SOLDOUT]),
+    /* Tonight only: the shop is staying open later than the fixed hours say.
+       Never written into the published opening hours — see writeExtension. */
+    extension: normaliseExtension(raw[EXTENSION]),
     // So the admin page can say which of the two is in effect without guessing.
     hoursAreCustom: !!custom,
     /* When the hours last changed. The pages that state opening hours in their
@@ -372,4 +377,50 @@ export async function writeSoldOut(env, ids, existing = {}) {
   }
   await put(env, SOLDOUT, value);
   return value;
+}
+
+
+/* --- staying open later than the hours say ---------------------------------
+   The opposite of the closure switch, and the same shape: it carries its own
+   end, it expires by being read against the clock, and nothing has to run for
+   it to lapse. Somebody still in the restaurant at midnight taps "+1 hour"
+   rather than editing the week — because a fixed closing time edited on a
+   Saturday night is a fixed closing time still wrong on Tuesday.
+
+   IT IS NEVER PUBLISHED AS AN OPENING HOUR. `openingHoursSpecification` states
+   what the restaurant does every week, and Google caches it for the place
+   card; a Saturday that ran late is not a new Saturday. So this changes what
+   can be ORDERED right now and what the badge says, and touches neither the
+   structured data nor the hours table's own rows. */
+
+function normaliseExtension(value, now = Date.now()) {
+  if (!value) return null;
+  const until = Date.parse(String(value.until || ''));
+  // Already elapsed is the same as never set. Read against the clock, not swept.
+  if (!Number.isFinite(until) || until <= now) return null;
+  const from = Date.parse(String(value.from || ''));
+  return {
+    from: Number.isFinite(from) ? new Date(from).toISOString() : new Date(now).toISOString(),
+    until: new Date(until).toISOString()
+  };
+}
+
+/** Stay open until `until` (an epoch ms or ISO). Capped at 8 hours ahead: a
+ *  slip on a number field must not leave the shop advertising itself as open
+ *  for a week. */
+export async function extendHours(env, until) {
+  const at = typeof until === 'number' ? until : Date.parse(String(until || ''));
+  if (!Number.isFinite(at)) return null;
+  const capped = Math.min(at, Date.now() + 8 * 3600 * 1000);
+  if (capped <= Date.now()) return null;
+
+  const value = { from: new Date().toISOString(), until: new Date(capped).toISOString() };
+  await put(env, EXTENSION, value);
+  return normaliseExtension(value);
+}
+
+/** Back to the fixed hours, now. */
+export async function clearExtension(env) {
+  await env.DB.prepare('DELETE FROM settings WHERE key = ?1').bind(EXTENSION).run();
+  forgetCache(env);
 }

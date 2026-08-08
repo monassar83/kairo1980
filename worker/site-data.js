@@ -31,6 +31,12 @@ const ATTR_PRICE = /\bdata-price="([^"]+)"/;
 // delivery platforms all use one spelling — and German is the one that is
 // always present.
 const NAME_RE = /class="mname[^"]*"[^>]*\bdata-de="([^"]+)"/;
+/* The heading each dish sits under. Read the same way and for the same reason
+   as the name: German, because the three spellings are one house rule apart and
+   German is the one always present. Used by /admin/dishes so the sold-out list
+   reads in the same groups and the same order as the printed menu — a cook
+   hunting for a dish mid-service looks where the menu puts it. */
+const CAT_RE = /<h3\b[^>]*\bclass="cat-name[^"]*"[^>]*\bdata-de="([^"]+)"/g;
 const BLOCK = 2400;
 
 let menuCache = null;
@@ -45,6 +51,24 @@ export async function menu(env) {
   if (!res.ok) throw new Error('menu unavailable: index.html returned ' + res.status);
   const html = await res.text();
 
+  /* Where each category heading starts, so a dish can be told which one it
+     falls under by position — the markup nests nothing, the heading simply
+     precedes its dishes. */
+  const cats = [];
+  CAT_RE.lastIndex = 0;
+  let cat;
+  while ((cat = CAT_RE.exec(html)) !== null) {
+    cats.push({ at: cat.index, name: decodeEntities(cat[1]) });
+  }
+  const categoryAt = (index) => {
+    let name = '';
+    for (const entry of cats) {
+      if (entry.at > index) break;
+      name = entry.name;
+    }
+    return name;
+  };
+
   const found = new Map();
   ITEM_RE.lastIndex = 0;
   let match;
@@ -56,7 +80,11 @@ export async function menu(env) {
     const cents = Math.round(parseFloat(price) * 100);
     if (!Number.isFinite(cents) || cents <= 0) continue;
     const name = (html.slice(match.index, match.index + BLOCK).match(NAME_RE) || [])[1];
-    found.set(id, { price: cents, name: decodeEntities(name || id) });
+    found.set(id, {
+      price: cents,
+      name: decodeEntities(name || id),
+      category: categoryAt(match.index)
+    });
   }
 
   if (!found.size) throw new Error('menu unavailable: no priced items found in index.html');

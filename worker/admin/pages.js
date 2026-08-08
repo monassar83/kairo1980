@@ -137,6 +137,13 @@ export function loginPage({ nonce, error = false, unconfigured = false }) {
 }
 
 const SWITCH_CSS = `
+ .extend{background:#fff;border:1px solid #e6dcc9;padding:12px 14px;margin:0 0 14px}
+ .extend.on{border-color:#bcd8b0;background:#eef6ea}
+ .extend .lead{margin:0 0 6px;font-size:15px;color:#31601f}
+ .extend .hint{font-size:12.5px;color:#7a6030;margin:6px 0 0;line-height:1.5}
+ .extend .cap{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7a6030;
+              margin:0 0 8px}
+
  .alertbox{background:#fff;border:1px solid #e6dcc9;padding:12px 14px;margin:0 0 14px}
  .alertbox .msg{padding:9px 11px;border:1px solid #bcd8b0;background:#eef6ea;color:#31601f;
                 font-size:13.5px;margin:0 0 10px}
@@ -257,7 +264,18 @@ function todayLine(hours) {
 
 /* The dashboard leads with the switch rather than a menu of pages, because the
    reason this page gets opened in a hurry is always the switch. */
-export function dashboardPage({ nonce, ordering, hours, hoursAreCustom, alert, alertError }) {
+/** "01:00", in the restaurant's own clock. */
+function untilClock(iso) {
+  try {
+    return new Date(iso).toLocaleTimeString('de-DE', {
+      timeZone: 'Europe/Berlin', hour: '2-digit', minute: '2-digit'
+    });
+  } catch {
+    return '';
+  }
+}
+
+export function dashboardPage({ nonce, ordering, hours, hoursAreCustom, extension, alert, alertError }) {
   const closed = !ordering.open;
   const resumesAt = closed ? Date.parse(ordering.resumesAt) : null;
   const today = todayLine(hours);
@@ -315,6 +333,38 @@ export function dashboardPage({ nonce, ordering, hours, hoursAreCustom, alert, a
     : 'Taking orders'}</b></div>
   <p class="sched ${today.open ? 'is-open' : ''}">${esc(today.text)}</p>
   ${closed ? stopped : running}
+</div>
+
+<!-- Staying open later tonight. Deliberately below the switch and above the
+     tiles: it belongs with "what is true right now", not with the settings. -->
+<div class="extend ${extension ? 'on' : ''}">
+  ${extension ? `<p class="lead">Open later tonight — until
+      <b>${esc(untilClock(extension.until))}</b>.</p>
+    <p class="hint">The published opening hours are unchanged, and this lapses
+    on its own. Nothing to come back and undo.</p>
+    <form method="post" action="/admin/extend">
+      <button class="go2" name="clear" value="1" type="submit">Back to the normal hours</button>
+    </form>`
+  : `<p class="cap">Staying open later tonight?</p>
+    <form method="post" action="/admin/extend">
+      <div class="quick">
+        <button class="stop" name="minutes" value="30" type="submit">+30 min</button>
+        <button class="stop" name="minutes" value="60" type="submit">+1 hour</button>
+        <button class="stop" name="minutes" value="120" type="submit">+2 hours</button>
+      </div>
+      <details>
+        <summary>Until a particular time</summary>
+        <div class="row">
+          <div class="grow">
+            <label for="until">Until</label>
+            <input id="until" name="until" type="time" step="300">
+          </div>
+        </div>
+        <button class="stop wide" type="submit">Stay open until then</button>
+        <p class="hint">Orders can be placed for right now until that time. The
+        opening hours on the website do not change.</p>
+      </details>
+    </form>`}
 </div>
 
 <div class="tiles">

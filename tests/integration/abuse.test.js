@@ -1139,3 +1139,61 @@ test('marking a dish sold out is behind the login', async (t) => {
   const row = await env.DB.prepare("SELECT value FROM settings WHERE key='soldout'").first();
   assert.equal(row, null, 'and nothing was written');
 });
+
+test('an extension changes what can be ordered, never the published hours', async (t) => {
+  /* The whole point of it being separate from the hours: openingHoursSpecification
+     is what Google caches for the place card, and a Saturday that ran late is
+     not a new Saturday. */
+  const env = workerEnv(MENU, CREDS);
+  const c = ctx();
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const { cookie } = await signIn(env);
+  const res = await worker.fetch(form('/admin/extend', { minutes: '90' }, { cookie }), env, c);
+  assert.equal(res.status, 303);
+
+  const { forgetCache } = await import('../../worker/settings.js');
+  forgetCache(env);
+
+  const html = await (await worker.fetch(get('/'), env, c)).text();
+
+  // The browser is told, so the badge and the basket agree.
+  assert.match(html, /"extension"/, 'handed to the page without a fetch');
+  assert.match(html, /"until"/);
+
+  // The structured data is untouched: still the stub's fixed Wednesday window.
+  const schema = JSON.parse(/<script id="restaurantSchema"[^>]*>([\s\S]*?)<\/script>/.exec(html)[1]);
+  for (const spec of schema.openingHoursSpecification) {
+    assert.equal(spec.closes, '23:00', 'an extension never becomes an opening hour');
+  }
+});
+
+test('an extension can be taken back before it lapses', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const c = ctx();
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+  const { forgetCache } = await import('../../worker/settings.js');
+
+  const { cookie } = await signIn(env);
+  await worker.fetch(form('/admin/extend', { minutes: '60' }, { cookie }), env, c);
+  forgetCache(env);
+  assert.ok((await (await worker.fetch(get('/api/status'), env, c)).json()).ordering);
+
+  await worker.fetch(form('/admin/extend', { clear: '1' }, { cookie }), env, c);
+  forgetCache(env);
+  const html = await (await worker.fetch(get('/'), env, c)).text();
+  assert.match(html, /"extension":null/, 'back to the fixed hours at once');
+});
+
+test('extending is behind the login', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const c = ctx();
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  await worker.fetch(form('/admin/extend', { minutes: '120' }), env, c);
+  const row = await env.DB.prepare("SELECT value FROM settings WHERE key='extension'").first();
+  assert.equal(row, null, 'no session, no change to the hours');
+});

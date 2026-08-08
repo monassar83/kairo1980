@@ -31,7 +31,16 @@
     // JavaScript still reads the hours actually kept (see page-render.js).
     // Without this line, /firmencatering would be served straight from the
     // file and would publish whatever config.js said on the day it shipped.
-    "run_worker_first": ["/", "/firmencatering"]
+    "run_worker_first": [
+      "/", "/firmencatering",
+      // The .html twins, so the Worker can answer 301 instead of the
+      // platform's 307. Named one by one: googled7bbc73984e8deda.html is
+      // Google's verification file and must never be redirected.
+      "/index.html", "/impressum.html", "/datenschutz.html", "/firmencatering.html",
+      // Served as-is with a 200. Google asks for this exact URL, and a
+      // verification that relies on a redirect being followed can lapse.
+      "/googled7bbc73984e8deda.html"
+    ]
   },
 
   // The retention sweep: nulls the payer's identity 180 days after a payment,

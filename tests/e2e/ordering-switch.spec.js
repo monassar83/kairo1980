@@ -65,20 +65,26 @@ async function setOrdering(page,
     return;
   }
 
-  if (await page.locator('button.go2').count()) await page.locator('button.go2').click();
-  await page.locator(`input[name="reason"][value="${reason}"]`).check();
+  /* Scoped to the switch. The dashboard now also carries the "stay open later"
+     controls, which use the same disclosure and the same button classes — an
+     unscoped `details summary` matches both and the closure silently drives the
+     wrong form. */
+  const box = page.locator('.switch');
+
+  if (await box.locator('button.go2').count()) await box.locator('button.go2').click();
+  await box.locator(`input[name="reason"][value="${reason}"]`).check();
 
   if (untilDate || untilTime) {
     // The date fields live behind a disclosure: the common closure is one tap
     // and should not be buried under a form nobody usually needs.
-    await page.locator('details summary').click();
+    await box.locator('details summary').click();
     if (untilDate) await page.fill('#untilDate', untilDate);
     if (untilTime) await page.fill('#untilTime', untilTime);
-    await page.locator('button.stop.wide').click();
+    await box.locator('button.stop.wide').click();
   } else if (minutes != null) {
-    await page.locator(`button.stop[value="${minutes}"]`).click();
+    await box.locator(`button.stop[value="${minutes}"]`).click();
   } else {
-    await page.locator('button.stop[name="minutes"][value=""]').click();   // rest of today
+    await box.locator('button.stop[name="minutes"][value=""]').click();   // rest of today
   }
 
   await expect(page.locator('.switch.off')).toBeVisible();
@@ -411,11 +417,16 @@ test('a dish marked sold out cannot be ordered, and says so', async ({ page }) =
     await page.click('button.save-btn');
     await expect(page.locator('.msg')).toContainText('Saved');
 
-    await page.goto('/?lang=de');
+    /* readSettings caches for a few seconds per isolate, and forgetCache only
+       clears the one that wrote. That is deliberate — a database round trip per
+       page load for a value that changes twice a month is waste — but it means
+       the mark can take a moment to appear. Polled rather than slept. */
     const row = page.locator('.mitem[data-item="hummus"]');
+    await expect(async () => {
+      await page.goto('/?lang=de&t=' + Date.now());
+      await expect(row).toHaveAttribute('data-soldout', '1');
+    }).toPass({ timeout: 20000 });
 
-    // Stated in the markup the Worker sends, not painted on afterwards.
-    await expect(row).toHaveAttribute('data-soldout', '1');
     await expect(row).toContainText('Ausverkauft');
     // No control at all — a disabled "+" reads as a broken page.
     await expect(row.locator('[data-act="inc"]')).toHaveCount(0);
@@ -429,7 +440,12 @@ test('a dish marked sold out cannot be ordered, and says so', async ({ page }) =
     await page.click('button.save-btn');
   }
 
-  // Back on the menu the moment it is unticked.
-  await page.goto('/?lang=de');
-  await expect(page.locator('.mitem[data-item="hummus"] [data-act="inc"]')).toHaveCount(1);
+  /* Back on the menu once the cache turns over. The query string is a cache
+     buster, not decoration: the page is served with an ETag and the browser is
+     entitled to reuse its copy, which would test Chromium's cache rather than
+     the site. */
+  await expect(async () => {
+    await page.goto('/?lang=de&t=' + Date.now());
+    await expect(page.locator('.mitem[data-item="hummus"] [data-act="inc"]')).toHaveCount(1);
+  }).toPass({ timeout: 20000 });
 });

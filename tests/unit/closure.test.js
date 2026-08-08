@@ -12,6 +12,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { dayOf, timeOf, nextMidnight, nextTimeOfDay, instantOf } from '../../worker/berlin.js';
+import { freshDatabase } from '../helpers/d1.js';
 import { normaliseHours } from '../../worker/settings.js';
 import { wantedAfterClosure } from '../../worker/index.js';
 
@@ -252,4 +253,49 @@ test('a genuine afternoon break still keeps both windows', () => {
   }));
   assert.deepEqual(hours.days.wed.lunch, ['11:00', '14:30']);
   assert.deepEqual(hours.days.wed.evening, ['18:00', '23:00']);
+});
+
+/* --- staying open later than the hours say --------------------------------
+   The opposite of the closure and deliberately the same shape. The thing worth
+   holding down is that it can never become a published opening hour: the table
+   and the JSON-LD say what happens every week, Google caches that for the place
+   card, and a Saturday that ran late is not a new Saturday. */
+
+test('an extension that has already passed is the same as none', async () => {
+  const { extendHours, readSettings } = await import('../../worker/settings.js');
+  const db = freshDatabase();
+  const env = { DB: db };
+
+  // Nothing set at all.
+  assert.equal((await readSettings(env)).extension, null);
+
+  // A time already gone is refused rather than stored as expired.
+  assert.equal(await extendHours(env, Date.now() - 60000), null);
+});
+
+test('an extension is capped, so a slip cannot leave the shop open for a week', async () => {
+  const { extendHours } = await import('../../worker/settings.js');
+  const env = { DB: freshDatabase() };
+
+  const far = Date.now() + 30 * 24 * 3600 * 1000;     // a month
+  const got = await extendHours(env, far);
+  const hours = (Date.parse(got.until) - Date.now()) / 3600000;
+  assert.ok(hours <= 8.01, `capped to 8 hours, got ${hours.toFixed(1)}`);
+});
+
+test('an extension is readable, and clearing it puts the hours back', async () => {
+  const { extendHours, clearExtension, readSettings, forgetCache } =
+    await import('../../worker/settings.js');
+  const env = { DB: freshDatabase() };
+
+  await extendHours(env, Date.now() + 45 * 60000);
+  forgetCache(env);
+  const on = await readSettings(env);
+  assert.ok(on.extension, 'the extension is in effect');
+  assert.ok(Date.parse(on.extension.until) > Date.now());
+  assert.ok(Date.parse(on.extension.from) <= Date.now(), 'and knows when it started');
+
+  await clearExtension(env);
+  forgetCache(env);
+  assert.equal((await readSettings(env)).extension, null);
 });

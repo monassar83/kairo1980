@@ -170,7 +170,13 @@ export function withLiveData(html, settings) {
      stands untouched. The escape keeps a "</script>" inside a value from
      ending the element early. */
   const island = `<script type="application/json" id="kairoLive">${
-    JSON.stringify({ hours, ordering, soldOut: soldOut || {} }).replace(/</g, '\\u003c')
+    JSON.stringify({
+      hours, ordering, soldOut: soldOut || {},
+      /* Tonight only, and never merged into `hours` — the JSON-LD below is
+         built from `hours` alone, so an extension cannot leak into the opening
+         hours Google caches for the place card. */
+      extension: settings.extension || null
+    }).replace(/</g, '\\u003c')
   }</script>\n`;
   if (out.includes('</head>')) out = out.replace('</head>', island + '</head>');
 

@@ -123,6 +123,18 @@ are only the no-JavaScript fallback — update both or neither.
   `python tools/build-zones.py`. CI fails the deploy if the two disagree.
 - **No third-party requests on load.** No fonts CDN, no analytics, no cookies.
   The Google Maps embed loads only after an explicit click.
+- **Staying open later is not an opening hour.** `/admin` extends tonight only:
+  it changes what can be ordered now and what the badge says, and never touches
+  the hours table or `openingHoursSpecification`, which state what happens every
+  week and are cached by Google for the place card. It carries its own end like
+  the closure does, is capped at 8 hours, and expires by being read against the
+  clock. Ask `slotAt()`, never `slotsFor()`, when the question is "can this be
+  served" — `slotsFor()` is the published week and deliberately does not know.
+- **The `.html` twins move with a 301, and one file never moves at all.** A 307
+  tells a crawler the old URL may return, so it keeps both and splits the
+  ranking. `googled7bbc73984e8deda.html` is Google's verification file and is
+  served at that exact URL with a 200 — it was being 307'd to the extensionless
+  path, which worked only because Google followed it.
 - **A sold-out dish is the ONE refusal.** `/admin/dishes` takes a dish off the
   menu when the kitchen runs out. Unlike everything below, this blocks: the
   ingredient is not in the building, so it is refused in the basket AND in

@@ -43,6 +43,10 @@ export default {
     const isAdmin = url.pathname === '/admin' || url.pathname.startsWith('/admin/');
 
     if (!isAdmin && !url.pathname.startsWith('/api/')) {
+      const verify = await verificationFile(request, env, url);
+      if (verify) return verify;
+      const moved = permanentTwin(url);
+      if (moved) return moved;
       return withPolicy(url, await asset(request, env, url));
     }
 
@@ -776,6 +780,58 @@ function matches(header, etag) {
   return header.split(',').some((candidate) => {
     const one = candidate.trim().replace(/^W\//, '');
     return one === etag.replace(/^W\//, '');
+  });
+}
+
+/* The .html twin of every page, sent permanently to its real URL.
+
+   Cloudflare's asset handling already redirects these, but with a 307 —
+   temporary. A temporary redirect tells a crawler the old URL may come back, so
+   it keeps it, keeps requesting it, and keeps the ranking signals split between
+   two addresses. These URLs are never coming back: the pages have lived at the
+   extensionless paths since launch and the sitemap has only ever listed those.
+
+   Listed by name rather than matched by pattern. `googled7bbc73984e8deda.html`
+   is Google's own site-verification file and must be served exactly where it
+   is — redirecting it would un-verify the property, which is the opposite of
+   the point of this function. */
+const TWINS = {
+  '/index.html': '/',
+  '/impressum.html': '/impressum',
+  '/datenschutz.html': '/datenschutz',
+  '/firmencatering.html': '/firmencatering'
+};
+
+/* Google's site-verification file, served at exactly the URL Google asks for.
+
+   The platform's .html handling was redirecting it to the extensionless path
+   with a 307. It happened to keep working, because Google followed the
+   redirect — but the whole point of the file is that it sits at one exact
+   address, and a verification that depends on a redirect being followed is a
+   verification that can lapse on somebody else's release note. Losing it means
+   losing Search Console for the property, which is the only place any of this
+   is measurable. */
+const VERIFICATION = '/googled7bbc73984e8deda.html';
+
+async function verificationFile(request, env, url) {
+  if (url.pathname !== VERIFICATION) return null;
+  // The asset itself lives at the extensionless path once the platform has
+  // rewritten it; ask for that and answer here, without a redirect.
+  const res = await env.ASSETS.fetch(
+    new Request(new URL(VERIFICATION.replace(/\.html$/, ''), url), request));
+  if (!res.ok) return null;
+  return new Response(await res.text(), {
+    status: 200,
+    headers: { 'Content-Type': 'text/html; charset=utf-8', 'Cache-Control': 'no-store' }
+  });
+}
+
+function permanentTwin(url) {
+  const to = TWINS[url.pathname];
+  if (!to) return null;
+  return new Response(null, {
+    status: 301,
+    headers: { Location: to + url.search, 'Cache-Control': 'no-store' }
   });
 }
 
