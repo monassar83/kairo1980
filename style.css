@@ -69,11 +69,15 @@ summary:focus-visible {
 .nav-links a:hover { color: #a07838; }
 .nav-right { display: flex; align-items: center; gap: 24px; }
 .lang-switcher { display: flex; align-items: center; gap: 6px; }
+/* The text is 10px and the box was 16x12 — a target a thumb misses, on the
+   control that decides which language the whole site is in. The padding grows
+   what can be TAPPED without growing what is SEEN; the letters stay the size
+   the header was designed around. */
 .lang-btn {
   background: none; border: none;
   font-family: 'Cinzel', serif; font-size: 10px;
   letter-spacing: 0.18em; color: #9a8050;
-  cursor: pointer; padding: 0; transition: color 0.2s;
+  cursor: pointer; padding: 7px 5px; transition: color 0.2s;
 }
 .lang-btn.active { color: #1c1409; font-weight: 500; }
 .lang-btn:hover { color: #a07838; }
@@ -214,8 +218,13 @@ summary:focus-visible {
    the old cap silently cut the story off mid-sentence with no way to reach
    the rest. The value only has to exceed the tallest rendering. */
 .mehr-lesen-content.open { max-height: 3200px; }
+/* 8px of the 24px gap above is spent as padding instead of margin: the button
+   looks identical and sits in exactly the same place, but the box a thumb has
+   to hit grows from 18px tall to 26px. The underline is the design here, so
+   the target cannot grow downwards without moving it. */
 .mehr-lesen-btn {
-  margin-top: 24px; background: none; border: none;
+  margin-top: 16px; padding-top: 8px;
+  background: none; border: none;
   border-bottom: 1px solid #b8914a;
   font-family: 'Cinzel', serif; font-size: 10px;
   letter-spacing: 0.22em; text-transform: uppercase;
@@ -369,9 +378,21 @@ summary:focus-visible {
 .footer-dot { color: rgba(200,175,120,0.3); }
 .footer-copy { font-size: 12px; color: rgba(200,175,120,0.4); letter-spacing: 0.08em; }
 
-/* FADE IN ON SCROLL */
+/* FADE IN ON SCROLL
+   The default state of this rule is INVISIBLE, which makes it the most
+   dangerous rule in the file: anything that stops the reveal running leaves a
+   blank page rather than an unanimated one. It has already happened once — see
+   the observer in app.js — so the two escape hatches below are not decoration.
+   If you touch this, ask what a guest sees when the script does not run. */
 .fade-in { opacity: 0; transform: translateY(24px); transition: opacity 0.7s ease, transform 0.7s ease; }
 .fade-in.visible { opacity: 1; transform: translateY(0); }
+
+/* No JavaScript, no reveal — so nothing is hidden in the first place. Without
+   this, a visitor with scripting off meets a site whose menu is simply not
+   there, which is the same blank page a broken observer produces. */
+@media (scripting: none) {
+  .fade-in { opacity: 1; transform: none; transition: none; }
+}
 
 /* Reveal-on-scroll is the effect "reduce motion" exists for. The content must
    still be visible, so it is shown outright rather than merely un-animated —
@@ -729,7 +750,12 @@ summary:focus-visible {
 }
 .legal-note:empty { display: none; }
 .legal li { margin-bottom: 6px; }
-.legal a { color: #b8914a; }
+/* The privacy policy cites provider URLs in full, and a URL is one unbreakable
+   word. At 360px "paypal.com/de/webapps/mpp/ua/privacy-full" pushed the page
+   65px wider than the screen and took the whole document sideways with it —
+   every section then scrolled horizontally, on the one page a guest reads to
+   decide whether to trust us. Links here may break anywhere. */
+.legal a { color: #b8914a; overflow-wrap: anywhere; }
 .legal a:hover { color: #a07838; }
 .legal-back {
   margin-top: 48px; padding-top: 24px;
@@ -1512,6 +1538,17 @@ a.cart-send-wa {
   .mbuy .mprice { min-width: 58px; }
   .cart-type { padding: 15px 8px; }
   .cart-close { padding: 4px 10px; font-size: 30px; }
+}
+
+/* Narrower than about 360px the dish name, the price and the add button stop
+   fitting on one line. At 320px the row overflowed the page by 17px — and an
+   overflow anywhere scrolls the WHOLE document sideways, so one cramped menu
+   row made every section on the page drift. The 44px tap target is not
+   negotiable, so the space comes out of the gaps and the price column. */
+@media (max-width: 360px) {
+  .mitem { gap: 12px; }
+  .mbuy { gap: 8px; }
+  .mbuy .mprice { min-width: 50px; }
 }
 
 /* ===========================================================================

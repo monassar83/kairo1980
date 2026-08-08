@@ -39,16 +39,40 @@
     setToggleLabels(btn.querySelector('.t'), isOpen ? LESS : MORE);
   }
 
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(el => {
-      if (el.isIntersecting) {
-        el.target.classList.add('visible');
-        observer.unobserve(el.target);
-      }
-    });
-  }, { threshold: 0.12 });
+  /* --- reveal on scroll ---------------------------------------------------
+     `threshold` is a fraction of THE ELEMENT, not of the screen, and that is
+     the trap this code fell into. `#speisekarte` is the whole menu and on a
+     phone it is many times taller than the viewport — so a screenful of it was
+     about 9% of the section, the 0.12 threshold could never be met, the
+     callback never fired, and the menu sat at `opacity: 0` for ever. A guest
+     reported a blank menu; "Desktop site" appeared to cure it only because the
+     wider layout makes the section short enough for 12% to be reachable, which
+     is what made it look like a browser bug rather than an arithmetic one. It
+     was reproduced on both Brave and Chrome, because it is neither.
 
-  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+     A threshold of 0 fires as soon as any part of the element is visible, so
+     the reveal can no longer depend on how tall the section happens to be. The
+     rootMargin is what keeps the effect: the element must come 40px into view
+     rather than trigger on its first pixel.
+
+     NEVER express this as a fraction of the element again. Any section here
+     can grow past a phone's height with one more dish. */
+  if ('IntersectionObserver' in window) {
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(el => {
+        if (el.isIntersecting) {
+          el.target.classList.add('visible');
+          observer.unobserve(el.target);
+        }
+      });
+    }, { threshold: 0, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+  } else {
+    /* No observer, no reveal — so nothing may be left hidden. The animation is
+       an enhancement; the menu is the page. */
+    document.querySelectorAll('.fade-in').forEach(el => el.classList.add('visible'));
+  }
 
   // Reviews carousel
   let currentReview = 0;

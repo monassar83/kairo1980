@@ -310,3 +310,113 @@ test('a collected order is never held to a delivery minimum', async ({ page }) =
   await choosePickup(page);
   await expect(page.locator('#cartBody')).not.toContainText('Mindestbestellwert');
 });
+
+/* --- the menu has to be VISIBLE, not merely present ----------------------
+   A guest reported a blank menu on an Android phone, on both Brave and Chrome,
+   cured only by "Desktop site". The markup was there the whole time: the
+   reveal-on-scroll observer used `threshold: 0.12`, which is a fraction of THE
+   ELEMENT, and #speisekarte is the entire menu — many times taller than a
+   phone. A full screen of it was about 9%, so the threshold could never be
+   met and the section stayed at opacity 0.
+
+   The old mobile project missed it by luck: a Pixel 7 is tall enough that the
+   ratio just cleared 12%. So these run on a deliberately small viewport, which
+   is where the arithmetic actually bites, and assert what a guest can SEE. */
+
+const SMALL = { width: 360, height: 640 };
+
+test('the menu is visible on a small phone, not just present in the DOM', async ({ page }) => {
+  await page.setViewportSize(SMALL);
+  await page.goto('/?lang=de');
+
+  const menu = page.locator('#speisekarte');
+  await menu.scrollIntoViewIfNeeded();
+
+  // opacity is what the bug actually was — `toBeVisible()` alone passes on an
+  // element that is fully transparent, which is exactly how this shipped.
+  await expect.poll(
+    () => menu.evaluate((el) => Number(getComputedStyle(el).opacity)),
+    { message: 'the menu section must not stay transparent', timeout: 7000 }
+  ).toBeGreaterThan(0.9);
+
+  const first = page.locator('.mitem[data-item]').first();
+  await expect(first).toBeVisible();
+  await expect(first).toContainText(/\d/);
+});
+
+test('every long section reveals itself on a small phone', async ({ page }) => {
+  /* Not only the menu: #firmen, #faq and #liefergebiet are all `.fade-in` and
+     all grow past a phone's height. Whatever hid one hid the others, so the
+     guarantee is asserted for the set rather than the symptom. */
+  await page.setViewportSize(SMALL);
+  await page.goto('/?lang=de');
+
+  for (const id of ['ueber-uns', 'speisekarte', 'firmen', 'faq', 'liefergebiet']) {
+    const section = page.locator(`#${id}`);
+    if (!(await section.count())) continue;
+    await section.scrollIntoViewIfNeeded();
+    await expect.poll(
+      () => section.evaluate((el) => Number(getComputedStyle(el).opacity)),
+      { message: `#${id} must not stay transparent`, timeout: 7000 }
+    ).toBeGreaterThan(0.9);
+  }
+});
+
+test('a basket can be built and sent on a small phone', async ({ page }) => {
+  // The end of the same story: an invisible menu cannot be ordered from.
+  await page.setViewportSize(SMALL);
+  const whatsapp = await captureWhatsApp(page);
+  await page.goto('/?lang=de');
+
+  await addItem(page, 'hummus', 1);
+  await openBasket(page);
+  await choosePickup(page);
+  await fillContact(page, { name: 'Kleines Display', phone: '+49 176 5559999' });
+  await page.locator('#cartSend').click();
+
+  expect(await whatsapp()).toContain('wa.me');
+  await expect(page.locator('.cart-sent')).toBeVisible();
+});
+
+test('no page scrolls sideways on a small phone', async ({ page }) => {
+  /* An overflow anywhere scrolls the WHOLE document, so one cramped menu row
+     made every section drift. Two were found this way: the dish row at 320px,
+     and an unbreakable provider URL in the privacy policy that pushed
+     /datenschutz 65px past a 360px screen. Both are the kind of fault nobody
+     reports — the page still works, it just feels broken. */
+  for (const width of [320, 360, 390]) {
+    await page.setViewportSize({ width, height: 640 });
+    for (const path of ['/', '/firmencatering', '/impressum', '/datenschutz']) {
+      await page.goto(path + '?lang=de');
+      const over = await page.evaluate(() => {
+        const d = document.documentElement;
+        if (d.scrollWidth <= d.clientWidth + 1) return null;
+        const worst = [...document.querySelectorAll('body *')]
+          .map((el) => ({ el, r: el.getBoundingClientRect() }))
+          .filter((x) => x.r.width > 0 && x.r.right > d.clientWidth + 1)
+          .sort((a, b) => b.r.right - a.r.right)[0];
+        return {
+          scrollWidth: d.scrollWidth,
+          clientWidth: d.clientWidth,
+          worst: worst ? worst.el.tagName + '.' + String(worst.el.className).split(' ')[0] : '?'
+        };
+      });
+      expect(over, `${path} at ${width}px overflows: ${JSON.stringify(over)}`).toBeNull();
+    }
+  }
+});
+
+test('the language switch is big enough to hit', async ({ page }) => {
+  // 16x12 on the control that decides the language of the whole site.
+  await page.setViewportSize({ width: 360, height: 640 });
+  await page.goto('/?lang=de');
+  const boxes = await page.locator('.lang-btn').evaluateAll((els) =>
+    els.map((el) => {
+      const r = el.getBoundingClientRect();
+      return { w: Math.round(r.width), h: Math.round(r.height) };
+    }));
+  expect(boxes.length).toBeGreaterThan(0);
+  for (const b of boxes) {
+    expect(b.h, `language button only ${b.w}x${b.h}`).toBeGreaterThanOrEqual(24);
+  }
+});
