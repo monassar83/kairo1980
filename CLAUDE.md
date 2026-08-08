@@ -123,6 +123,14 @@ are only the no-JavaScript fallback — update both or neither.
   `python tools/build-zones.py`. CI fails the deploy if the two disagree.
 - **No third-party requests on load.** No fonts CDN, no analytics, no cookies.
   The Google Maps embed loads only after an explicit click.
+- **A sold-out dish is the ONE refusal.** `/admin/dishes` takes a dish off the
+  menu when the kitchen runs out. Unlike everything below, this blocks: the
+  ingredient is not in the building, so it is refused in the basket AND in
+  `worker/pricing.js`, where the browser cannot argue. The dish list is read
+  from `index.html` itself, so a new dish appears on that page by itself. The
+  row shows words, never a disabled `+` — a control that is present and refuses
+  reads as a broken page. A basket lives two hours and the kitchen can run out
+  inside that, so `dropSoldOut()` clears such items at boot and says which.
 - **Validation is advisory, never blocking.** An unknown postcode, a closed
   slot or a sub-minimum order warns the guest and flags the WhatsApp message —
   it never refuses the order. Losing one €300 corporate order to an automatic
@@ -167,6 +175,14 @@ are only the no-JavaScript fallback — update both or neither.
   duplicates. Do not reintroduce a second attribute holding the same URL: the
   bug was not the missing attribute, it was that the URL was written twice.
   `tests/e2e/seo.spec.js` holds every page to it, in the rendered DOM.
+  **The canonical mirrors the URL, never the language being displayed.** It
+  once followed the detected language, so Googlebot — which renders in English
+  — fetched `/` and was handed a page claiming its canonical was `/?lang=en`.
+  Search Console reported "Duplicate, Google chose different canonical than
+  user" and the homepage left the index on 13 June 2026. Only `updateUrl()` may
+  move it, because that is the only thing that moves the URL. The suite missed
+  it because `playwright.config.js` pins `locale: 'de-DE'`; the canonical tests
+  now also run under `en-GB` and `ar-EG`.
 - **The menu is a section, not a page.** `#speisekarte` is the homepage's
   primary content and the address printed on the Google and Apple place cards.
   It stays there because the basket and the checkout CSP both belong to `/`,

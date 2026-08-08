@@ -30,6 +30,7 @@ import { nextMidnight, nextTimeOfDay, instantOf } from './berlin.js';
 
 const ORDERING = 'ordering';
 const HOURS = 'hours';
+const SOLDOUT = 'soldout';
 
 const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -53,6 +54,22 @@ export function forgetCache(env) {
 }
 
 export async function readSettings(env) {
+  /* No database bound at all — a preview deployment, or a caller that only
+     wanted a price. The published defaults are a complete answer, and the
+     cache is keyed on the binding, so without one there is nothing to key on:
+     WeakMap.set(undefined) throws, which would turn a missing binding into a
+     500 on a route that never needed the database. */
+  if (!env || !env.DB) {
+    return {
+      ordering: normaliseOrdering(null),
+      hours: defaultHours(),
+      hoursAreCustom: false,
+      soldOut: {},
+      hoursVersion: '0',
+      soldOutVersion: '0'
+    };
+  }
+
   const held = cache.get(env.DB);
   if (held && held.until > Date.now()) return held.value;
 
@@ -75,6 +92,11 @@ export async function readSettings(env) {
   const value = {
     ordering: normaliseOrdering(raw[ORDERING]),
     hours: custom || defaultHours(),
+    /* Dishes the kitchen has run out of. A list of ids and the moment each was
+       marked — the time is what stops a dish being sold out for a fortnight
+       because somebody flipped it on a Saturday and went home, which is the
+       same failure the ordering switch carries its own end to avoid. */
+    soldOut: normaliseSoldOut(raw[SOLDOUT]),
     // So the admin page can say which of the two is in effect without guessing.
     hoursAreCustom: !!custom,
     /* When the hours last changed. The pages that state opening hours in their
@@ -82,7 +104,10 @@ export async function readSettings(env) {
        copy stale at once — and an unchanged one still answers 304. Without it,
        `must-revalidate` would keep revalidating its way to the same stale
        body, because the asset behind it never changed. */
-    hoursVersion: (rows.find((r) => r.key === HOURS) || {}).updated_at || '0'
+    hoursVersion: (rows.find((r) => r.key === HOURS) || {}).updated_at || '0',
+    // Pages state which dishes are sold out, so the ETag has to move when the
+    // answer does — exactly as it does for the hours.
+    soldOutVersion: (rows.find((r) => r.key === SOLDOUT) || {}).updated_at || '0'
   };
 
   cache.set(env.DB, { value, until: Date.now() + CACHE_MS });
@@ -310,4 +335,41 @@ async function put(env, key, value) {
      ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`
   ).bind(key, JSON.stringify(value)).run();
   forgetCache(env);
+}
+
+
+/* --- dishes the kitchen has run out of -------------------------------------
+   Unlike a postcode or a lunchtime, this is not advisory. Everything else on
+   this site warns and lets the order through, because the guest might be right
+   and we might be wrong. Here we are certainly right: the ingredient is not in
+   the building, and taking money for it would mean ringing the guest back to
+   say so. So it is refused, in the basket AND in worker/pricing.js, which is
+   the only refusal on the whole site.
+
+   Stored as { id: markedAt }, not as a bare list, so /admin can say how long a
+   dish has been off and nothing quietly stays sold out for a fortnight. */
+
+function normaliseSoldOut(value) {
+  const out = {};
+  if (!value || typeof value !== 'object') return out;
+  for (const [id, at] of Object.entries(value)) {
+    if (typeof id !== 'string' || !id || id.length > 80) continue;
+    out[id] = typeof at === 'string' ? at : new Date().toISOString();
+  }
+  return out;
+}
+
+/** Replace the whole set. `ids` is what is sold out now; anything absent is
+ *  back on. A dish already off keeps its original timestamp, so "sold out
+ *  since Saturday" does not reset itself every time the form is saved. */
+export async function writeSoldOut(env, ids, existing = {}) {
+  const now = new Date().toISOString();
+  const value = {};
+  for (const id of ids) {
+    if (typeof id === 'string' && id && id.length <= 80) {
+      value[id] = existing[id] || now;
+    }
+  }
+  await put(env, SOLDOUT, value);
+  return value;
 }

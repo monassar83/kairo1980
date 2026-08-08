@@ -332,6 +332,10 @@ export function dashboardPage({ nonce, ordering, hours, hoursAreCustom, alert, a
     <b>Sales</b>
     <span>What was taken, month by month — cash and card together.</span>
   </a>
+  <a class="tile" href="/admin/dishes">
+    <b>Sold out</b>
+    <span>Take a dish off the menu when the kitchen runs out of it.</span>
+  </a>
 </div>
 
 <!-- The alert channel, and proof that it works.

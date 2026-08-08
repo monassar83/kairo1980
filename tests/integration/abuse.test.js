@@ -1032,3 +1032,110 @@ test('sales and orders are behind the login like everything else', async (t) => 
   assert.match(html, /name="password"/, 'the login form, not the takings');
   assert.equal(html.includes('Taken this month'), false);
 });
+
+/* --- a dish the kitchen has run out of ------------------------------------
+   The only refusal on this site. Everything else warns and lets the order
+   through because the guest may be right; here the ingredient is not in the
+   building and taking the money means ringing them back to say so. The browser
+   dims it, and the browser is not to be trusted with the answer. */
+
+const markSoldOut = (env, ids) => env.DB.prepare(
+  `INSERT INTO settings (key, value, updated_at) VALUES ('soldout', ?1, datetime('now'))
+   ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at`
+).bind(JSON.stringify(Object.fromEntries(ids.map((id) => [id, new Date().toISOString()])))).run();
+
+test('a sold-out dish cannot be paid for, however the request is dressed up', async (t) => {
+  const env = workerEnv(MENU);
+  const c = ctx();
+  const paypal = fakePayPal({ '/v2/checkout/orders': () => orderResponse({}) });
+  t.after(() => paypal.restore());
+
+  await markSoldOut(env, ['koshari']);
+
+  const res = await worker.fetch(post('/api/payments', BASKET), env, c);
+  assert.equal(res.status, 400);
+  assert.equal((await res.json()).error.code, 'sold_out');
+
+  // Not merely refused — no payment may exist for it at all.
+  const rows = await env.DB.prepare('SELECT COUNT(*) AS n FROM payments').first();
+  assert.equal(rows.n, 0, 'nothing was created for a dish we cannot cook');
+});
+
+test('a sold-out dish poisons the whole basket rather than being dropped quietly', async (t) => {
+  /* Silently pricing the rest would charge the guest for a different order
+     than the one they placed, and they would find out at the door. */
+  const env = workerEnv(MENU);
+  const c = ctx();
+  const paypal = fakePayPal({ '/v2/checkout/orders': () => orderResponse({}) });
+  t.after(() => paypal.restore());
+
+  await markSoldOut(env, ['hummus']);
+  const res = await worker.fetch(post('/api/payments', {
+    ...BASKET, items: { koshari: 1, hummus: 1 }
+  }), env, c);
+  assert.equal(res.status, 400);
+  assert.equal((await res.json()).error.code, 'sold_out');
+});
+
+test('a cash order for a sold-out dish is refused too', async (t) => {
+  // The announce route prices with the same function, so it inherits the rule.
+  const env = workerEnv(MENU);
+  const c = ctx();
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  await markSoldOut(env, ['koshari']);
+  const res = await worker.fetch(post('/api/orders/announce', {
+    items: { koshari: 2 }, type: 'pickup', name: 'Gast', phone: '+49 176 1'
+  }), env, c);
+  assert.equal(res.status, 400);
+});
+
+test('putting a dish back makes it orderable again', async (t) => {
+  const env = workerEnv(MENU);
+  const c = ctx();
+  const paypal = fakePayPal({ '/v2/checkout/orders': () => orderResponse({}) });
+  t.after(() => paypal.restore());
+
+  await markSoldOut(env, ['koshari']);
+  assert.equal((await worker.fetch(post('/api/payments', BASKET), env, c)).status, 400);
+
+  await markSoldOut(env, []);
+  const { forgetCache } = await import('../../worker/settings.js');
+  forgetCache(env);
+  assert.equal((await worker.fetch(post('/api/payments', BASKET), env, c)).status, 201);
+});
+
+test('the sold-out list reaches the page a crawler reads', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const c = ctx();
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  await markSoldOut(env, ['hummus']);
+  const { forgetCache } = await import('../../worker/settings.js');
+  forgetCache(env);
+
+  const html = await (await worker.fetch(get('/'), env, c)).text();
+  assert.match(html, /data-item="hummus" data-soldout="1"/,
+    'marked in the markup, not left to the script');
+  assert.match(html, /"soldOut"/, 'and handed to the browser without a fetch');
+});
+
+test('marking a dish sold out is behind the login', async (t) => {
+  const env = workerEnv(MENU, CREDS);
+  const c = ctx();
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const res = await worker.fetch(new Request('https://kairo1980.de/admin/dishes', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: 'soldout=koshari'
+  }), env, c);
+  const html = await res.text();
+  assert.match(html, /name="password"/, 'no session, no menu changes');
+
+  const row = await env.DB.prepare("SELECT value FROM settings WHERE key='soldout'").first();
+  assert.equal(row, null, 'and nothing was written');
+});

@@ -1824,3 +1824,34 @@ a.cart-send-wa {
 /* Inside the basket the note sits directly above the send button, where the
    press was about to happen. */
 #cartOrderOff { margin: 0 0 12px; font-size: 13px; }
+
+/* ===========================================================================
+   SOLD OUT — a dish the kitchen has run out of
+   ===========================================================================
+   The only thing on this site that withholds an order outright. Everything
+   else warns and lets it through; an ingredient that is not in the building
+   cannot be cooked, so the row says so and there is nothing to press.
+
+   Deliberately NOT a disabled "+" button: a control that is present and
+   refuses reads as a broken page, and a guest taps it three times before
+   concluding the site is broken rather than the dish unavailable. */
+.mitem.is-soldout .mname,
+.mitem.is-soldout .mdesc,
+.mitem.is-soldout .mprice { opacity: 0.45; }
+.qty.is-soldout { display: flex; align-items: center; justify-content: flex-end; }
+.soldout-tag {
+  font-family: 'Cinzel', serif; font-size: 9px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: #a04a00; background: #fdf0e0;
+  border: 1px solid #e8c9a0; padding: 6px 10px;
+  white-space: nowrap;
+}
+/* Arabic has no capitals and is cursive: the same rule as every other
+   small-caps label on this page. */
+:root[lang="ar"] .soldout-tag { letter-spacing: 0; text-transform: none; font-size: 11px; }
+
+.cart-soldout-note {
+  margin: 0; padding: 12px 24px;
+  background: #fdf0e0; border-bottom: 1px solid #e8c9a0;
+  color: #a04a00; font-size: 13.5px; line-height: 1.55;
+}

@@ -186,3 +186,51 @@ test('the legal pages link back into the site', async ({ page }) => {
     await expect(page.locator('nav.nav a[href="/"]').first()).toBeVisible();
   }
 });
+
+/* --- the canonical belongs to the URL, not to the reader -------------------
+   Search Console, 8 August 2026: "Duplicate, Google chose different canonical
+   than user", and the homepage out of the index since 13 June — indexed pages
+   2 -> 1.
+
+   The cause was here and the whole suite above missed it, because
+   playwright.config.js pins `locale: 'de-DE'`. On a German browser the bare URL
+   displays German, so the canonical stayed bare and every assertion passed.
+   Googlebot renders in ENGLISH: it fetched https://kairo1980.de/, lang.js chose
+   `en` from navigator.languages, and rewrote the canonical of the page it was
+   standing on to https://kairo1980.de/?lang=en.
+
+   These run in English and Arabic deliberately. A canonical describes the URL
+   it was served at; what language the visitor happens to read is none of its
+   business. */
+for (const locale of ['en-GB', 'ar-EG']) {
+  test.describe(`a ${locale} browser`, () => {
+    test.use({ locale });
+
+    test('is still served a homepage that canonicalises to the bare URL', async ({ page }) => {
+      await page.goto('/');
+      // The language really did switch — otherwise this proves nothing.
+      await expect(page.locator('html')).not.toHaveAttribute('lang', 'de');
+      await expect(page.locator('link[rel="canonical"]'))
+        .toHaveAttribute('href', 'https://kairo1980.de/');
+    });
+
+    test('does not repoint any page at a language variant', async ({ page }) => {
+      for (const { path, canonical: base } of PAGES) {
+        await page.goto(path);
+        await expect(page.locator('link[rel="canonical"]'), `${path} under ${locale}`)
+          .toHaveAttribute('href', base);
+      }
+    });
+
+    test('still canonicalises an explicit ?lang= URL to itself', async ({ page }) => {
+      // The other half of the rule: when the URL DOES name a language, the
+      // canonical must name it too, or the variant cannot be indexed at all.
+      await page.goto('/?lang=en');
+      await expect(page.locator('link[rel="canonical"]'))
+        .toHaveAttribute('href', 'https://kairo1980.de/?lang=en');
+      await page.goto('/?lang=ar');
+      await expect(page.locator('link[rel="canonical"]'))
+        .toHaveAttribute('href', 'https://kairo1980.de/?lang=ar');
+    });
+  });
+}

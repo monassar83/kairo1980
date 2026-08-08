@@ -393,3 +393,43 @@ test('a delivery order carries the address the driver needs', async ({ page }) =
   // The number has to be dialable from the phone the restaurant reads this on.
   await expect(card.locator('a[href^="tel:"]')).toHaveAttribute('href', 'tel:+491765550001');
 });
+
+/* --- a dish the kitchen has run out of ------------------------------------
+   Marked at /admin, and the guest must meet it as a fact rather than as a
+   button that does not work. Cleanup is in a finally: leaving a dish sold out
+   would silently break every later test that tries to order it, and — far
+   worse if this ever ran against something real — leave it off the menu. */
+test('a dish marked sold out cannot be ordered, and says so', async ({ page }) => {
+  await signIn(page);
+  await goAdmin(page, '/admin/dishes');
+
+  const box = page.locator('input[name="soldout"][value="hummus"]');
+  await expect(box, 'the dish list is read from the menu itself').toHaveCount(1);
+
+  try {
+    await box.check();
+    await page.click('button.save-btn');
+    await expect(page.locator('.msg')).toContainText('Saved');
+
+    await page.goto('/?lang=de');
+    const row = page.locator('.mitem[data-item="hummus"]');
+
+    // Stated in the markup the Worker sends, not painted on afterwards.
+    await expect(row).toHaveAttribute('data-soldout', '1');
+    await expect(row).toContainText('Ausverkauft');
+    // No control at all — a disabled "+" reads as a broken page.
+    await expect(row.locator('[data-act="inc"]')).toHaveCount(0);
+
+    // And a dish that is still available is untouched beside it.
+    const ok = page.locator('.mitem[data-item="baba-ghanough"]');
+    await expect(ok.locator('[data-act="inc"]')).toHaveCount(1);
+  } finally {
+    await goAdmin(page, '/admin/dishes');
+    await page.locator('input[name="soldout"][value="hummus"]').uncheck();
+    await page.click('button.save-btn');
+  }
+
+  // Back on the menu the moment it is unticked.
+  await page.goto('/?lang=de');
+  await expect(page.locator('.mitem[data-item="hummus"] [data-act="inc"]')).toHaveCount(1);
+});

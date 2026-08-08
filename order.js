@@ -37,13 +37,30 @@
   var LIVE = readLiveData();
   if (LIVE.hours && LIVE.hours.days) CFG.hours = LIVE.hours;
 
+  /* Dishes the kitchen has run out of, written into the page by the Worker so
+     the answer is right in the markup rather than a moment after load. The
+     `data-soldout` attribute on the row says the same thing for a reader with
+     no JavaScript at all; this is the copy the basket asks. */
+  var SOLD_OUT = (LIVE && LIVE.soldOut) || {};
+  function soldOut(id) {
+    if (SOLD_OUT[id]) return true;
+    /* The row carries the same fact as an attribute, which is what a reader
+       with no JavaScript sees. Asking both means a page cached with one and
+       not the other still refuses the dish — and refusing wrongly costs one
+       order, while selling a dish that does not exist costs a phone call and
+       the guest's evening. */
+    var el = items[id] && items[id].el;
+    return !!(el && el.getAttribute('data-soldout') === '1');
+  }
+
   function readLiveData() {
     var node = document.getElementById('kairoLive');
-    var out = { hours: null, ordering: { open: true, resumesAt: null } };
+    var out = { hours: null, ordering: { open: true, resumesAt: null }, soldOut: {} };
     if (!node) return out;
     try {
       var data = JSON.parse(node.textContent);
       out.hours = data.hours || null;
+      out.soldOut = data.soldOut || {};
       if (data.ordering && data.ordering.open === false) {
         out.ordering = { open: false, resumesAt: data.ordering.resumesAt || null };
       }
@@ -105,6 +122,8 @@
     de: {
       days: { mon: 'Montag', tue: 'Dienstag', wed: 'Mittwoch', thu: 'Donnerstag', fri: 'Freitag', sat: 'Samstag', sun: 'Sonntag' },
       closed: 'Geschlossen',
+      soldOut: 'Ausverkauft',
+      soldOutRemoved: '{dish} ist heute leider ausverkauft und wurde aus dem Warenkorb entfernt.',
       pickupLabel: 'Abholung', deliveryLabel: 'Lieferung',
       deliveryNotice: 'Abholung während der gesamten Öffnungszeit, Lieferung ab {from} Uhr.',
       deliveryClause: 'Bitte beachten: Lieferungen ab {from} Uhr, davor ausschließlich Abholung.',
@@ -255,6 +274,8 @@
     en: {
       days: { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' },
       closed: 'Closed',
+      soldOut: 'Sold out',
+      soldOutRemoved: '{dish} is sold out today and has been removed from your basket.',
       pickupLabel: 'Pickup', deliveryLabel: 'Delivery',
       deliveryNotice: 'Collection throughout our opening hours, delivery from {from}.',
       deliveryClause: 'Please note: deliveries from {from} — before that, collection only.',
@@ -391,6 +412,8 @@
     ar: {
       days: { mon: 'الاثنين', tue: 'الثلاثاء', wed: 'الأربعاء', thu: 'الخميس', fri: 'الجمعة', sat: 'السبت', sun: 'الأحد' },
       closed: 'مغلق',
+      soldOut: 'خلص',
+      soldOutRemoved: '{dish} خلص النهارده للأسف واتشال من السلة.',
       pickupLabel: 'الاستلام', deliveryLabel: 'التوصيل',
       deliveryNotice: 'الاستلام من المطعم طول مواعيد الفتح، والتوصيل من الساعة {from}.',
       deliveryClause: 'للعلم: التوصيل من الساعة {from}، وقبل كده الاستلام من المطعم بس.',
@@ -1172,7 +1195,41 @@
     return Object.keys(cart).reduce(function (n, id) { return n + cart[id]; }, 0);
   }
 
+  /* A basket lives for two hours and the kitchen can run out inside that. A
+     guest who added Koshari before it went off must not carry it to a checkout
+     that will refuse it — the server prices this order and would reject the
+     whole basket, so the dish is dropped here and the guest is told which one
+     and why. Silence would look like a bug in the total. */
+  /* Said once, where the guest is already looking. Deliberately not an alert():
+     a modal on load is the kind of thing people dismiss without reading, and
+     this has to be read — the total changed. */
+  function notifySoldOut(names) {
+    var host = document.getElementById('cartSoldOutNote');
+    if (!host) return;
+    host.textContent = names
+      .map(function (n) { return fill(t().soldOutRemoved, { dish: n }); })
+      .join(' ');
+    host.hidden = false;
+  }
+
+  function dropSoldOut() {
+    var dropped = [];
+    Object.keys(cart).forEach(function (id) {
+      if (soldOut(id)) {
+        dropped.push(itemName(id));
+        delete cart[id];
+      }
+    });
+    if (dropped.length) saveCart();
+    return dropped;
+  }
+
   function setQty(id, qty) {
+    /* The single gate. Every path that adds a dish comes through here — the
+       menu "+", the basket "+", a restored basket — so a dish that has run out
+       cannot be added by any of them, including a button left on screen from
+       before the kitchen flipped it. */
+    if (qty > 0 && soldOut(id)) return;
     if (qty <= 0) delete cart[id];
     else cart[id] = Math.min(qty, 99);
     saveCart();
@@ -1344,6 +1401,7 @@
   function paintMenu() {
     var L = t();
     Object.keys(items).forEach(function (id) {
+      items[id].el.classList.toggle('is-soldout', soldOut(id));
       var box = items[id].el.querySelector('.qty[data-for="' + id + '"]');
       if (!box) return;
       var qty = cart[id] || 0;
@@ -1353,6 +1411,13 @@
           '<button type="button" class="qty-btn" data-act="dec" data-id="' + id + '" aria-label="−">−</button>' +
           '<span class="qty-num">' + qty + '</span>' +
           '<button type="button" class="qty-btn" data-act="inc" data-id="' + id + '" aria-label="+">+</button>';
+      } else if (soldOut(id)) {
+        /* No disabled "+" here. A button that is present and refuses reads as a
+           broken page; the words say what is true and there is nothing to
+           press. This is the one place the site withholds an order outright —
+           see the note in worker/admin/dishes.js. */
+        box.className = 'qty is-soldout';
+        box.innerHTML = '<span class="soldout-tag">' + escapeHtml(L.soldOut) + '</span>';
       } else {
         box.className = 'qty';
         box.innerHTML = '<button type="button" class="qty-add" data-act="inc" data-id="' + id + '" ' +
@@ -1412,6 +1477,8 @@
           '<h2 class="cart-heading" id="cartHeading"></h2>' +
           '<button type="button" class="cart-close" id="cartClose" aria-label="×">×</button>' +
         '</header>' +
+        // Sits above the basket contents because it explains why they changed.
+        '<p class="cart-soldout-note" id="cartSoldOutNote" hidden></p>' +
         '<div class="cart-body" id="cartBody"></div>' +
       '</aside>';
     while (wrap.firstChild) document.body.appendChild(wrap.firstChild);
@@ -3152,9 +3219,16 @@
     if (CFG.order.cartEnabled && hasMenu) {
       collectItems();
       loadCart();
+      /* A basket outlives a service. Anything the kitchen has run out of since
+         it was filled goes now, before a total is drawn from it — otherwise
+         the guest reads a figure the server will refuse to charge. */
+      var gone = dropSoldOut();
       buildPanel();
       wireEvents();
       paint();
+      if (gone.length) {
+        notifySoldOut(gone);
+      }
       // A payment that was taken but never handed over must not be lost
       // because the guest refreshed at the wrong moment.
       recoverPayment();

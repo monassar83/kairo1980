@@ -16,6 +16,7 @@
      - an unknown postcode charges no fee; that is agreed in the chat instead */
 
 import { CONFIG, menu, zoneFor } from './site-data.js';
+import { readSettings } from './settings.js';
 
 export const MAX_ITEMS = 200;
 
@@ -45,6 +46,14 @@ function minimumApplies(type, business) {
  */
 export async function quote(env, req) {
   const prices = await menu(env);
+
+  /* THE ONE REFUSAL ON THIS SITE. An unknown postcode, a closed slot and a
+     sub-minimum basket are all warnings that let the order through, because
+     the guest may be right and we may be wrong. A dish the kitchen has run out
+     of is not that: the ingredient is not in the building, and taking the money
+     would mean ringing the guest back to say so. The browser dims it too, but
+     the browser is not to be trusted with the answer. */
+  const { soldOut } = await readSettings(env);
   const type = req.type === 'pickup' ? 'pickup' : 'delivery';
   const business = !!req.business;
 
@@ -57,6 +66,9 @@ export async function quote(env, req) {
     if (!Number.isFinite(qty) || qty <= 0) continue;
     const dish = prices.get(id);
     if (!dish) throw new PricingError('unknown_item', 'Unknown menu item: ' + id);
+    if (soldOut && soldOut[id]) {
+      throw new PricingError('sold_out', 'Currently unavailable: ' + dish.name);
+    }
     units += qty;
     if (units > MAX_ITEMS) throw new PricingError('too_many_items', 'Order exceeds ' + MAX_ITEMS + ' items');
     const amount = dish.price * qty;

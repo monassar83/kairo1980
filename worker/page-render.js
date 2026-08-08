@@ -148,8 +148,21 @@ const SCHEMA_BLOCK = /(<script id="restaurantSchema"[^>]*>)([\s\S]*?)(<\/script>
  * @param {object} settings from readSettings()
  */
 export function withLiveData(html, settings) {
-  const { hours, ordering } = settings;
+  const { hours, ordering, soldOut } = settings;
   let out = html;
+
+  /* A dish the kitchen has run out of is marked in the markup itself, not left
+     to the script. The attribute is what CSS dims and what order.js reads, so a
+     reader with no JavaScript still sees "ausverkauft" rather than an add
+     button that refuses to work. */
+  const off = Object.keys(soldOut || {});
+  if (off.length) {
+    for (const id of off) {
+      const attr = `data-item="${id}"`;
+      if (!out.includes(attr)) continue;   // a dish since removed from the menu
+      out = out.split(attr).join(`${attr} data-soldout="1"`);
+    }
+  }
 
   /* Read by order.js at boot, synchronously — no fetch, so no moment in which
      the page shows one thing and then another. type="application/json" is a
@@ -157,7 +170,7 @@ export function withLiveData(html, settings) {
      stands untouched. The escape keeps a "</script>" inside a value from
      ending the element early. */
   const island = `<script type="application/json" id="kairoLive">${
-    JSON.stringify({ hours, ordering }).replace(/</g, '\\u003c')
+    JSON.stringify({ hours, ordering, soldOut: soldOut || {} }).replace(/</g, '\\u003c')
   }</script>\n`;
   if (out.includes('</head>')) out = out.replace('</head>', island + '</head>');
 
@@ -194,5 +207,7 @@ export function withLiveData(html, settings) {
 export function liveETag(assetETag, settings) {
   const base = (assetETag || 'none').replace(/^W\//, '').replace(/"/g, '');
   const state = settings.ordering.open ? 'open' : `off:${settings.ordering.resumesAt}`;
-  return `W/"${base}~${settings.hoursVersion}~${state}"`;
+  // The sold-out set is stated in the markup too, so a change to it has to make
+  // every cached copy stale — same reason hoursVersion is here.
+  return `W/"${base}~${settings.hoursVersion}~${settings.soldOutVersion || '0'}~${state}"`;
 }

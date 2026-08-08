@@ -118,13 +118,34 @@
      makes that class of bug impossible rather than merely fixed. */
   var canonicalBase = null;
 
-  function paintCanonical(lang) {
+  /* The language named in the CURRENT URL — nothing else.
+
+     The invariant is that the canonical mirrors the URL. Detection may change
+     what is displayed; only something that changes the URL may change the
+     canonical, and in this file that is updateUrl() alone.
+
+     It used to follow the language being DISPLAYED, which is chosen from
+     navigator.languages when the URL says nothing. Googlebot renders in
+     English — so it fetched https://kairo1980.de/, was handed a page claiming
+     its canonical was https://kairo1980.de/?lang=en, and reasonably concluded
+     the two were duplicates and that we had nominated the other one. Search
+     Console reported "Duplicate, Google chose different canonical than user"
+     and the homepage fell out of the index on 13 June 2026: indexed pages went
+     from 2 to 1 and stayed there.
+
+     The static markup was right the whole time, and so was the sitemap and the
+     hreflang set. This script overwrote all three a moment after load. */
+  var urlLang = null;
+
+  function paintCanonical() {
     var link = document.querySelector('link[rel="canonical"]');
     if (!link) return;
     if (canonicalBase === null) canonicalBase = link.getAttribute('href') || '';
     if (!canonicalBase) return;
     link.setAttribute('href',
-      lang === FALLBACK ? canonicalBase : canonicalBase + '?lang=' + lang);
+      (urlLang && urlLang !== FALLBACK)
+        ? canonicalBase + '?lang=' + urlLang
+        : canonicalBase);
   }
 
   function paintSwitcher(lang) {
@@ -146,7 +167,7 @@
     root.setAttribute('dir', isRtl(lang) ? 'rtl' : 'ltr');
 
     paintElements(lang);
-    paintCanonical(lang);
+    paintCanonical();
     paintSwitcher(lang);
 
     // order.js repaints the hours, the basket and every generated string; the
@@ -164,15 +185,22 @@
     updateUrl(lang);
   }
 
+  /* The one place the URL changes, and therefore the one place the canonical
+     may change with it. Pressing a language button rewrites both together; a
+     browser merely PREFERRING a language rewrites neither. */
   function updateUrl(lang) {
     if (!window.history || !history.replaceState) return;
     var url = location.pathname + (lang === FALLBACK ? '' : '?lang=' + lang) + location.hash;
     try { history.replaceState(null, '', url); } catch (e) { /* file:// */ }
+    urlLang = (lang === FALLBACK) ? null : lang;
+    paintCanonical();
   }
 
   /* --- boot --------------------------------------------------------------- */
 
   var linked = fromQuery();
+  // What the URL says at load. Read before anything can rewrite it.
+  urlLang = linked;
   var chosen = stored();
   var initial = linked || chosen || fromBrowser() || FALLBACK;
 
