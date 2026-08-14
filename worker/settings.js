@@ -451,8 +451,22 @@ export async function clearExtension(env) {
    this changes what can be ORDERED, and adds one sentence beneath the hours
    saying what is true today — and touches neither the table nor the schema.
 
-   `from` is a clock time and '' is a real answer, exactly as in
-   `hours.deliveryFrom`: it means a driver is out for the whole opening today. */
+   `from` has THREE answers, and the third is the one the week cannot express:
+
+     null    — no driver at all today. Collection only, all day.
+     ''      — a driver out for the whole opening.
+     'HH:MM' — a driver from that time.
+
+   `hours.deliveryFrom` has only the last two, because "we do not deliver" is
+   not something a restaurant that delivers says about its week — it is
+   something it says about a Tuesday when the driver is ill. Expressing it in
+   the weekly field would mean typing a time after closing and hoping every
+   reader draws the right conclusion, which is a rule nobody can read back.
+
+   So null is a value here, and it is checked FOR EXPLICITLY everywhere. `''`
+   and `null` are both falsy and mean opposite things — a caller that tests
+   truthiness turns "no driver at all" into "a driver all day", which is the
+   worst answer this switch can give. */
 
 function normaliseDeliveryShift(value, now = Date.now()) {
   if (!value) return null;
@@ -460,21 +474,28 @@ function normaliseDeliveryShift(value, now = Date.now()) {
   // Already elapsed is the same as never set. Read against the clock, not swept.
   if (!Number.isFinite(until) || until <= now) return null;
 
+  /* null survives as null. An ABSENT key is '' — rows written before the third
+     answer existed carry a time or an empty string and never a missing one, so
+     nothing stored can be misread as "no driver" by this upgrade. */
+  const raw = value.from === undefined ? '' : value.from;
+
   /* A stored time that is not a time is not repaired into ''. Reading it that
      way would put a driver on the road from opening — the same silent
      publication window2() refuses for the hours themselves. */
-  const from = String(value.from == null ? '' : value.from).trim();
+  const from = raw === null ? null : String(raw).trim();
   if (from && !TIME.test(from)) return null;
 
   return { from, until: new Date(until).toISOString() };
 }
 
-/** Put a driver out from `from` ('HH:MM', or '' for the whole opening) for the
- *  rest of today. The end is midnight tonight and is not offered as a choice:
- *  the whole point of this switch is that it is about today and lapses without
- *  anyone remembering it. */
+/** Set today's driver: `from` is 'HH:MM', '' for the whole opening, or null
+ *  for no driver at all — collection only.
+ *
+ *  The end is midnight tonight and is not offered as a choice: the whole point
+ *  of this switch is that it is about today and lapses without anyone
+ *  remembering it. */
 export async function setDeliveryShift(env, from, until) {
-  const at = String(from == null ? '' : from).trim();
+  const at = from === null ? null : String(from == null ? '' : from).trim();
   if (at && !TIME.test(at)) return null;
 
   const end = Number.isFinite(until) ? until : nextMidnight();

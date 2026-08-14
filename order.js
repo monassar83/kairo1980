@@ -133,6 +133,8 @@
          a sentence that simply states today's time is true either way. */
       deliveryToday: 'Heute liefern wir ab {from} Uhr.',
       deliveryTodayAll: 'Heute liefern wir während der gesamten Öffnungszeit.',
+      deliveryTodayNone: 'Heute bieten wir ausschließlich Abholung an — es ist kein Fahrer unterwegs.',
+      cartPickupOnlyToday: 'Heute bieten wir ausschließlich Abholung an. Für eine Lieferung wählen Sie unter „Wunschtermin“ bitte einen anderen Tag.',
       soldOut: 'Ausverkauft',
       soldOutRemoved: '{dish} ist heute leider ausverkauft und wurde aus dem Warenkorb entfernt.',
       pickupLabel: 'Abholung', deliveryLabel: 'Lieferung',
@@ -288,6 +290,8 @@
       openLater: 'Open later today — orders until {until}.',
       deliveryToday: 'Today we deliver from {from}.',
       deliveryTodayAll: 'Today we deliver throughout our opening hours.',
+      deliveryTodayNone: 'Today we offer collection only — no driver is out.',
+      cartPickupOnlyToday: 'Today we offer collection only. For a delivery, please pick another day under “Preferred time”.',
       soldOut: 'Sold out',
       soldOutRemoved: '{dish} is sold out today and has been removed from your basket.',
       pickupLabel: 'Pickup', deliveryLabel: 'Delivery',
@@ -429,6 +433,8 @@
       openLater: 'النهارده فاتحين لوقت متأخر — الطلبات لحد الساعة {until}.',
       deliveryToday: 'النهارده بنوصّل من الساعة {from}.',
       deliveryTodayAll: 'النهارده بنوصّل طول مواعيد الفتح.',
+      deliveryTodayNone: 'النهارده الاستلام من المطعم بس — مفيش سواق برّه.',
+      cartPickupOnlyToday: 'النهارده الاستلام من المطعم بس. لو عايز توصيل، اختار يوم تاني من «الميعاد المطلوب».',
       soldOut: 'خلص',
       soldOutRemoved: '{dish} خلص النهارده للأسف واتشال من السلة.',
       pickupLabel: 'الاستلام', deliveryLabel: 'التوصيل',
@@ -726,6 +732,9 @@
     if (!key) return false;
     // Today's driver if one was moved, the standing shift otherwise.
     var from = shiftFor(iso, minutes);
+    // No driver at all today. Nothing else can make one appear — not an
+    // extension, not an opening window — so this answers before either.
+    if (from === null) return false;
     var hit = false;
     deliverySlotsFor(key, from).forEach(function (s) {
       if (minutes >= hhmm(s.from) && minutes <= hhmm(s.to)) hit = true;
@@ -752,8 +761,18 @@
      data and every printed sentence state, and what must not change because
      one afternoon had a driver in it.
 
-     '' is a real answer here as it is there — a driver out for the whole
-     opening — so the caller checks for null, never for falsiness. */
+     `from` has THREE answers and two of them are falsy, which is why every
+     caller below tests `=== null` by name and never truthiness:
+
+       null    — no driver at all today. Collection only.
+       ''      — a driver out for the whole opening.
+       'HH:MM' — a driver from that time.
+
+     The week has only the last two: "we do not deliver" is not a fact about
+     a restaurant that delivers, it is a fact about the Tuesday its driver was
+     ill. Reading null as '' would turn "no driver" into "a driver all day",
+     which is the worst answer this can give — it promises a car that does not
+     exist. */
   function deliveryShiftToday() {
     var raw = (LIVE && LIVE.deliveryShift) || null;
     if (!raw) return null;
@@ -762,7 +781,7 @@
 
     var u = berlinNow(new Date(until));
     if (!u) return null;
-    var from = String(raw.from == null ? '' : raw.from).trim();
+    var from = raw.from === null ? null : String(raw.from == null ? '' : raw.from).trim();
     // A stored time that is not a time is ignored rather than read as "all
     // day": guessing here would put a driver on the road that does not exist.
     if (from && !/^([01]\d|2[0-3]):[0-5]\d$/.test(from)) return null;
@@ -772,6 +791,7 @@
   // The delivery shift in force at one moment: today's if it has been moved
   // and the moment falls before the move lapses, the standing one otherwise.
   // A guest scheduling for tomorrow evening therefore meets the ordinary rule.
+  // May be null — see deliveryShiftToday: that is "no driver", not "no rule".
   function shiftFor(iso, minutes) {
     var today = deliveryShiftToday();
     if (today && stamp(iso, minutes) <= today.untilStamp) return today.from;
@@ -966,9 +986,15 @@
     if (!host) return;
     var today = deliveryShiftToday();
     var L = t();
-    var say = today && today.from !== deliveryFrom()
-      ? (today.from ? fill(L.deliveryToday, { from: today.from }) : L.deliveryTodayAll)
-      : '';
+    var say = '';
+    if (today && today.from !== deliveryFrom()) {
+      // Three answers, three sentences. `null` first: it is the only one that
+      // takes something away, and reading it as falsy would print "we deliver
+      // all day" on the day there is nobody to drive.
+      say = today.from === null ? L.deliveryTodayNone
+        : today.from ? fill(L.deliveryToday, { from: today.from })
+          : L.deliveryTodayAll;
+    }
     host.textContent = say;
     host.hidden = !say;
   }
@@ -1755,10 +1781,13 @@
     // the chat, and withholding the button on a guess is the one thing this
     // check must not do.
     if (!at) return false;
-    // Asked of the shift in force AT THAT MOMENT, not of the standing one: a
-    // day whose driver is out from opening has nothing to withhold, and a day
-    // whose driver starts late withholds it even when the week says otherwise.
-    if (!shiftFor(at.iso, at.minutes)) return false;
+    /* Asked of the shift in force AT THAT MOMENT, not of the standing one: a
+       day whose driver is out from opening has nothing to withhold, and a day
+       whose driver starts late withholds it even when the week says otherwise.
+       Tested by name, because null and '' are both falsy and mean opposites. */
+    var from = shiftFor(at.iso, at.minutes);
+    if (from === null) return true;    // no driver today — collection only
+    if (!from) return false;           // a driver out for the whole opening
     return !deliversAt(at.iso, at.minutes);
   }
 
@@ -1826,8 +1855,13 @@
       // picked a time we can serve, just not in the way they asked for — so the
       // note names the alternative rather than the refusal.
       // The time named is the one that would actually work for the day the
-      // guest picked — today's moved shift, or the standing one.
-      out.push({ kind: 'hours', text: fill(L.cartDeliveryLater, { from: shiftFor(iso, minutes) }) });
+      // guest picked — today's moved shift, or the standing one. When there is
+      // no driver at all, no time works and the note says so instead of
+      // sending the guest to hunt for one.
+      var when = shiftFor(iso, minutes);
+      out.push({ kind: 'hours', text: when === null
+        ? L.cartPickupOnlyToday
+        : fill(L.cartDeliveryLater, { from: when }) });
     }
     var lead = (CFG.business && CFG.business.leadTimeHours) || 0;
     if (form.business && lead && target - current < lead * 60) {
@@ -1983,9 +2017,13 @@
     syncType();
     var blocked = deliveryBlocked();
     // Named from the moment the order would land at, so the note tells the
-    // guest the time that would actually get them a driver.
+    // guest the time that would actually get them a driver — or says there is
+    // no time at all today, which naming one would be a lie about.
     var at = blocked ? targetMoment() : null;
     var deliversFrom = at ? shiftFor(at.iso, at.minutes) : deliveryFrom();
+    var noteText = deliversFrom === null
+      ? L.cartPickupOnlyToday
+      : fill(L.cartDeliveryLater, { from: deliversFrom });
 
     return '<div class="cart-types" role="group" aria-label="' + L.type + '">' +
       '<button type="button" class="cart-type' +
@@ -1996,7 +2034,7 @@
         '" data-type="pickup">' + L.pickup + '</button>' +
       '</div>' +
       '<p class="cart-note is-pickup-only" id="cartTypeNote"' + (blocked ? '' : ' hidden') + '>' +
-        (blocked ? escapeHtml(fill(L.cartDeliveryLater, { from: deliversFrom })) : '') +
+        (blocked ? escapeHtml(noteText) : '') +
       '</p>' +
       payHtml();
   }

@@ -359,6 +359,31 @@ test('an empty shift is a real answer, and a mistyped one changes nothing', asyn
   assert.equal((await readSettings(env)).deliveryShift.from, '');
 });
 
+test('"no driver today" is a third answer, and is never read as "all day"', async () => {
+  const { setDeliveryShift, readSettings, forgetCache } =
+    await import('../../worker/settings.js');
+  const env = { DB: freshDatabase() };
+
+  /* The distinction that costs money if it is lost: null means nobody is
+     driving, '' means somebody is driving all day. Both are falsy, so any
+     reader that tests truthiness turns "no driver" into "a driver from the
+     moment we open" and promises a car that does not exist. */
+  const none = await setDeliveryShift(env, null);
+  assert.equal(none.from, null);
+
+  forgetCache(env);
+  const live = await readSettings(env);
+  assert.equal(live.deliveryShift.from, null,
+    'it must survive the database as null, not come back as ""');
+  assert.notEqual(live.deliveryShift.from, '',
+    'no driver is not the same fact as a driver all day');
+
+  // And the opposite answer still stores as the opposite answer.
+  await setDeliveryShift(env, '');
+  forgetCache(env);
+  assert.equal((await readSettings(env)).deliveryShift.from, '');
+});
+
 test('a delivery shift that has already elapsed is the same as none', async () => {
   const { setDeliveryShift, clearDeliveryShift, readSettings, forgetCache } =
     await import('../../worker/settings.js');

@@ -110,6 +110,11 @@ export async function handle(request, env, url) {
     } else if (mode === 'open') {
       // A driver out for the whole of today's opening, whatever it is.
       await setDeliveryShift(env, '');
+    } else if (mode === 'off') {
+      /* No driver at all today — collection only. null, not '': the two are
+         both falsy and mean opposite things, which is why setDeliveryShift
+         and everything downstream test for null by name. */
+      await setDeliveryShift(env, null);
     } else {
       // A time typed in. An unreadable one changes nothing rather than
       // clearing the shift: setDeliveryShift refuses it and says so by

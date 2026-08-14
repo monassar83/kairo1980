@@ -110,9 +110,18 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
+/* Hooks share the TEST's 30s budget, and this one already spends two page
+   loads. Today's driver is put back with a plain POST on the context's own
+   session instead of a third — teardown is not the thing under test, and
+   driving the UI to undo it cost more time than the test body had left, which
+   surfaces as the PREVIOUS test failing in its hook and takes the rest of the
+   serial file down with it. */
 test.afterEach(async ({ page }) => {
   await signIn(page).catch(() => {});
   await setOrdering(page, { closed: false }).catch(() => {});
+  // A settings row like the switch: a test that leaves one set changes the next.
+  await page.request.post('/admin/delivery-shift', { form: { mode: 'clear' } })
+    .catch(() => {});
 });
 
 test('a paused shop still shows its menu, and says why in all three languages',
@@ -324,7 +333,7 @@ test('hours saved in the admin reach the markup a crawler reads', async ({ page 
    Two failures are worth holding down: the sentence rendering in German and
    nowhere else, and today's driver leaking into the published hours. */
 
-/** Move today's shift at /admin. `mode` is 'now', 'open', 'at' or 'clear'. */
+/** Move today's shift at /admin. `mode` is 'now', 'open', 'off', 'at' or 'clear'. */
 async function setShift(page, mode, from = null) {
   await goAdmin(page);
   const box = page.locator('.shift');
@@ -339,20 +348,16 @@ async function setShift(page, mode, from = null) {
   // Clear first: the block shows the controls only while no shift is in force.
   if (await box.locator('button.go2').count()) await box.locator('button.go2').click();
 
+  /* Selected by the value it submits, never by its classes. The block now has
+     two `.stop.wide` buttons — "no driver today" and the disclosure's own
+     submit — and a class-based locator silently drove whichever came first. */
   if (mode === 'at') {
     await box.locator('details summary').click();
     await page.fill('#shiftFrom', from);
-    await box.locator('button.stop.wide').click();
-  } else {
-    await box.locator(`button.stop[name="mode"][value="${mode}"]`).click();
   }
+  await box.locator(`button[name="mode"][value="${mode}"]`).click();
   await expect(page.locator('.shift.on')).toBeVisible();
 }
-
-test.afterEach(async ({ page }) => {
-  await signIn(page).catch(() => {});
-  await setShift(page, 'clear').catch(() => {});
-});
 
 test('today\'s driver is said in three languages and published in none',
   async ({ page }) => {
@@ -462,6 +467,48 @@ test('a shift set for later today withholds delivery the basket would have offer
 
     // And the order itself is never refused: pickup at that moment still sends.
     await expect(page.locator('#cartSend')).toBeEnabled();
+  });
+
+test('with no driver today, delivery is withheld and the order still goes',
+  async ({ page }) => {
+    const whatsapp = await captureWhatsApp(page);
+    await signIn(page);
+    await setShift(page, 'off');
+
+    await page.goto('/');
+
+    // Said under the hours, in the reader's own language.
+    const note = page.locator('.hours-delivery-today');
+    await expect(note).toBeVisible();
+    await expect(note).toContainText('Abholung');
+    for (const [lang, expected] of [['en', /collection only/i], ['ar', /الاستلام/]]) {
+      await page.locator(`[data-lang="${lang}"]`).first().click();
+      await expect(note).toHaveText(expected);
+    }
+
+    await page.goto('/?lang=de');
+    await addItem(page, 'hummus', 1);
+    await openBasket(page);
+
+    /* Withheld for every moment today, whatever the clock says — this is the
+       one thing the weekly settings could not express, and "no driver" must
+       not decay into "a driver from the moment we open". */
+    await expect(page.locator('[data-type="delivery"]')).toBeDisabled();
+
+    /* And the note does not name a time. Naming one would send the guest to
+       pick a slot that cannot be driven either — the failure that made this a
+       third answer rather than a time typed after closing. */
+    const why = page.locator('#cartTypeNote');
+    await expect(why).toContainText('Abholung');
+    await expect(why).not.toHaveText(/\d\d:\d\d/);
+
+    /* Validation withholds an OPTION, never the order. Collection at the
+       counter still sends, which is the whole point of having a switch for
+       this instead of closing the shop. */
+    await fillContact(page, { name: 'Test Gast', phone: '+49 176 1234567' });
+    await page.locator('#cartSend').click();
+    expect(await whatsapp()).toContain('wa.me');
+    await expect(page.locator('.cart-sent')).toBeVisible();
   });
 
 test('resuming clears every trace of the closure', async ({ page }) => {

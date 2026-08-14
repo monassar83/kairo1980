@@ -382,9 +382,11 @@ export function dashboardPage({ nonce, ordering, hours, hoursAreCustom, extensio
      applied to the driver instead of the door: it moves the delivery time in
      either direction for today only, and lapses at midnight by itself. -->
 <div class="shift ${deliveryShift ? 'on' : ''}">
-  ${deliveryShift ? `<p class="lead">Delivering today ${deliveryShift.from
-      ? `from <b>${esc(deliveryShift.from)}</b>`
-      : '<b>throughout the opening hours</b>'} — ${usual}.</p>
+  ${deliveryShift ? `<p class="lead">${deliveryShift.from === null
+      ? '<b>Collection only today</b> — no driver out.'
+      : `Delivering today ${deliveryShift.from
+        ? `from <b>${esc(deliveryShift.from)}</b>`
+        : '<b>throughout the opening hours</b>'}`} — ${usual}.</p>
     <p class="hint">The delivery times on the website are unchanged, and this
     lapses at midnight on its own. Nothing to come back and undo.</p>
     <form method="post" action="/admin/delivery-shift">
@@ -397,6 +399,10 @@ export function dashboardPage({ nonce, ordering, hours, hoursAreCustom, extensio
         <button class="stop" name="mode" value="now" type="submit">from now</button>
         <button class="stop" name="mode" value="open" type="submit">all day today</button>
       </div>
+      <!-- The commonest of the three, and the one the weekly settings cannot
+           say at all, so it gets its own row and its own words rather than
+           being a third chip in the line above. -->
+      <button class="stop wide" name="mode" value="off" type="submit">No driver today — collection only</button>
       <details>
         <summary>From a particular time</summary>
         <div class="row">
