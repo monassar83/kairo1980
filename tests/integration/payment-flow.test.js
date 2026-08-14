@@ -990,3 +990,81 @@ test('an announcement that fails never costs the guest their order', async (t) =
     post('/api/orders/announce', { ...CASH_ORDER, items: { caviar: 1 } }), env, c);
   assert.equal(bad.status, 400);
 });
+
+/* --- the orders report ---------------------------------------------------
+   What the bookkeeping system reads. The settlement report answers "what money
+   arrived"; this answers "what was sold", which is what the books are built
+   from. Held to the same three things the route was written for: it is closed
+   without the token, it carries the sale in full, and it carries no guest. */
+
+const ordersReport = (env, c, query = '', token = 'tok') => worker
+  .fetch(get('/api/reports/orders' + query, { authorization: 'Bearer ' + token }), env, c)
+  .then((r) => r.json());
+
+test('the orders report is closed without the token', async (t) => {
+  const env = workerEnv(MENU, { REPORT_TOKEN: 'sekret' });
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  assert.equal((await worker.fetch(get('/api/reports/orders'), env, ctx())).status, 401);
+  assert.equal((await worker.fetch(get('/api/reports/orders', {
+    authorization: 'Bearer wrong'
+  }), env, ctx())).status, 401);
+  assert.equal((await worker.fetch(get('/api/reports/orders', {
+    authorization: 'Bearer sekret'
+  }), env, ctx())).status, 200);
+});
+
+test('the orders report carries the sale, and never the guest', async (t) => {
+  const env = workerEnv(MENU, { ...TELEGRAM, REPORT_TOKEN: 'tok' });
+  const c = ctx();
+  const paypal = fakePayPal({ [SEND]: () => ({ ok: true }) });
+  t.after(() => paypal.restore());
+
+  const res = await worker.fetch(post('/api/orders/announce', CASH_ORDER), env, c);
+  const { reference } = await res.json();
+  await c.settled();
+
+  const body = await ordersReport(env, c);
+  assert.equal(body.orders.length, 1);
+  const order = body.orders[0];
+
+  // The sale, in full: what it was, what it cost, and where it went.
+  assert.equal(order.reference, reference);
+  assert.equal(order.orderType, 'delivery');
+  assert.equal(order.payMethod, 'onsite');
+  assert.equal(order.postcode, '68766');
+  assert.ok(order.lines.length, 'the dishes, or the books cannot say what sold');
+  assert.equal(order.money.subtotal - order.money.discount + order.money.deliveryFee,
+    order.money.total, 'the parts must add up to what the guest owes');
+  assert.equal(order.money.net, order.money.total, 'nothing refunded');
+  assert.equal(order.payment, null, 'paid on arrival — there is no payment to describe');
+
+  // An instant, and the restaurant's own day for it. A reader must never have
+  // to guess which of the two a bare timestamp meant.
+  assert.match(order.placedAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
+  assert.match(order.tradingDay, /^\d{4}-\d{2}-\d{2}$/);
+
+  // Not the name, not the phone, not the address, not the note. Same rule the
+  // settlement report follows: those are read at /admin and travel nowhere.
+  const printed = JSON.stringify(body);
+  for (const secret of ['Sherif', '79906621', 'Hauptstrasse', 'klingeln']) {
+    assert.equal(printed.includes(secret), false, `the report leaks ${secret}`);
+  }
+});
+
+test('the orders report states that no VAT is charged', async (t) => {
+  /* This restaurant is a Kleinunternehmer under § 19 UStG, so these figures
+     carry no tax to split out. A reader that simply found no tax field could
+     not tell "exempt" from "forgotten", and would have to assume one. */
+  const env = workerEnv(MENU, { REPORT_TOKEN: 'tok' });
+  const paypal = fakePayPal({});
+  t.after(() => paypal.restore());
+
+  const body = await ordersReport(env, ctx());
+  assert.equal(body.vat.charged, false);
+  assert.equal(body.vat.scheme, 'kleinunternehmer');
+  assert.equal(body.currency, 'EUR');
+  assert.equal(body.timezone, 'Europe/Berlin');
+  assert.equal(body.complete, true, 'a partial window must say so');
+});

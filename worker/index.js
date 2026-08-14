@@ -19,7 +19,7 @@ import { ProviderError } from './payments/errors.js';
 import * as admin from './admin/index.js';
 import { readSettings } from './settings.js';
 import { withLiveData, liveETag } from './page-render.js';
-import { dayOf, timeOf } from './berlin.js';
+import { dayOf, timeOf, instantOf } from './berlin.js';
 import { sendOrderNotification, sendCashOrderNotification } from './notify.js';
 import { runRetention } from './retention.js';
 import { recordOrder, getOrder } from './orders.js';
@@ -84,6 +84,7 @@ async function route(request, env, ctx, url) {
   const hook = path.match(/^\/api\/webhooks\/(\w+)$/);
   if (hook && method === 'POST') return webhook(request, env, ctx, hook[1]);
   if (path === '/api/reports/settlement' && method === 'GET') return settlement(request, env, url);
+  if (path === '/api/reports/orders' && method === 'GET') return ordersReport(request, env, url);
 
   if (path === '/api/orders/announce' && method === 'POST') return announceOrder(request, env, ctx);
 
@@ -634,7 +635,11 @@ async function handleEvent(env, provider, event) {
    One authenticated endpoint, because the alternative is somebody retyping
    figures into a spreadsheet — which is how books stop matching reality. */
 
-async function settlement(request, env, url) {
+/* Who may read a report. One definition, because there are two of them now and
+   a second endpoint that checks credentials its own way is a second endpoint
+   that can check them slightly worse. Returns a Response when the caller must
+   be turned away, and null when they may pass. */
+function reportAuthFailure(request, env) {
   if (!env.REPORT_TOKEN) return fail(503, 'reports_off', 'Reporting is not configured.');
   // The scheme is required, not stripped if present. Accepting a bare token
   // is not exploitable — you still need the token — but an endpoint that
@@ -645,6 +650,12 @@ async function settlement(request, env, url) {
   if (!match || !timingSafeEqual(match[1], env.REPORT_TOKEN)) {
     return fail(401, 'unauthorised', 'Not authorised.');
   }
+  return null;
+}
+
+async function settlement(request, env, url) {
+  const denied = reportAuthFailure(request, env);
+  if (denied) return denied;
 
   const from = (url.searchParams.get('from') || '0000-01-01').slice(0, 10);
   const to = (url.searchParams.get('to') || '9999-12-31').slice(0, 10);
@@ -684,6 +695,122 @@ async function settlement(request, env, url) {
       capturedAt: o.captured_at,
       items: JSON.parse(o.lines || '[]').map((l) => l.qty + '× ' + l.name)
     }))
+  });
+}
+
+/* --- the orders report ----------------------------------------------------
+   One row per order, for the bookkeeping system that keeps this restaurant's
+   accounts (KBOSS). The settlement report above answers "what money arrived",
+   which is a day's total; this answers "what was sold", which is the question
+   the books are actually built from — dishes, zones, times, and the money each
+   order carried.
+
+   THREE THINGS ARE DELIBERATE.
+
+   No personal data. Not the name, not the phone, not the address, not the
+   note — the same rule the settlement report follows, and for the same reason:
+   those details are read at /admin behind the login and travel nowhere else.
+   The books do not need to know who ate; they need to know what was sold. An
+   order is identified by its own id, which is meaningless outside this
+   database. (`tests/integration/payment-flow.test.js` asserts this.)
+
+   Instants, not days. `created_at` is written by SQLite's `datetime('now')`,
+   which is UTC. It is reported as an explicit UTC instant so the reader can
+   place it on the restaurant's own trading day rather than guessing what the
+   timestamp meant; the Berlin day is given alongside it, from berlin.js, so
+   the two can never be worked out differently in two places.
+
+   The VAT position is stated rather than left out. This restaurant is a
+   Kleinunternehmer under § 19 UStG: it charges no VAT, so there is no tax to
+   split out of these figures. Saying so is not the same as being silent about
+   it — a reader that finds no tax field cannot tell "exempt" from "we forgot",
+   and would have to assume one of them. */
+
+// A window wider than the books ever ask for in one go. Reported honestly when
+// it is hit, because a report that quietly returns some of the orders is worse
+// than one that refuses: the missing ones look like days with no trade.
+const ORDERS_REPORT_CAP = 2000;
+
+/** A UTC instant as SQLite writes it: 'YYYY-MM-DD HH:MM:SS'. */
+function sqliteUTC(instant) {
+  return new Date(instant).toISOString().slice(0, 19).replace('T', ' ');
+}
+
+async function ordersReport(request, env, url) {
+  const denied = reportAuthFailure(request, env);
+  if (denied) return denied;
+
+  // `from` and `to` are days in Hockenheim, inclusive — the same days the
+  // restaurant would name. They are converted to the instants that actually
+  // bound them, so an order taken at 00:30 on a summer night belongs to the
+  // day the guest thinks it does rather than to the UTC date.
+  const from = (url.searchParams.get('from') || '2000-01-01').slice(0, 10);
+  const to = (url.searchParams.get('to') || '9999-12-30').slice(0, 10);
+  const startsAt = sqliteUTC(instantOf(from, '00:00'));
+  const endsAt = sqliteUTC(instantOf(to, '00:00') + 24 * 60 * 60 * 1000);
+
+  const { results } = await env.DB.prepare(
+    `SELECT o.id, o.reference, o.order_type, o.business, o.pay_method, o.postcode,
+            o.lines, o.subtotal, o.discount, o.fee, o.total, o.currency,
+            o.requested_time, o.created_at,
+            p.provider, p.status AS payment_status, p.refunded_amount,
+            p.captured_at, p.payment_source
+       FROM orders o
+       LEFT JOIN payments p ON p.id = o.payment_id
+      WHERE o.created_at >= ?1 AND o.created_at < ?2
+      ORDER BY o.created_at ASC
+      LIMIT ?3`
+  ).bind(startsAt, endsAt, ORDERS_REPORT_CAP + 1).all();
+
+  const complete = results.length <= ORDERS_REPORT_CAP;
+  const rows = complete ? results : results.slice(0, ORDERS_REPORT_CAP);
+
+  return json({
+    from,
+    to,
+    currency: 'EUR',
+    timezone: 'Europe/Berlin',
+    // Why every figure below is a gross figure with no tax split out.
+    vat: { charged: false, scheme: 'kleinunternehmer', basis: '§ 19 UStG' },
+    // False means the window held more orders than were returned, so the
+    // caller must ask for a narrower one rather than treat this as all of them.
+    complete,
+    orders: rows.map((o) => {
+      const refunded = o.refunded_amount || 0;
+      const placedAt = o.created_at.replace(' ', 'T') + 'Z';
+      return {
+        id: o.id,
+        reference: o.reference,
+        placedAt,
+        tradingDay: dayOf(Date.parse(placedAt)),
+        orderType: o.order_type,          // delivery | pickup
+        business: !!o.business,
+        payMethod: o.pay_method,          // onsite | online
+        postcode: o.postcode,
+        requestedTime: o.requested_time,
+        // Cents, exactly as the server priced it. `total` is what the guest
+        // owes: food, less the discount that applies only to food, plus the
+        // delivery fee that the discount never touches (worker/pricing.js).
+        money: {
+          subtotal: o.subtotal,
+          discount: o.discount,
+          deliveryFee: o.fee,
+          total: o.total,
+          refunded,
+          net: o.total - refunded
+        },
+        lines: JSON.parse(o.lines || '[]'),
+        // Absent for an order paid on arrival: there is no payment to describe.
+        payment: o.provider
+          ? {
+              provider: o.provider,
+              status: o.payment_status,
+              source: o.payment_source,
+              capturedAt: o.captured_at ? o.captured_at.replace(' ', 'T') + 'Z' : null
+            }
+          : null
+      };
+    })
   });
 }
 
