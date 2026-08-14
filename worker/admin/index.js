@@ -18,8 +18,10 @@ import * as salesView from './sales.js';
 import * as dishesView from './dishes.js';
 import * as hoursView from './hours.js';
 import {
-  readSettings, closeOrdering, openOrdering, extendHours, clearExtension
+  readSettings, closeOrdering, openOrdering, extendHours, clearExtension,
+  setDeliveryShift, clearDeliveryShift
 } from '../settings.js';
+import { timeOf } from '../berlin.js';
 
 /* Long enough to make scripted guessing tedious, short enough that a mistyped
    password does not feel like a broken page. It is not a defence against a
@@ -40,9 +42,9 @@ export async function handle(request, env, url) {
 
   if (path === '/admin' && method === 'GET') {
     const nonce = newNonce();
-    const { ordering, hours, hoursAreCustom, extension } = await readSettings(env);
+    const { ordering, hours, hoursAreCustom, extension, deliveryShift } = await readSettings(env);
     return html(dashboardPage({
-      nonce, ordering, hours, hoursAreCustom, extension,
+      nonce, ordering, hours, hoursAreCustom, extension, deliveryShift,
       // Set by the test below, carried in the URL so a reload does not resend.
       alert: url.searchParams.get('alert'),
       alertError: url.searchParams.get('why')
@@ -92,6 +94,34 @@ export async function handle(request, env, url) {
       status: 303, headers: { Location: '/admin', 'Cache-Control': 'no-store' }
     });
   }
+  /* A driver out at a different time today — earlier because somebody is free,
+     later because nobody is yet. Same shape again: one tap, its own end at
+     midnight, and no edit to the week. */
+  if (path === '/admin/delivery-shift' && method === 'POST') {
+    const form = await request.formData();
+    const mode = String(form.get('mode') || '');
+
+    if (mode === 'clear') {
+      await clearDeliveryShift(env);
+    } else if (mode === 'now') {
+      // "I am here and I can drive." The restaurant's own clock, not the
+      // server's — a shift is a wall-clock time in Hockenheim.
+      await setDeliveryShift(env, timeOf());
+    } else if (mode === 'open') {
+      // A driver out for the whole of today's opening, whatever it is.
+      await setDeliveryShift(env, '');
+    } else {
+      // A time typed in. An unreadable one changes nothing rather than
+      // clearing the shift: setDeliveryShift refuses it and says so by
+      // returning null, and the page simply comes back unchanged.
+      await setDeliveryShift(env, String(form.get('from') || '').trim());
+    }
+
+    return new Response(null, {
+      status: 303, headers: { Location: '/admin', 'Cache-Control': 'no-store' }
+    });
+  }
+
   if (path === '/admin/hours' && method === 'GET') return hoursView.page(request, env, url);
   if (path === '/admin/hours' && method === 'POST') return hoursView.save(request, env, url);
   if (path === '/admin/orders' && method === 'GET') return ordersView.page(request, env, url);

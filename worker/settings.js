@@ -32,6 +32,7 @@ const ORDERING = 'ordering';
 const HOURS = 'hours';
 const SOLDOUT = 'soldout';
 const EXTENSION = 'extension';
+const SHIFT = 'shift';
 
 const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
@@ -67,6 +68,7 @@ export async function readSettings(env) {
       hoursAreCustom: false,
       soldOut: {},
       extension: null,
+      deliveryShift: null,
       hoursVersion: '0',
       soldOutVersion: '0'
     };
@@ -102,6 +104,10 @@ export async function readSettings(env) {
     /* Tonight only: the shop is staying open later than the fixed hours say.
        Never written into the published opening hours — see writeExtension. */
     extension: normaliseExtension(raw[EXTENSION]),
+    /* Tonight only: a driver is out at a different time from the usual shift —
+       earlier because somebody is free, later because nobody is yet. Same
+       reasoning as the extension, and equally never published. */
+    deliveryShift: normaliseDeliveryShift(raw[SHIFT]),
     // So the admin page can say which of the two is in effect without guessing.
     hoursAreCustom: !!custom,
     /* When the hours last changed. The pages that state opening hours in their
@@ -422,5 +428,65 @@ export async function extendHours(env, until) {
 /** Back to the fixed hours, now. */
 export async function clearExtension(env) {
   await env.DB.prepare('DELETE FROM settings WHERE key = ?1').bind(EXTENSION).run();
+  forgetCache(env);
+}
+
+
+/* --- a driver out at a different time today --------------------------------
+   `hours.deliveryFrom` says when a driver goes out EVERY WEEK. Some days that
+   is not when one actually goes out: somebody is in the building at two and
+   free to drive, or nobody is free until nine. Both are facts about one day,
+   and neither is a reason to edit the week — a delivery time changed on a
+   Saturday afternoon is a delivery time still wrong on Wednesday.
+
+   So this is the same shape as the extension above and the closure above that:
+   it carries its own end, it expires by being read against the clock, and
+   nothing has to run for it to lapse. It moves the shift in EITHER direction,
+   because "I can drive from now" and "no driver until nine" are one fact with
+   two values, not two features.
+
+   IT IS NEVER PUBLISHED AS AN OPENING HOUR. The hours table and
+   `openingHoursSpecification` state the standing arrangement, and Google caches
+   the latter for the place card; one afternoon's driver is not a new week. So
+   this changes what can be ORDERED, and adds one sentence beneath the hours
+   saying what is true today — and touches neither the table nor the schema.
+
+   `from` is a clock time and '' is a real answer, exactly as in
+   `hours.deliveryFrom`: it means a driver is out for the whole opening today. */
+
+function normaliseDeliveryShift(value, now = Date.now()) {
+  if (!value) return null;
+  const until = Date.parse(String(value.until || ''));
+  // Already elapsed is the same as never set. Read against the clock, not swept.
+  if (!Number.isFinite(until) || until <= now) return null;
+
+  /* A stored time that is not a time is not repaired into ''. Reading it that
+     way would put a driver on the road from opening — the same silent
+     publication window2() refuses for the hours themselves. */
+  const from = String(value.from == null ? '' : value.from).trim();
+  if (from && !TIME.test(from)) return null;
+
+  return { from, until: new Date(until).toISOString() };
+}
+
+/** Put a driver out from `from` ('HH:MM', or '' for the whole opening) for the
+ *  rest of today. The end is midnight tonight and is not offered as a choice:
+ *  the whole point of this switch is that it is about today and lapses without
+ *  anyone remembering it. */
+export async function setDeliveryShift(env, from, until) {
+  const at = String(from == null ? '' : from).trim();
+  if (at && !TIME.test(at)) return null;
+
+  const end = Number.isFinite(until) ? until : nextMidnight();
+  if (end <= Date.now()) return null;
+
+  const value = { from: at, until: new Date(end).toISOString() };
+  await put(env, SHIFT, value);
+  return normaliseDeliveryShift(value);
+}
+
+/** Back to the standing delivery time, now. */
+export async function clearDeliveryShift(env) {
+  await env.DB.prepare('DELETE FROM settings WHERE key = ?1').bind(SHIFT).run();
   forgetCache(env);
 }

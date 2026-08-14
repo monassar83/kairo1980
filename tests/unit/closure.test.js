@@ -299,3 +299,147 @@ test('an extension is readable, and clearing it puts the hours back', async () =
   forgetCache(env);
   assert.equal((await readSettings(env)).extension, null);
 });
+
+
+/* --- a driver out at a different time today --------------------------------
+   `hours.deliveryFrom` is the standing shift. This moves it for today only, in
+   either direction, and must lapse by itself for the same reason the closure
+   must: a delivery time changed on a Saturday afternoon is a delivery time
+   still wrong on Wednesday. It is never published as an opening hour. */
+
+test('today\'s delivery shift moves in both directions and lapses at midnight', async () => {
+  const { setDeliveryShift, readSettings, forgetCache } =
+    await import('../../worker/settings.js');
+  const env = { DB: freshDatabase() };
+
+  // Earlier: somebody is in the building at two and free to drive.
+  const early = await setDeliveryShift(env, '14:00');
+  assert.equal(early.from, '14:00');
+
+  // Later: nobody is free until nine. The same switch, a different time — not
+  // a second feature, which is the whole point of storing a time.
+  const late = await setDeliveryShift(env, '21:00');
+  assert.equal(late.from, '21:00');
+
+  forgetCache(env);
+  const live = await readSettings(env);
+  assert.equal(live.deliveryShift.from, '21:00');
+
+  // It ends tonight without anybody coming back to release it.
+  const until = Date.parse(live.deliveryShift.until);
+  assert.ok(until > Date.now(), 'still in force now');
+  assert.ok(until - Date.now() <= 24 * 3600 * 1000, 'and gone within the day');
+  assert.equal(
+    new Date(until).toLocaleTimeString('sv-SE', { timeZone: BERLIN }),
+    '00:00:00',
+    'the end is midnight in Hockenheim, not on the server'
+  );
+});
+
+test('an empty shift is a real answer, and a mistyped one changes nothing', async () => {
+  const { setDeliveryShift, readSettings, forgetCache } =
+    await import('../../worker/settings.js');
+  const env = { DB: freshDatabase() };
+
+  // '' means a driver is out for the whole opening today — the same meaning it
+  // carries in hours.deliveryFrom, and the "all day today" button at /admin.
+  const all = await setDeliveryShift(env, '');
+  assert.equal(all.from, '');
+  forgetCache(env);
+  assert.equal((await readSettings(env)).deliveryShift.from, '');
+
+  /* A time that is not a time is REFUSED, never read as "". Reading "1800" as
+     "delivers all day" would put a driver on the road at eleven — the same
+     silent publication the hours themselves refuse. */
+  assert.equal(await setDeliveryShift(env, '1800'), null);
+  assert.equal(await setDeliveryShift(env, '25:00'), null);
+
+  // And the refusal left the earlier answer standing rather than clearing it.
+  forgetCache(env);
+  assert.equal((await readSettings(env)).deliveryShift.from, '');
+});
+
+test('a delivery shift that has already elapsed is the same as none', async () => {
+  const { setDeliveryShift, clearDeliveryShift, readSettings, forgetCache } =
+    await import('../../worker/settings.js');
+  const env = { DB: freshDatabase() };
+
+  assert.equal((await readSettings(env)).deliveryShift, null);
+
+  // An end already gone is refused rather than stored as expired.
+  assert.equal(await setDeliveryShift(env, '14:00', Date.now() - 60000), null);
+
+  await setDeliveryShift(env, '14:00');
+  await clearDeliveryShift(env);
+  forgetCache(env);
+  assert.equal((await readSettings(env)).deliveryShift, null,
+    'clearing puts the standing delivery time back');
+});
+
+test('a page cached before tonight\'s state was set does not survive it', async () => {
+  const { setDeliveryShift, extendHours, clearDeliveryShift, readSettings, forgetCache } =
+    await import('../../worker/settings.js');
+  const { liveETag } = await import('../../worker/page-render.js');
+  const env = { DB: freshDatabase() };
+
+  /* Both of these are STATED in the markup, so a copy cached before either was
+     set says the wrong thing — and `must-revalidate` revalidates its way
+     straight back to it unless the tag moves. This is the failure that kept
+     the note under the hours from ever appearing. */
+  const tag = async () => {
+    forgetCache(env);
+    return liveETag('"asset-1"', await readSettings(env));
+  };
+
+  const plain = await tag();
+
+  await setDeliveryShift(env, '14:00');
+  const shifted = await tag();
+  assert.notEqual(shifted, plain, 'a moved driver makes every cached copy stale');
+
+  await extendHours(env, Date.now() + 45 * 60000);
+  assert.notEqual(await tag(), shifted, 'and so does staying open later');
+
+  // Nothing changed, so nothing is stale: an unchanged page still answers 304.
+  assert.equal(await tag(), await tag());
+
+  await clearDeliveryShift(env);
+  const back = await tag();
+  assert.notEqual(back, shifted, 'and putting it back is a change too');
+});
+
+test('today\'s driver never becomes a published opening hour', async () => {
+  const { setDeliveryShift, readSettings, forgetCache } =
+    await import('../../worker/settings.js');
+  const { withLiveData } = await import('../../worker/page-render.js');
+  const env = { DB: freshDatabase() };
+
+  await setDeliveryShift(env, '14:00');
+  forgetCache(env);
+  const settings = await readSettings(env);
+
+  const page = withLiveData(
+    '<html><head></head><body>' +
+    '<script id="restaurantSchema" type="application/ld+json">{"@type":"Restaurant"}</script>' +
+    '<!--hours:start--><!--hours:end--></body></html>',
+    settings
+  );
+
+  // The browser is told, so the basket and the note under the hours can act.
+  assert.match(page, /"deliveryShift":\{"from":"14:00"/);
+
+  /* But nothing Google reads moved. openingHoursSpecification and the hours
+     table state the week; one afternoon with a driver in it is not a new week,
+     and the place card caches whatever is published here. */
+  const schema = JSON.parse(
+    page.match(/<script id="restaurantSchema"[^>]*>([\s\S]*?)<\/script>/)[1]
+  );
+  for (const spec of schema.openingHoursSpecification || []) {
+    assert.ok(spec.opens !== '14:00' || spec.closes !== '14:00');
+  }
+  assert.equal(
+    JSON.stringify(settings.hours.deliveryFrom),
+    JSON.stringify((await readSettings(env)).hours.deliveryFrom),
+    'the standing delivery time is untouched'
+  );
+});

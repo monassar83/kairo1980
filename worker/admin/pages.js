@@ -137,12 +137,17 @@ export function loginPage({ nonce, error = false, unconfigured = false }) {
 }
 
 const SWITCH_CSS = `
- .extend{background:#fff;border:1px solid #e6dcc9;padding:12px 14px;margin:0 0 14px}
- .extend.on{border-color:#bcd8b0;background:#eef6ea}
- .extend .lead{margin:0 0 6px;font-size:15px;color:#31601f}
- .extend .hint{font-size:12.5px;color:#7a6030;margin:6px 0 0;line-height:1.5}
- .extend .cap{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:#7a6030;
-              margin:0 0 8px}
+ /* Two blocks, one appearance: staying open later and putting a driver out at
+    a different time are the same kind of decision and read better as the same
+    card. They keep SEPARATE class names because a page with two identical
+    hooks is a page where a test — or a person reading the markup — cannot say
+    which form they are looking at. */
+ .extend,.shift{background:#fff;border:1px solid #e6dcc9;padding:12px 14px;margin:0 0 14px}
+ .extend.on,.shift.on{border-color:#bcd8b0;background:#eef6ea}
+ .extend .lead,.shift .lead{margin:0 0 6px;font-size:15px;color:#31601f}
+ .extend .hint,.shift .hint{font-size:12.5px;color:#7a6030;margin:6px 0 0;line-height:1.5}
+ .extend .cap,.shift .cap{font-size:11px;letter-spacing:.08em;text-transform:uppercase;
+              color:#7a6030;margin:0 0 8px}
 
  .alertbox{background:#fff;border:1px solid #e6dcc9;padding:12px 14px;margin:0 0 14px}
  .alertbox .msg{padding:9px 11px;border:1px solid #bcd8b0;background:#eef6ea;color:#31601f;
@@ -275,10 +280,16 @@ function untilClock(iso) {
   }
 }
 
-export function dashboardPage({ nonce, ordering, hours, hoursAreCustom, extension, alert, alertError }) {
+export function dashboardPage({ nonce, ordering, hours, hoursAreCustom, extension, deliveryShift, alert, alertError }) {
   const closed = !ordering.open;
   const resumesAt = closed ? Date.parse(ordering.resumesAt) : null;
   const today = todayLine(hours);
+
+  /* The standing arrangement, said plainly, so the tap below is made against a
+     known starting point rather than a remembered one. */
+  const usual = hours.deliveryFrom
+    ? `normally from <b>${esc(hours.deliveryFrom)}</b>`
+    : 'normally throughout the opening hours';
 
   const stopped = `<p class="lead">Reason: <b>${esc(REASON_LABEL[ordering.reason] || 'none given')}</b></p>
     <p class="until">Reopens ${esc(whenText(resumesAt))}
@@ -363,6 +374,42 @@ export function dashboardPage({ nonce, ordering, hours, hoursAreCustom, extensio
         <button class="stop wide" type="submit">Stay open until then</button>
         <p class="hint">Orders can be placed for right now until that time. The
         opening hours on the website do not change.</p>
+      </details>
+    </form>`}
+</div>
+
+<!-- Driving out at a different time today. The same idea as the block above,
+     applied to the driver instead of the door: it moves the delivery time in
+     either direction for today only, and lapses at midnight by itself. -->
+<div class="shift ${deliveryShift ? 'on' : ''}">
+  ${deliveryShift ? `<p class="lead">Delivering today ${deliveryShift.from
+      ? `from <b>${esc(deliveryShift.from)}</b>`
+      : '<b>throughout the opening hours</b>'} — ${usual}.</p>
+    <p class="hint">The delivery times on the website are unchanged, and this
+    lapses at midnight on its own. Nothing to come back and undo.</p>
+    <form method="post" action="/admin/delivery-shift">
+      <button class="go2" name="mode" value="clear" type="submit">Back to the normal delivery time</button>
+    </form>`
+  : `<p class="cap">Driving out at a different time today?</p>
+    <p class="hint">Deliveries run ${usual}.</p>
+    <form method="post" action="/admin/delivery-shift">
+      <div class="quick">
+        <button class="stop" name="mode" value="now" type="submit">from now</button>
+        <button class="stop" name="mode" value="open" type="submit">all day today</button>
+      </div>
+      <details>
+        <summary>From a particular time</summary>
+        <div class="row">
+          <div class="grow">
+            <label for="shiftFrom">Deliveries from</label>
+            <input id="shiftFrom" name="from" type="time" step="300"
+                   value="${esc(hours.deliveryFrom || '')}">
+          </div>
+        </div>
+        <button class="stop wide" name="mode" value="at" type="submit">Deliver from then today</button>
+        <p class="hint">Earlier or later — a time before the usual one starts
+        deliveries sooner, a later one holds them back. Today only; the times on
+        the website do not change.</p>
       </details>
     </form>`}
 </div>

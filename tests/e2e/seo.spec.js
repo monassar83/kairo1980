@@ -244,6 +244,7 @@ for (const locale of ['en-GB', 'ar-EG']) {
 const HEAD_LIMITS = { title: 65, description: 165 };
 
 test('no page has a title or description Google will truncate', async ({ page }) => {
+  test.slow();
   const seen = { title: new Map(), description: new Map() };
 
   for (const { path } of PAGES) {
@@ -269,6 +270,7 @@ test('no page has a title or description Google will truncate', async ({ page })
 });
 
 test('every page can be shared as a card, and names one h1', async ({ page }) => {
+  test.slow();
   for (const { path, canonical } of PAGES) {
     await page.goto(path);
     const head = await page.evaluate(() => ({
@@ -323,6 +325,8 @@ test('every URL in the sitemap answers 200 without redirecting', async ({ reques
 });
 
 test('no page leaves an unfilled {placeholder} on screen, in any language', async ({ page }) => {
+  // Twenty-four navigations: four pages, three languages, cleared between each.
+  test.slow();
   /* applyConfig() fills {freeDeliveryFrom} and friends at runtime. One that
      survives is a config value that no longer exists, and it reaches the guest
      as literal curly braces in the middle of a sentence. */
@@ -345,4 +349,67 @@ test('no page leaves an unfilled {placeholder} on screen, in any language', asyn
       expect(state.left, `${path} in ${lang} shows unfilled placeholders`).toEqual([]);
     }
   }
+});
+
+/* --- the map is visible, and costs the guest nothing ----------------------
+   A map on the page at load used to mean Google's embed, which transmits the
+   visitor's IP before they have agreed to anything — § 25 TDDDG, and the
+   reason the click-to-load panel exists. The picture underneath is rendered
+   from OpenStreetMap and served from this origin, so it is not a third-party
+   request at all: the guest sees where we are immediately, and Google still
+   waits for the button.
+
+   What is actually asserted is the promise: NO request leaves this origin
+   until the button is pressed. */
+test('the page makes no third-party request before anything is clicked', async ({ page }) => {
+  const foreign = [];
+  page.on('request', (req) => {
+    const host = new URL(req.url()).host;
+    if (host && !host.includes('127.0.0.1') && !host.includes('localhost')) foreign.push(req.url());
+  });
+
+  await page.goto('/');
+  await page.evaluate(async () => {
+    // Scroll the whole page so every lazy image is asked for.
+    for (let y = 0; y < document.body.scrollHeight; y += 400) {
+      window.scrollTo(0, y);
+      await new Promise((r) => setTimeout(r, 40));
+    }
+  });
+  await page.waitForTimeout(800);
+
+  expect(foreign, `these left our origin unasked: ${foreign.join(', ')}`).toEqual([]);
+
+  // And the map really is on screen, not a grey placeholder.
+  const map = page.locator('.map-static');
+  await expect(map).toBeVisible();
+  const box = await map.boundingBox();
+  expect(box.width, 'the static map has no width').toBeGreaterThan(200);
+  await expect(page.locator('.map-attrib')).toContainText('OpenStreetMap');
+
+  /* The notice sits on a card, not on a scrim across the whole map. A full
+     overlay washes the map into wallpaper, which wastes the reason for drawing
+     one underneath — the guest should be able to read the street before
+     deciding whether they want to pan around it. */
+  const paint = await page.evaluate(() => ({
+    panel: getComputedStyle(document.querySelector('.map-consent')).backgroundColor,
+    card: getComputedStyle(document.querySelector('.map-consent-card')).backgroundColor
+  }));
+  expect(paint.panel, 'the consent panel must not cover the map').toMatch(/rgba\(0, 0, 0, 0\)|transparent/);
+  expect(paint.card, 'the notice needs its own card to stay legible').not.toMatch(/rgba\(0, 0, 0, 0\)/);
+});
+
+test('the interactive map loads only when asked, and replaces the picture', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('.map-ph iframe')).toHaveCount(0);
+
+  await page.locator('#mapConsentBtn').scrollIntoViewIfNeeded();
+  await page.locator('#mapConsentBtn').click();
+
+  const frame = page.locator('.map-ph iframe');
+  await expect(frame).toHaveCount(1);
+  await expect(frame).toHaveAttribute('src', /google\.com\/maps\/embed/);
+  // The panel and the picture it covered are gone together.
+  await expect(page.locator('#mapConsent')).toHaveCount(0);
+  await expect(page.locator('.map-static')).toHaveCount(0);
 });

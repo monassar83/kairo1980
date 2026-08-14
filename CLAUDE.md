@@ -122,7 +122,15 @@ are only the no-JavaScript fallback — update both or neither.
 - **`zones.js` is generated.** Edit `data/delivery_zones.xlsx`, then
   `python tools/build-zones.py`. CI fails the deploy if the two disagree.
 - **No third-party requests on load.** No fonts CDN, no analytics, no cookies.
-  The Google Maps embed loads only after an explicit click.
+  The Google Maps embed loads only after an explicit click — but a map is
+  visible immediately, because the picture underneath it is rendered from
+  OpenStreetMap and **served from this origin**, which is not a third-party
+  request at all. Regenerate with the script in `docs/static-map.md`; ODbL
+  attribution is required and must stay legible, so it is not put behind a
+  hover. The consent panel is a card, never a scrim across the whole map: a
+  full overlay washes the map into wallpaper and wastes the reason for drawing
+  one. `tests/e2e/seo.spec.js` asserts that NOTHING leaves this origin before
+  the button is pressed.
 - **Staying open later is not an opening hour.** `/admin` extends tonight only:
   it changes what can be ordered now and what the badge says, and never touches
   the hours table or `openingHoursSpecification`, which state what happens every
@@ -297,6 +305,22 @@ are only the no-JavaScript fallback — update both or neither.
   once the kitchen opened straight through. "Open 11:00–23:00, delivering from
   18:00" is not a fact about lunch. **Never ask which window a moment falls in
   to decide whether it delivers**; ask `deliversAt()`, which compares times.
+- **Driving out at a different time is not a delivery shift.** `/admin` moves
+  TODAY's driver — earlier because somebody is free, later because nobody is
+  yet — and it is the same shape as staying open later and as the closure: it
+  carries its own end (midnight tonight), it expires by being read against the
+  clock, and nothing has to run for it to lapse. One switch, either direction,
+  because "I can drive from now" and "no driver until nine" are one fact with
+  two values. It never touches `hours.deliveryFrom`, the hours rows or
+  `openingHoursSpecification` — the week is what Google caches for the place
+  card, and one afternoon with a driver in it is not a new week. So it changes
+  what can be ORDERED and adds one sentence beneath the hours, and that is all.
+  Ask `shiftFor(iso, minutes)` for the shift in force at a moment; ask
+  `deliveryFrom()` only for what is printed as the standing arrangement. That
+  is why `deliverySlotsFor()` takes the shift as a parameter: the published
+  table is drawn from the week, the basket from the moment. `''` means the same
+  here as in `hours.deliveryFrom` — a driver out for the whole opening — so
+  every caller checks for null, never for falsiness.
 - **The delivery button is dimmed, never removed.** It is the one place
   validation withholds anything, and it withholds an option, not an order: a
   missing button reads as a broken page, so it stays visible with the note that

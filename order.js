@@ -55,13 +55,17 @@
 
   function readLiveData() {
     var node = document.getElementById('kairoLive');
-    var out = { hours: null, ordering: { open: true, resumesAt: null }, soldOut: {}, extension: null };
+    var out = {
+      hours: null, ordering: { open: true, resumesAt: null }, soldOut: {},
+      extension: null, deliveryShift: null
+    };
     if (!node) return out;
     try {
       var data = JSON.parse(node.textContent);
       out.hours = data.hours || null;
       out.soldOut = data.soldOut || {};
       out.extension = data.extension || null;
+      out.deliveryShift = data.deliveryShift || null;
       if (data.ordering && data.ordering.open === false) {
         out.ordering = { open: false, resumesAt: data.ordering.resumesAt || null };
       }
@@ -124,6 +128,11 @@
       days: { mon: 'Montag', tue: 'Dienstag', wed: 'Mittwoch', thu: 'Donnerstag', fri: 'Freitag', sat: 'Samstag', sun: 'Sonntag' },
       closed: 'Geschlossen',
       openLater: 'Heute länger geöffnet — Bestellungen bis {until} Uhr.',
+      /* One sentence for both directions: a driver out earlier than usual and
+         a driver out later are the same fact with a different time in it, and
+         a sentence that simply states today's time is true either way. */
+      deliveryToday: 'Heute liefern wir ab {from} Uhr.',
+      deliveryTodayAll: 'Heute liefern wir während der gesamten Öffnungszeit.',
       soldOut: 'Ausverkauft',
       soldOutRemoved: '{dish} ist heute leider ausverkauft und wurde aus dem Warenkorb entfernt.',
       pickupLabel: 'Abholung', deliveryLabel: 'Lieferung',
@@ -277,6 +286,8 @@
       days: { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' },
       closed: 'Closed',
       openLater: 'Open later today — orders until {until}.',
+      deliveryToday: 'Today we deliver from {from}.',
+      deliveryTodayAll: 'Today we deliver throughout our opening hours.',
       soldOut: 'Sold out',
       soldOutRemoved: '{dish} is sold out today and has been removed from your basket.',
       pickupLabel: 'Pickup', deliveryLabel: 'Delivery',
@@ -416,6 +427,8 @@
       days: { mon: 'الاثنين', tue: 'الثلاثاء', wed: 'الأربعاء', thu: 'الخميس', fri: 'الجمعة', sat: 'السبت', sun: 'الأحد' },
       closed: 'مغلق',
       openLater: 'النهارده فاتحين لوقت متأخر — الطلبات لحد الساعة {until}.',
+      deliveryToday: 'النهارده بنوصّل من الساعة {from}.',
+      deliveryTodayAll: 'النهارده بنوصّل طول مواعيد الفتح.',
       soldOut: 'خلص',
       soldOutRemoved: '{dish} خلص النهارده للأسف واتشال من السلة.',
       pickupLabel: 'الاستلام', deliveryLabel: 'التوصيل',
@@ -687,9 +700,16 @@
 
   /* The windows a driver goes out in: the opening, clipped to start no earlier
      than the delivery shift. A window ending before the shift starts drops out
-     — that is the collection-only stretch of the day. */
-  function deliverySlotsFor(dayKey) {
-    var from = deliveryFrom();
+     — that is the collection-only stretch of the day.
+
+     `from` is the shift to clip against, and it is a parameter for one reason:
+     the PUBLISHED table must be drawn from the standing time (this is what we
+     do every week) while the basket asks about a particular moment, which may
+     fall under a shift moved for today. Callers that draw the week pass
+     nothing and get the standing answer; callers that ask "can we drive then"
+     pass shiftFor(). */
+  function deliverySlotsFor(dayKey, from) {
+    if (from === undefined) from = deliveryFrom();
     var out = [];
     slotsFor(dayKey).forEach(function (s) {
       if (from && hhmm(from) >= hhmm(s.to)) return;
@@ -704,8 +724,10 @@
   function deliversAt(iso, minutes) {
     var key = dayKeyFromISO(iso);
     if (!key) return false;
+    // Today's driver if one was moved, the standing shift otherwise.
+    var from = shiftFor(iso, minutes);
     var hit = false;
-    deliverySlotsFor(key).forEach(function (s) {
+    deliverySlotsFor(key, from).forEach(function (s) {
       if (minutes >= hhmm(s.from) && minutes <= hhmm(s.to)) hit = true;
     });
     /* Somebody who stays late to keep serving is also there to drive. The
@@ -713,10 +735,47 @@
        always past it — so this only ever adds time, never brings delivery
        forward into the collection-only part of the day. */
     if (!hit && withinExtension(iso, minutes)) {
-      var from = deliveryFrom();
       hit = !from || minutes >= hhmm(from) || minutes < 6 * 60;
     }
     return hit;
+  }
+
+  /* --- a driver out at a different time today ------------------------------
+     `hours.deliveryFrom` is when a driver goes out every week. Some days that
+     is not when one actually goes out — somebody is free to drive at two, or
+     nobody is free until nine — and neither is a reason to edit the week. So
+     /admin can move TODAY's shift in either direction, and this is the one
+     place anything asks which shift applies to a given moment.
+
+     It is deliberately not folded into deliveryFrom(): that function answers
+     "what do we do every week", which is what the hours table, the structured
+     data and every printed sentence state, and what must not change because
+     one afternoon had a driver in it.
+
+     '' is a real answer here as it is there — a driver out for the whole
+     opening — so the caller checks for null, never for falsiness. */
+  function deliveryShiftToday() {
+    var raw = (LIVE && LIVE.deliveryShift) || null;
+    if (!raw) return null;
+    var until = Date.parse(raw.until || '');
+    if (!isFinite(until) || until <= Date.now()) return null;
+
+    var u = berlinNow(new Date(until));
+    if (!u) return null;
+    var from = String(raw.from == null ? '' : raw.from).trim();
+    // A stored time that is not a time is ignored rather than read as "all
+    // day": guessing here would put a driver on the road that does not exist.
+    if (from && !/^([01]\d|2[0-3]):[0-5]\d$/.test(from)) return null;
+    return { from: from, untilStamp: stamp(u.iso, u.minutes) };
+  }
+
+  // The delivery shift in force at one moment: today's if it has been moved
+  // and the moment falls before the move lapses, the standing one otherwise.
+  // A guest scheduling for tomorrow evening therefore meets the ordinary rule.
+  function shiftFor(iso, minutes) {
+    var today = deliveryShiftToday();
+    if (today && stamp(iso, minutes) <= today.untilStamp) return today.from;
+    return deliveryFrom();
   }
 
   /* --- scheduling ---------------------------------------------------------
@@ -894,6 +953,24 @@
     var ext = extensionWindow();
     host.textContent = ext ? fill(t().openLater, { until: ext.untilLabel }) : '';
     host.hidden = !ext;
+
+    renderDeliveryToday();
+  }
+
+  /* The same sentence for the driver: what is true today, said beneath the week
+     rather than written into it. Silent when today's shift is the standing one
+     — a note that repeats the rule above it reads as a contradiction the guest
+     then has to resolve. */
+  function renderDeliveryToday() {
+    var host = document.querySelector('.hours-delivery-today');
+    if (!host) return;
+    var today = deliveryShiftToday();
+    var L = t();
+    var say = today && today.from !== deliveryFrom()
+      ? (today.from ? fill(L.deliveryToday, { from: today.from }) : L.deliveryTodayAll)
+      : '';
+    host.textContent = say;
+    host.hidden = !say;
   }
 
   function renderStatus(now) {
@@ -1673,12 +1750,16 @@
   // send. Promising a lunchtime delivery we then have to cancel by phone costs
   // far more than a clearly labelled disabled button.
   function deliveryBlocked() {
-    if (!deliveryFrom()) return false;
     var at = targetMoment();
     // A moment we cannot place is never blocked: an unknown time is settled in
     // the chat, and withholding the button on a guess is the one thing this
     // check must not do.
-    return !!(at && !deliversAt(at.iso, at.minutes));
+    if (!at) return false;
+    // Asked of the shift in force AT THAT MOMENT, not of the standing one: a
+    // day whose driver is out from opening has nothing to withhold, and a day
+    // whose driver starts late withholds it even when the week says otherwise.
+    if (!shiftFor(at.iso, at.minutes)) return false;
+    return !deliversAt(at.iso, at.minutes);
   }
 
   function fill(template, values) {
@@ -1744,7 +1825,9 @@
       // Open, but before a driver goes out. Not "we are closed" — the guest has
       // picked a time we can serve, just not in the way they asked for — so the
       // note names the alternative rather than the refusal.
-      out.push({ kind: 'hours', text: fill(L.cartDeliveryLater, { from: deliveryFrom() }) });
+      // The time named is the one that would actually work for the day the
+      // guest picked — today's moved shift, or the standing one.
+      out.push({ kind: 'hours', text: fill(L.cartDeliveryLater, { from: shiftFor(iso, minutes) }) });
     }
     var lead = (CFG.business && CFG.business.leadTimeHours) || 0;
     if (form.business && lead && target - current < lead * 60) {
@@ -1899,6 +1982,10 @@
     var L = t();
     syncType();
     var blocked = deliveryBlocked();
+    // Named from the moment the order would land at, so the note tells the
+    // guest the time that would actually get them a driver.
+    var at = blocked ? targetMoment() : null;
+    var deliversFrom = at ? shiftFor(at.iso, at.minutes) : deliveryFrom();
 
     return '<div class="cart-types" role="group" aria-label="' + L.type + '">' +
       '<button type="button" class="cart-type' +
@@ -1909,7 +1996,7 @@
         '" data-type="pickup">' + L.pickup + '</button>' +
       '</div>' +
       '<p class="cart-note is-pickup-only" id="cartTypeNote"' + (blocked ? '' : ' hidden') + '>' +
-        (blocked ? escapeHtml(fill(L.cartDeliveryLater, { from: deliveryFrom() })) : '') +
+        (blocked ? escapeHtml(fill(L.cartDeliveryLater, { from: deliversFrom })) : '') +
       '</p>' +
       payHtml();
   }
@@ -3318,6 +3405,11 @@
     setInterval(function () {
       renderStatus(berlinNow());
       renderOrdering();
+      /* Tonight's two notes end by the clock as well, and a tab left open past
+         midnight would otherwise keep saying "today we deliver from 15:00"
+         while the basket had already gone back to the standing shift — a note
+         contradicting the button, which is the one thing it must not do. */
+      renderExtensionNote();
     }, 60000);
   }
 

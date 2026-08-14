@@ -173,9 +173,11 @@ export function withLiveData(html, settings) {
     JSON.stringify({
       hours, ordering, soldOut: soldOut || {},
       /* Tonight only, and never merged into `hours` — the JSON-LD below is
-         built from `hours` alone, so an extension cannot leak into the opening
-         hours Google caches for the place card. */
-      extension: settings.extension || null
+         built from `hours` alone, so neither an extension nor a driver out at
+         an unusual time can leak into the opening hours Google caches for the
+         place card. */
+      extension: settings.extension || null,
+      deliveryShift: settings.deliveryShift || null
     }).replace(/</g, '\\u003c')
   }</script>\n`;
   if (out.includes('</head>')) out = out.replace('</head>', island + '</head>');
@@ -215,5 +217,23 @@ export function liveETag(assetETag, settings) {
   const state = settings.ordering.open ? 'open' : `off:${settings.ordering.resumesAt}`;
   // The sold-out set is stated in the markup too, so a change to it has to make
   // every cached copy stale — same reason hoursVersion is here.
-  return `W/"${base}~${settings.hoursVersion}~${settings.soldOutVersion || '0'}~${state}"`;
+
+  /* And so is everything true only tonight. Both are written into the JSON
+     island above, which means a page cached before either was set is a page
+     that STATES the wrong thing — and `must-revalidate` would faithfully
+     revalidate its way back to it, because the asset behind it never moved.
+     That is not theoretical: it is why the note under the hours did not appear
+     until the guest happened to get a fresh copy.
+
+     Each is identified by the values it publishes rather than by an
+     updated_at, so the tag also moves when one LAPSES — they expire by being
+     read against the clock, and nothing writes a row when they do. */
+  const tonight = [
+    settings.extension ? `x:${settings.extension.until}` : '-',
+    settings.deliveryShift
+      ? `d:${settings.deliveryShift.from}@${settings.deliveryShift.until}`
+      : '-'
+  ].join(',');
+
+  return `W/"${base}~${settings.hoursVersion}~${settings.soldOutVersion || '0'}~${state}~${tonight}"`;
 }

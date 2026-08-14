@@ -675,6 +675,10 @@
         </div>
         <p class="hours-note hours-extended" hidden></p>
         <p class="hours-note delivery-note" data-requires="delivery" hidden></p>
+        <!-- What is true TODAY about the driver, when it is not what the line
+             above says. Written by order.js from the shift set at /admin; the
+             rows and the structured data state the week and never move. -->
+        <p class="hours-note hours-delivery-today" hidden></p>
         <!-- One primary way to order, and the platforms named honestly as an
              alternative rather than as four equal buttons. The "direct via
              WhatsApp" button was removed: it produced the same chat as the
@@ -697,7 +701,29 @@
            discloses the visitor's IP address, so it is only loaded after the
            visitor explicitly consents. -->
       <div class="map-ph" id="mapHolder">
+        <!-- A map is visible the moment the page opens, and no third party
+             hears about it. This image is rendered from OpenStreetMap and
+             served from our own origin, so it is not a third-party request at
+             all — nothing is transmitted, nothing is stored on the device, and
+             § 25 TDDDG has nothing to consent to. Google's interactive embed
+             still waits for the button below, because THAT one does disclose
+             the visitor's IP.
+
+             ODbL requires the attribution beneath it, and it stays visible. -->
+        <picture>
+          <source srcset="images/map-hockenheim.webp" type="image/webp">
+          <img class="map-static t" src="images/map-hockenheim.jpg"
+               width="1280" height="640" loading="lazy" decoding="async"
+               data-t="alt"
+               alt="Karte: KAIRO 1980, Rostocker Straße 20a, 68766 Hockenheim"
+               data-de="Karte: KAIRO 1980, Rostocker Straße 20a, 68766 Hockenheim"
+               data-en="Map: KAIRO 1980, Rostocker Strasse 20a, 68766 Hockenheim"
+               data-ar="خريطة: KAIRO 1980, Rostocker Straße 20a, 68766 Hockenheim">
+        </picture>
+        <p class="map-attrib">&copy; <a href="https://www.openstreetmap.org/copyright"
+           target="_blank" rel="noopener">OpenStreetMap</a></p>
         <div class="map-consent" id="mapConsent">
+          <div class="map-consent-card">
           <p class="map-consent-text t"
              data-de="Beim Laden der Karte werden Daten an Google übertragen, unter anderem Ihre IP-Adresse."
              data-en="Loading the map transfers data to Google, including your IP address." data-ar="لما بتحمّل الخريطة بتتبعت بيانات لـ Google، منها عنوان الـ IP بتاعك.">Beim Laden der Karte werden Daten an Google übertragen, unter anderem Ihre IP-Adresse.</p>
@@ -705,6 +731,7 @@
                   data-de="Karte laden" data-en="Load map" data-ar="حمّل الخريطة">Karte laden</button>
           <a class="map-consent-link t" href="/datenschutz"
              data-de="Datenschutzerklärung" data-en="Privacy policy" data-ar="سياسة الخصوصية">Datenschutzerklärung</a>
+          </div>
         </div>
       </div>
     </div>

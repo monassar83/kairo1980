@@ -368,6 +368,10 @@
         ar: 'موقع KAIRO 1980'
       };
       frame.title = TITLE[currentLang] || TITLE.de;
+      /* Everything goes: the static image, its attribution and the panel. The
+         guest asked for the interactive map and now has it, and OpenStreetMap's
+         attribution goes with the picture it belonged to — Google's embed
+         carries its own. */
       holder.innerHTML = '';
       holder.appendChild(frame);
     });

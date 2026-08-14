@@ -379,6 +379,8 @@ test('a basket can be built and sent on a small phone', async ({ page }) => {
 });
 
 test('no page scrolls sideways on a small phone', async ({ page }) => {
+  // Twelve navigations in one test: three widths across four pages.
+  test.slow();
   /* An overflow anywhere scrolls the WHOLE document, so one cramped menu row
      made every section drift. Two were found this way: the dish row at 320px,
      and an unbreakable provider URL in the privacy policy that pushed

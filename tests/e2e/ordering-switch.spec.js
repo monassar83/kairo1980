@@ -315,6 +315,155 @@ test('hours saved in the admin reach the markup a crawler reads', async ({ page 
   }
 });
 
+/* --- a driver out at a different time today --------------------------------
+   The restaurant is free to drive at two, or has nobody until nine. Either way
+   they must be able to say so without editing the week — because the week is
+   what Google caches for the place card, and a changed delivery time is still
+   changed on Wednesday.
+
+   Two failures are worth holding down: the sentence rendering in German and
+   nowhere else, and today's driver leaking into the published hours. */
+
+/** Move today's shift at /admin. `mode` is 'now', 'open', 'at' or 'clear'. */
+async function setShift(page, mode, from = null) {
+  await goAdmin(page);
+  const box = page.locator('.shift');
+
+  if (mode === 'clear') {
+    const back = box.locator('button.go2');
+    if (await back.count()) await back.click();
+    await expect(page.locator('.shift.on')).toHaveCount(0);
+    return;
+  }
+
+  // Clear first: the block shows the controls only while no shift is in force.
+  if (await box.locator('button.go2').count()) await box.locator('button.go2').click();
+
+  if (mode === 'at') {
+    await box.locator('details summary').click();
+    await page.fill('#shiftFrom', from);
+    await box.locator('button.stop.wide').click();
+  } else {
+    await box.locator(`button.stop[name="mode"][value="${mode}"]`).click();
+  }
+  await expect(page.locator('.shift.on')).toBeVisible();
+}
+
+test.afterEach(async ({ page }) => {
+  await signIn(page).catch(() => {});
+  await setShift(page, 'clear').catch(() => {});
+});
+
+test('today\'s driver is said in three languages and published in none',
+  async ({ page }) => {
+    await signIn(page);
+    await setShift(page, 'open');           // a driver out for the whole opening
+
+    await page.goto('/');
+    const note = page.locator('.hours-delivery-today');
+    await expect(note).toBeVisible();
+    await expect(note).toContainText('Heute');
+
+    /* The standing sentence is still the standing sentence. Two lines that
+       disagree would be a bug; one stating the week and one stating today is
+       the whole design. */
+    await expect(page.locator('.hours-note.delivery-note')).toContainText('18:00');
+
+    /* A string added to one dictionary and forgotten in the other two shows up
+       as an empty note or a German sentence on the Arabic page. */
+    for (const [lang, expected] of [['en', /today/i], ['ar', /النهارده/]]) {
+      await page.locator(`[data-lang="${lang}"]`).first().click();
+      await expect(page.locator('html')).toHaveAttribute('lang', lang);
+      await expect(note).toHaveText(expected);
+      await expect(note).not.toHaveText(/Heute/);
+    }
+
+    /* And the crawlers read the week, unchanged. This is the assertion the
+       whole feature exists to keep true: the restaurant said "not today" and
+       the place card heard nothing at all. */
+    const html = await (await page.request.get('/')).text();
+    const spec = JSON.parse(
+      html.match(/<script id="restaurantSchema"[^>]*>([\s\S]*?)<\/script>/)[1]
+    ).openingHoursSpecification;
+    expect(spec.length, 'the week is still published').toBeGreaterThan(0);
+    expect(html).toMatch(/<!--hours:start-->[\s\S]*18:00[\s\S]*<!--hours:end-->/);
+  });
+
+test('a shift set for later today withholds delivery the basket would have offered',
+  async ({ page }) => {
+    await page.goto('/');
+
+    /* A moment still ahead inside today's opening, read out of the page's own
+       config rather than typed here — a time written into a test is a second
+       copy of the opening hours, and it is the copy nobody updates. */
+    const slot = await page.evaluate(() => {
+      const hours = window.KAIRO_CONFIG.hours;
+      const KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+      const now = new Date();
+      const day = hours.days[KEYS[(now.getDay() + 6) % 7]];
+      if (!day || day.closed) return null;
+
+      const pad = (n) => String(n).padStart(2, '0');
+      const hhmm = (s) => Number(s.split(':')[0]) * 60 + Number(s.split(':')[1]);
+      const mins = now.getHours() * 60 + now.getMinutes();
+      const shift = hours.deliveryFrom ? hhmm(hours.deliveryFrom) : 0;
+
+      for (const w of [day.lunch, day.evening]) {
+        if (!w) continue;
+        /* A moment the STANDING shift already delivers at: a quarter past
+           opening, never before the driver's usual start, and never in the
+           past. Starting anywhere else would prove nothing — the point is a
+           slot that delivers until today's shift is pushed past it. */
+        const at = Math.max(hhmm(w[0]) + 15, mins + 15, shift);
+        // And it must leave an hour of daylight to push the shift into.
+        if (at + 60 >= hhmm(w[1])) continue;
+        return {
+          date: `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`,
+          time: `${pad(Math.floor(at / 60))}:${pad(at % 60)}`,
+          later: `${pad(Math.floor((at + 60) / 60))}:${pad((at + 60) % 60)}`
+        };
+      }
+      return null;
+    });
+
+    /* Nothing left of today to deliver in — a Monday, or after closing. There
+       is no delivery to withhold, so there is nothing here to assert. The
+       sibling test above runs at every hour and carries the language and
+       structured-data guarantees on its own. */
+    test.skip(!slot, 'no opening left today to move a driver within');
+
+    await signIn(page);
+    await setShift(page, 'clear');
+
+    await page.goto('/');
+    await addItem(page, 'hummus', 1);
+    await openBasket(page);
+    await page.locator('[data-when="scheduled"]').click();
+    await page.fill('#fDate', slot.date);
+    await page.fill('#fTime', slot.time);
+
+    const delivery = page.locator('[data-type="delivery"]');
+    await expect(delivery, 'the standing shift already delivers then').toBeEnabled();
+
+    // Now nobody drives until an hour after that.
+    await setShift(page, 'at', slot.later);
+
+    await page.goto('/');
+    await openBasket(page);
+    await page.locator('[data-when="scheduled"]').click();
+    await page.fill('#fDate', slot.date);
+    await page.fill('#fTime', slot.time);
+
+    /* Withheld, and the note names the time that WOULD work — today's, not the
+       one printed in the hours. A note naming the standing time here would send
+       the guest back to a slot we had just said we cannot drive. */
+    await expect(delivery).toBeDisabled();
+    await expect(page.locator('#cartTypeNote')).toContainText(slot.later);
+
+    // And the order itself is never refused: pickup at that moment still sends.
+    await expect(page.locator('#cartSend')).toBeEnabled();
+  });
+
 test('resuming clears every trace of the closure', async ({ page }) => {
   await signIn(page);
   await setOrdering(page, { closed: true, reason: 'holiday' });

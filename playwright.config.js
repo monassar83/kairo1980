@@ -16,6 +16,14 @@ export default defineConfig({
   timeout: 30000,
   expect: { timeout: 7000 },
   fullyParallel: true,
+
+  /* Capped deliberately. Every worker drives the SAME `wrangler dev` process and
+     the SAME SQLite-backed D1, so parallelism past a point stops testing the
+     site and starts testing contention: tests began failing one at a time, a
+     different one each run, every one of them passing alone. A suite that cries
+     wolf is a suite people stop reading. CI gets a smaller number still,
+     because a shared runner has less to give than a desktop. */
+  workers: process.env.CI ? 2 : 4,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
   reporter: process.env.CI ? [['github'], ['list']] : [['list']],
