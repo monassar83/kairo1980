@@ -395,6 +395,12 @@ test('a page cached before tonight\'s state was set does not survive it', async 
 
   await setDeliveryShift(env, '14:00');
   const shifted = await tag();
+
+  /* And it stays ONE entity tag. `If-None-Match` is a comma-separated list, so
+     the header is split on commas before anything is compared — a comma inside
+     the tag is torn in half by that split and can never match itself. Every
+     request then answers 200 with a full body and nothing says so. */
+  assert.ok(!shifted.includes(','), `an ETag may not contain a comma: ${shifted}`);
   assert.notEqual(shifted, plain, 'a moved driver makes every cached copy stale');
 
   await extendHours(env, Date.now() + 45 * 60000);

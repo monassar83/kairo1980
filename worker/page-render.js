@@ -227,13 +227,19 @@ export function liveETag(assetETag, settings) {
 
      Each is identified by the values it publishes rather than by an
      updated_at, so the tag also moves when one LAPSES — they expire by being
-     read against the clock, and nothing writes a row when they do. */
-  const tonight = [
-    settings.extension ? `x:${settings.extension.until}` : '-',
-    settings.deliveryShift
-      ? `d:${settings.deliveryShift.from}@${settings.deliveryShift.until}`
-      : '-'
-  ].join(',');
+     read against the clock, and nothing writes a row when they do.
 
-  return `W/"${base}~${settings.hoursVersion}~${settings.soldOutVersion || '0'}~${state}~${tonight}"`;
+     NEVER PUT A COMMA IN THIS STRING. `If-None-Match` carries a comma-
+     separated LIST of entity tags, so matches() splits the header on commas
+     before comparing — a comma inside the tag is torn in half by that split
+     and can never match itself. The failure is silent and total: every
+     request answers 200 with a full body, forever, and the only symptom is a
+     site that has quietly stopped being cacheable. `~` is the separator here
+     for that reason. */
+  const extension = settings.extension ? `x${settings.extension.until}` : 'x-';
+  const shift = settings.deliveryShift
+    ? `d${settings.deliveryShift.from}@${settings.deliveryShift.until}`
+    : 'd-';
+
+  return `W/"${base}~${settings.hoursVersion}~${settings.soldOutVersion || '0'}~${state}~${extension}~${shift}"`;
 }
