@@ -765,6 +765,23 @@ function sqliteUTC(instant) {
   return new Date(instant).toISOString().slice(0, 19).replace('T', ' ');
 }
 
+/* The two timestamps in this report are not written the same way, and pretending
+   they are produced a malformed instant that a reader could not parse at all.
+
+   An order's `created_at` comes from SQLite's `datetime('now')`: 'YYYY-MM-DD
+   HH:MM:SS', UTC, with nothing to say so. A payment's `captured_at` comes from
+   `new Date().toISOString()`, which is already a complete instant ending in Z.
+   Appending 'Z' to both turned the second into '…872ZZ' — and the books' reader,
+   normalising Z to an offset, made '…872+00:00+00:00' of it and rejected the
+   whole window. Four orders, none imported, over a punctuation mark.
+
+   So: say what is missing, and only what is missing. */
+function asInstant(stored) {
+  if (!stored) return null;
+  const text = String(stored);
+  return /[Zz]|[+-]\d{2}:?\d{2}$/.test(text) ? text : text.replace(' ', 'T') + 'Z';
+}
+
 async function ordersReport(request, env, url) {
   const denied = reportAuthFailure(request, env);
   if (denied) return denied;
@@ -806,7 +823,7 @@ async function ordersReport(request, env, url) {
     complete,
     orders: rows.map((o) => {
       const refunded = o.refunded_amount || 0;
-      const placedAt = o.created_at.replace(' ', 'T') + 'Z';
+      const placedAt = asInstant(o.created_at);
       return {
         id: o.id,
         reference: o.reference,
@@ -835,7 +852,7 @@ async function ordersReport(request, env, url) {
               provider: o.provider,
               status: o.payment_status,
               source: o.payment_source,
-              capturedAt: o.captured_at ? o.captured_at.replace(' ', 'T') + 'Z' : null
+              capturedAt: asInstant(o.captured_at)
             }
           : null
       };
