@@ -1068,3 +1068,52 @@ test('the orders report states that no VAT is charged', async (t) => {
   assert.equal(body.timezone, 'Europe/Berlin');
   assert.equal(body.complete, true, 'a partial window must say so');
 });
+
+test('a closed kitchen is not given a cash order either', async (t) => {
+  /* The disaster of 14 August 2026. Closing the restaurant stopped orders that were
+     paid for and let through the ones that were not: /api/payments checked the switch
+     and /api/orders/announce, added later, never did. A guest whose page had been open
+     since before the switch pressed send, and a closed kitchen was told it had an
+     order — which then sat in the books as a real sale. */
+  const env = workerEnv(MENU, TELEGRAM);
+  const c = ctx();
+  const paypal = fakePayPal({ [SEND]: () => ({ ok: true }) });
+  t.after(() => paypal.restore());
+
+  await env.DB.prepare(
+    "INSERT INTO settings (key, value) VALUES ('ordering', ?1)"
+  ).bind(JSON.stringify({ open: false, resumesAt: '2099-01-01T00:00:00.000Z' })).run();
+
+  const res = await worker.fetch(post('/api/orders/announce', CASH_ORDER), env, c);
+  await c.settled();
+
+  assert.equal(res.status, 503, 'a closed kitchen was handed an order it had refused');
+  assert.equal((await res.json()).error.code, 'ordering_closed');
+
+  // Nothing recorded, and nothing announced: no row to become a sale, and no alert
+  // telling a closed kitchen to cook.
+  const rows = await env.DB.prepare('SELECT COUNT(*) AS n FROM orders').first();
+  assert.equal(rows.n, 0, 'the order was still written to the books');
+  assert.equal(paypal.calls.some((k) => k.path.includes('sendMessage')), false);
+});
+
+test('an order for after we reopen is ordinary, closure or not', async (t) => {
+  /* A closure withholds a MOMENT, not the order. Refusing a Tuesday order because
+     Monday night is off would cost the restaurant business it wanted. */
+  const env = workerEnv(MENU, TELEGRAM);
+  const c = ctx();
+  const paypal = fakePayPal({ [SEND]: () => ({ ok: true }) });
+  t.after(() => paypal.restore());
+
+  await env.DB.prepare(
+    "INSERT INTO settings (key, value) VALUES ('ordering', ?1)"
+  ).bind(JSON.stringify({ open: false, resumesAt: '2026-08-15T10:00:00.000Z' })).run();
+
+  const res = await worker.fetch(
+    post('/api/orders/announce', { ...CASH_ORDER, when: { date: '2026-08-16', time: '19:00' } }),
+    env, c);
+  await c.settled();
+
+  assert.equal(res.status, 200);
+  assert.equal((await res.json()).recorded, true);
+});

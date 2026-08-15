@@ -343,6 +343,35 @@ async function announceOrder(request, env, ctx) {
   const body = await readJson(request);
   const ip = request.headers.get('CF-Connecting-IP') || '';
 
+  /* The closure applies here too, and for a while it did not.
+     ---------------------------------------------------------------------
+     `/api/payments` has refused orders during a closure since the switch
+     existed, on the reasoning written above it: dimming the buttons is not
+     enough, because a tab opened before the switch was thrown still has a
+     live basket in it. This route was added later, for orders paid on
+     arrival, and never inherited the check — so closing the restaurant
+     stopped the orders that were paid for and let through the ones that
+     were not.
+
+     It happened on 14 August 2026. The kitchen was closed for the evening,
+     a guest whose page had been open since before the switch pressed send,
+     and the order was recorded and announced as real. Nothing failed
+     anywhere; the restaurant simply had an order it had already said it
+     could not cook.
+
+     Same rule as payments, deliberately: a closure withholds a MOMENT, not
+     the order, so one the guest asks for after we reopen still goes through.
+
+     What this cannot do is stop the WhatsApp message — that is the guest's
+     own browser opening their own chat, fired before this answer arrives and
+     ignoring it by design. The restaurant reads it and says no, as it would
+     to a telephone call. What changes is that a closed kitchen is no longer
+     told an order is real, and no longer has one in its books. */
+  const { ordering } = await readSettings(env);
+  if (!ordering.open && !wantedAfterClosure(ordering.resumesAt, body.when)) {
+    return fail(503, 'ordering_closed', 'The restaurant is not taking orders right now.');
+  }
+
   let stored;
   try {
     stored = await recordOrder(env, body, ip);
