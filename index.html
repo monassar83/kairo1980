@@ -660,6 +660,15 @@
         </div>
         <span class="info-eyebrow t" data-de="Öffnungszeiten" data-en="Opening Hours" data-ar="مواعيد العمل">Öffnungszeiten</span>
         <div class="hours-status" id="hoursStatus"></div>
+        <!-- What is true TODAY about the driver, when it is not what the week
+             says. It sits HERE, with the badge, and not with the notes under
+             the table, because the badge is what a guest reads before deciding
+             to order and it cannot say this itself: "Geöffnet" is true on a day
+             nobody is driving, and a restriction discovered four lines further
+             down is discovered after the delivery button has already been
+             tapped. Written by order.js from the shift set at /admin; the rows
+             and the structured data state the week and never move. -->
+        <p class="hours-today" hidden></p>
         <!-- Rendered from config.js so the table, the "open now" badge and the
              schema.org opening hours can never disagree. The rows below are the
              no-JavaScript fallback and are replaced on load. -->
@@ -675,10 +684,6 @@
         </div>
         <p class="hours-note hours-extended" hidden></p>
         <p class="hours-note delivery-note" data-requires="delivery" hidden></p>
-        <!-- What is true TODAY about the driver, when it is not what the line
-             above says. Written by order.js from the shift set at /admin; the
-             rows and the structured data state the week and never move. -->
-        <p class="hours-note hours-delivery-today" hidden></p>
         <!-- One primary way to order, and the platforms named honestly as an
              alternative rather than as four equal buttons. The "direct via
              WhatsApp" button was removed: it produced the same chat as the

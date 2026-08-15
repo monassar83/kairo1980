@@ -977,24 +977,34 @@
     renderDeliveryToday();
   }
 
-  /* The same sentence for the driver: what is true today, said beneath the week
-     rather than written into it. Silent when today's shift is the standing one
-     — a note that repeats the rule above it reads as a contradiction the guest
-     then has to resolve. */
+  /* What is true today about the driver, printed with the OPEN/CLOSED badge
+     rather than under the table. The badge cannot say this itself — a day
+     nobody is driving is still a day we are open — and it is the line a guest
+     reads before deciding to order, so a restriction that lives four lines
+     below it is read after the delivery button has already been tapped.
+
+     Silent when today's shift is the standing one: a note repeating the rule
+     printed under the table reads as a contradiction the guest has to resolve.
+
+     The restrictive case is marked so it can carry the weight of the badge
+     beside it. The other two ADD a service and are said quietly; this one
+     takes one away, and is the only line on the page that says so. */
   function renderDeliveryToday() {
-    var host = document.querySelector('.hours-delivery-today');
+    var host = document.querySelector('.hours-today');
     if (!host) return;
     var today = deliveryShiftToday();
     var L = t();
     var say = '';
+    var limited = false;
     if (today && today.from !== deliveryFrom()) {
       // Three answers, three sentences. `null` first: it is the only one that
       // takes something away, and reading it as falsy would print "we deliver
       // all day" on the day there is nobody to drive.
-      say = today.from === null ? L.deliveryTodayNone
-        : today.from ? fill(L.deliveryToday, { from: today.from })
-          : L.deliveryTodayAll;
+      if (today.from === null) { say = L.deliveryTodayNone; limited = true; }
+      else if (today.from) say = fill(L.deliveryToday, { from: today.from });
+      else say = L.deliveryTodayAll;
     }
+    host.className = 'hours-today' + (limited ? ' is-limited' : '');
     host.textContent = say;
     host.hidden = !say;
   }

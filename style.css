@@ -1143,6 +1143,27 @@ summary:focus-visible {
 .hours-status.is-closed { color: #a07838; }
 .hours-status-sub { color: #9a8050; }
 
+/* What is true today, printed with the badge. The badge answers "are they
+   open"; this answers "and what can I actually get", which is a different
+   question the badge cannot answer — a day with no driver is still an open
+   day. It pulls up against the badge's own bottom margin so the two read as
+   one block rather than as a stray sentence above the table. */
+.hours-today {
+  margin: -8px 0 14px; font-size: 12.5px; line-height: 1.6; color: #7a6030;
+}
+.hours-today:empty { display: none; }
+
+/* The restriction, and the only line here that takes a service away. It gets
+   a rule and a weight the two additive messages do not, because it is the one
+   a guest must not scroll past: everything else on this card says yes. The
+   marker is an inline-start border, so it mirrors with the Arabic layout
+   instead of clinging to the left edge. */
+.hours-today.is-limited {
+  color: #8a5a1a; font-weight: 500;
+  border-inline-start: 2px solid #d8a04a;
+  padding-inline-start: 10px;
+}
+
 .hrow { gap: 16px; align-items: baseline; }
 .hrow.today { font-weight: 400; }
 .hrow.today .day { color: #4a3010; }

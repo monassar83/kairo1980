@@ -365,7 +365,7 @@ test('today\'s driver is said in three languages and published in none',
     await setShift(page, 'open');           // a driver out for the whole opening
 
     await page.goto('/');
-    const note = page.locator('.hours-delivery-today');
+    const note = page.locator('.hours-today');
     await expect(note).toBeVisible();
     await expect(note).toContainText('Heute');
 
@@ -419,7 +419,13 @@ test('a shift set for later today withholds delivery the basket would have offer
            opening, never before the driver's usual start, and never in the
            past. Starting anywhere else would prove nothing — the point is a
            slot that delivers until today's shift is pushed past it. */
-        const at = Math.max(hhmm(w[0]) + 15, mins + 15, shift);
+        /* Rounded UP to five minutes, because the admin's time field is
+           step="300" and the browser refuses to submit a form holding a value
+           off that grid — silently, as far as a test is concerned: the click
+           lands, nothing navigates, and the assertion that follows waits for a
+           page that was never asked for. This passed for a week and failed at
+           17:57, which is what an unrounded "now + 15" produces. */
+        const at = Math.ceil(Math.max(hhmm(w[0]) + 15, mins + 15, shift) / 5) * 5;
         // And it must leave an hour of daylight to push the shift into.
         if (at + 60 >= hhmm(w[1])) continue;
         return {
@@ -478,7 +484,7 @@ test('with no driver today, delivery is withheld and the order still goes',
     await page.goto('/');
 
     // Said under the hours, in the reader's own language.
-    const note = page.locator('.hours-delivery-today');
+    const note = page.locator('.hours-today');
     await expect(note).toBeVisible();
     await expect(note).toContainText('Abholung');
     for (const [lang, expected] of [['en', /collection only/i], ['ar', /الاستلام/]]) {
