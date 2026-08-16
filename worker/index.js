@@ -798,7 +798,7 @@ async function ordersReport(request, env, url) {
   const { results } = await env.DB.prepare(
     `SELECT o.id, o.reference, o.order_type, o.business, o.pay_method, o.postcode,
             o.lines, o.subtotal, o.discount, o.fee, o.total, o.currency,
-            o.requested_time, o.created_at,
+            o.requested_time, o.created_at, o.cancelled_at, o.cancelled_reason,
             p.provider, p.status AS payment_status, p.refunded_amount,
             p.captured_at, p.payment_source
        FROM orders o
@@ -830,6 +830,14 @@ async function ordersReport(request, env, url) {
         placedAt,
         tradingDay: dayOf(Date.parse(placedAt)),
         orderType: o.order_type,          // delivery | pickup
+        // An order the restaurant never took: switched off for the evening and one
+        // arrived anyway, cancelled by telephone, a duplicate pressed twice. It is
+        // reported rather than withheld, because it happened and money may have
+        // moved -- and it is marked, so the books can leave it out of the takings
+        // without anyone deciding it a second time over there.
+        cancelled: !!o.cancelled_at,
+        cancelledAt: asInstant(o.cancelled_at),
+        cancelledReason: o.cancelled_reason || null,
         business: !!o.business,
         payMethod: o.pay_method,          // onsite | online
         postcode: o.postcode,

@@ -1117,3 +1117,58 @@ test('an order for after we reopen is ordinary, closure or not', async (t) => {
   assert.equal(res.status, 200);
   assert.equal((await res.json()).recorded, true);
 });
+
+test('an order the restaurant never took is marked, not deleted, and says so in the report', async (t) => {
+  /* The disaster of 14 August has a second half. Closing the kitchen now refuses
+     new orders — but an order can always turn out not to have been taken: the guest
+     rings to cancel, nobody can reach the address, somebody pressed send twice. The
+     restaurant marks it where the orders arrive, and the books must learn that
+     without anyone deciding it a second time over there. */
+  const ADMIN = { ADMIN_USER: 'sherif', ADMIN_PASSWORD: 'correct-horse-battery-staple' };
+  const env = workerEnv(MENU, { ...TELEGRAM, ...ADMIN, REPORT_TOKEN: 'tok' });
+  const c = ctx();
+  const paypal = fakePayPal({ [SEND]: () => ({ ok: true }) });
+  t.after(() => paypal.restore());
+
+  const signIn = await worker.fetch(new Request('https://kairo1980.de/admin/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ username: ADMIN.ADMIN_USER, password: ADMIN.ADMIN_PASSWORD })
+  }), env, c);
+  const cookie = (signIn.headers.get('set-cookie') || '').split(';')[0];
+
+  const res = await worker.fetch(post('/api/orders/announce', CASH_ORDER), env, c);
+  const { reference } = await res.json();
+  await c.settled();
+  const row = await orderRow(env, reference);
+
+  const form = new URLSearchParams({ id: row.id, reason: 'We were closed', day: '2026-08-14' });
+  const marked = await worker.fetch(new Request('https://kairo1980.de/admin/orders/cancel', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', cookie },
+    body: form
+  }), env, c);
+  assert.equal(marked.status, 303, 'a refresh must not repeat it');
+
+  // Still there. It happened, and money may have moved.
+  const after = await orderRow(env, reference);
+  assert.ok(after, 'the order was deleted rather than marked');
+  assert.ok(after.cancelled_at);
+  assert.equal(after.cancelled_reason, 'We were closed');
+
+  // And the books are told, on the order rather than by its absence.
+  const report = await ordersReport(env, c);
+  const reported = report.orders.find((o) => o.reference === reference);
+  assert.ok(reported, 'a cancelled order vanished from the report instead of being marked');
+  assert.equal(reported.cancelled, true);
+  assert.equal(reported.cancelledReason, 'We were closed');
+
+  // Reversible: pressed by mistake, put back.
+  await worker.fetch(new Request('https://kairo1980.de/admin/orders/cancel', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded', cookie },
+    body: new URLSearchParams({ id: row.id, restore: '1' })
+  }), env, c);
+  const restored = await orderRow(env, reference);
+  assert.equal(restored.cancelled_at, null);
+});

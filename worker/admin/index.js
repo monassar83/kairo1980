@@ -130,6 +130,11 @@ export async function handle(request, env, url) {
   if (path === '/admin/hours' && method === 'GET') return hoursView.page(request, env, url);
   if (path === '/admin/hours' && method === 'POST') return hoursView.save(request, env, url);
   if (path === '/admin/orders' && method === 'GET') return ordersView.page(request, env, url);
+  /* Marking an order the restaurant never took. Not a delete: it happened, the
+     guest may ring about it, and money may have moved. See migration 0005. */
+  if (path === '/admin/orders/cancel' && method === 'POST') {
+    return ordersView.cancel(request, env, url);
+  }
   if (path === '/admin/sales' && method === 'GET') return salesView.page(request, env, url);
   if (path === '/admin/dishes' && method === 'GET') return dishesView.page(request, env, url);
   if (path === '/admin/dishes' && method === 'POST') return dishesView.save(request, env);

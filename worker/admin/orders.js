@@ -99,6 +99,17 @@ const CSS = `
  .order.cash{border-inline-start:4px solid #a04a00}
  .order.paid{border-inline-start:4px solid #31601f}
  .otop{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;margin-bottom:8px}
+ /* An order that was never taken is dimmed and struck through, not hidden: the
+    kitchen has to see that it is NOT to be cooked, and the guest may ring. */
+ .order.off{opacity:.6}
+ .order.off .items,.order.off .amt,.order.off .who{text-decoration:line-through}
+ .tag.no{background:#7a1c1c;color:#fff}
+ .cancel{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+ .cancel input[name=reason]{flex:1;min-width:180px;padding:7px 9px;border:1px solid #d8cbb0;
+   background:#faf7f2;font:inherit}
+ .cancel button{flex:none;padding:7px 12px;border:1px solid #d8cbb0;background:#faf7f2;
+   font:inherit;cursor:pointer}
+ .cancel button.undo{background:#eef3ea}
  .ref{font-weight:700;font-size:16px;letter-spacing:.04em}
  .when{color:#7a6030;font-size:12.5px}
  .tag{font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;
@@ -158,18 +169,39 @@ export function render({ day, orders, orphans, totals, nonce }) {
           ${o.requested_time ? `<div><span class="lbl">Time</span>${esc(o.requested_time)}</div>` : ''}
         </div>`;
 
-    return `<div class="order ${cash ? 'cash' : 'paid'}">
+    /* An order the restaurant never took. Struck through rather than hidden: it
+       still happened, the guest may ring about it, and the kitchen needs to see
+       that it is NOT to be cooked rather than simply not see it. */
+    const cancelled = !!o.cancelled_at;
+    const mark = cancelled
+      ? `<form class="cancel" method="post" action="/admin/orders/cancel">
+           <input type="hidden" name="id" value="${esc(o.id)}">
+           <input type="hidden" name="day" value="${esc(day)}">
+           <input type="hidden" name="restore" value="1">
+           <button class="undo" type="submit">Put it back</button>
+         </form>`
+      : `<form class="cancel" method="post" action="/admin/orders/cancel">
+           <input type="hidden" name="id" value="${esc(o.id)}">
+           <input type="hidden" name="day" value="${esc(day)}">
+           <input name="reason" placeholder="Why? (we were closed…)" maxlength="200">
+           <button type="submit">Did not take it</button>
+         </form>`;
+
+    return `<div class="order ${cash ? 'cash' : 'paid'}${cancelled ? ' off' : ''}">
       <div class="otop">
         <span class="ref">${esc(o.reference)}</span>
         <span class="when">${clock(o.created_at)}</span>
         <span class="tag">${delivery ? 'Delivery' : 'Pickup'}</span>
         <span class="tag ${cash ? 'cash' : 'paid'}">${cash ? 'PAY ON ARRIVAL' : 'PAID ONLINE'}</span>
         ${o.business ? '<span class="tag">Company</span>' : ''}
+        ${cancelled ? '<span class="tag no">NOT TAKEN</span>' : ''}
         <span class="amt">${money(o.total)}</span>
       </div>
       ${who}
       <div class="items">${itemsOf(o.lines)}</div>
       ${!purged && o.notes ? `<div class="note-in"><b>Note:</b> ${esc(o.notes)}</div>` : ''}
+      ${cancelled && o.cancelled_reason ? `<div class="note-in"><b>Not taken:</b> ${esc(o.cancelled_reason)}</div>` : ''}
+      ${mark}
     </div>`;
   };
 
@@ -221,4 +253,38 @@ deleted automatically once the limitation period has run.
   return layout({
     title: 'Orders', nonce, body, logout: true, back: '/admin', extraCss: CSS
   });
+}
+
+
+/* Mark an order the restaurant never took, or put it back.
+   ---------------------------------------------------------------------------
+   Deliberately not a delete. The order happened; the guest may ring about it and
+   money may have moved, and a deleted row answers none of that. It is marked, and
+   the mark travels to the books through /api/reports/orders, so nobody has to make
+   the same decision twice in two systems.
+
+   Undoing it is the same route with no reason and `restore` set, because a
+   cancellation pressed by mistake must be reversible or the safe thing to do with
+   a doubtful order becomes nothing at all. */
+export async function cancel(request, env, url) {
+  const form = await request.formData();
+  const id = String(form.get('id') || '');
+  const day = String(form.get('day') || '').slice(0, 10);
+  const back = `/admin/orders${day ? `?day=${encodeURIComponent(day)}` : ''}`;
+
+  if (!id) return Response.redirect(new URL(back, url).toString(), 303);
+
+  if (form.get('restore')) {
+    await env.DB.prepare(
+      'UPDATE orders SET cancelled_at = NULL, cancelled_reason = NULL WHERE id = ?1'
+    ).bind(id).run();
+  } else {
+    // Clipped, because it is free text a person types and it travels to the books.
+    const reason = String(form.get('reason') || '').trim().slice(0, 200) || null;
+    await env.DB.prepare(
+      "UPDATE orders SET cancelled_at = datetime('now'), cancelled_reason = ?2 WHERE id = ?1"
+    ).bind(id, reason).run();
+  }
+  // 303 so a refresh does not repeat the action.
+  return Response.redirect(new URL(back, url).toString(), 303);
 }
