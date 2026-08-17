@@ -799,6 +799,8 @@ async function ordersReport(request, env, url) {
     `SELECT o.id, o.reference, o.order_type, o.business, o.pay_method, o.postcode,
             o.lines, o.subtotal, o.discount, o.fee, o.total, o.currency,
             o.requested_time, o.created_at, o.cancelled_at, o.cancelled_reason,
+            o.customer_name, o.customer_phone, o.customer_address,
+            o.customer_company, o.details_purged_at,
             p.provider, p.status AS payment_status, p.refunded_amount,
             p.captured_at, p.payment_source
        FROM orders o
@@ -854,6 +856,40 @@ async function ordersReport(request, env, url) {
           net: o.total - refunded
         },
         lines: JSON.parse(o.lines || '[]'),
+        /* Who ordered — for the restaurant's own books, and nobody else's.
+
+           These fields were held back from this report on the same reasoning
+           that keeps them out of a Telegram notification: they are a person's
+           name, telephone and address, and they should not travel anywhere they
+           are not needed. The books are where they ARE needed. Without them the
+           restaurant's own system cannot tell that the guest who ordered here on
+           Tuesday is the same regular who orders through a marketplace on
+           Fridays, so the same person counts as two customers and neither shows
+           what they are really worth.
+
+           This is a different journey from the notification one, and the
+           difference is what makes it defensible: the report is fetched by the
+           restaurant's own system, over a token only it holds, and the data goes
+           into the same books that already hold the same details from every
+           other channel. Same controller, same purpose, one more source.
+
+           `notes` is deliberately NOT sent. It is free text a guest writes, it
+           is where an allergy gets mentioned, and health data under Art. 9 needs
+           a reason to travel rather than an absence of one. The books do not
+           need it to know who somebody is.
+
+           A purged order sends `null` rather than blanks, so a reader can tell
+           "these were deleted on the 1st" from "this guest gave no name". */
+        customer:
+          o.details_purged_at
+            ? null
+            : {
+                name: o.customer_name || null,
+                phone: o.customer_phone || null,
+                address: o.customer_address || null,
+                company: o.customer_company || null
+              },
+        detailsPurgedAt: asInstant(o.details_purged_at),
         // Absent for an order paid on arrival: there is no payment to describe.
         payment: o.provider
           ? {

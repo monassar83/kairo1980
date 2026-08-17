@@ -1015,7 +1015,7 @@ test('the orders report is closed without the token', async (t) => {
   }), env, ctx())).status, 200);
 });
 
-test('the orders report carries the sale, and never the guest', async (t) => {
+test('the orders report carries the sale, and the guest the books need', async (t) => {
   const env = workerEnv(MENU, { ...TELEGRAM, REPORT_TOKEN: 'tok' });
   const c = ctx();
   const paypal = fakePayPal({ [SEND]: () => ({ ok: true }) });
@@ -1045,12 +1045,52 @@ test('the orders report carries the sale, and never the guest', async (t) => {
   assert.match(order.placedAt, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
   assert.match(order.tradingDay, /^\d{4}-\d{2}-\d{2}$/);
 
-  // Not the name, not the phone, not the address, not the note. Same rule the
-  // settlement report follows: those are read at /admin and travel nowhere.
-  const printed = JSON.stringify(body);
-  for (const secret of ['Sherif', '79906621', 'Hauptstrasse', 'klingeln']) {
-    assert.equal(printed.includes(secret), false, `the report leaks ${secret}`);
-  }
+  /* Who ordered, for the restaurant's own books.
+
+     This report used to carry no guest at all, on the same reasoning that keeps
+     a name out of a Telegram message. The books are the one place these details
+     are genuinely needed: without them the restaurant's own system cannot tell
+     that the guest who ordered here is the same regular who orders through a
+     marketplace, so one person counts as two customers and neither shows what
+     they are worth. Same controller, same purpose, one more source — and a
+     token only that system holds. */
+  assert.equal(order.customer.name, 'Sherif Esmat');
+  assert.ok(order.customer.phone, 'the books cannot match a guest without a way to know them');
+  assert.ok(order.customer.address, 'a delivery address is part of who a regular is');
+  assert.equal(order.detailsPurgedAt, null, 'nothing has been scrubbed yet');
+
+  /* The note still travels nowhere. It is free text a guest writes, it is where
+     an allergy gets mentioned, and health data under Art. 9 needs a reason to
+     move rather than an absence of one. Knowing who somebody is does not
+     require knowing what they are allergic to. */
+  assert.equal('notes' in order, false, 'the note must not be in the report at all');
+  assert.equal(JSON.stringify(body).includes('klingeln'), false, 'the report leaks the note');
+});
+
+test('a scrubbed order says so instead of looking like a guest who gave no name', async (t) => {
+  /* Once the details are purged there is nothing to send, and two very different
+     facts would otherwise look identical: an order whose guest details were
+     deleted on schedule, and an order taken from somebody who never gave any.
+     The books must be able to tell them apart, or a purge reads as a data loss. */
+  const env = workerEnv(MENU, { ...TELEGRAM, REPORT_TOKEN: 'tok' });
+  const c = ctx();
+  const paypal = fakePayPal({ [SEND]: () => ({ ok: true }) });
+  t.after(() => paypal.restore());
+
+  await worker.fetch(post('/api/orders/announce', CASH_ORDER), env, c);
+  await c.settled();
+  await env.DB.prepare(
+    `UPDATE orders SET customer_name = NULL, customer_phone = NULL,
+                       customer_address = NULL, customer_company = NULL, notes = NULL,
+                       details_purged_at = datetime('now')`
+  ).run();
+
+  const order = (await ordersReport(env, c)).orders[0];
+  assert.equal(order.customer, null, 'a purged order carries no guest object at all');
+  assert.ok(order.detailsPurgedAt, 'and says when they were deleted');
+  // The sale itself survives the purge, exactly as it must.
+  assert.ok(order.money.total > 0);
+  assert.ok(order.lines.length);
 });
 
 test('the orders report states that no VAT is charged', async (t) => {

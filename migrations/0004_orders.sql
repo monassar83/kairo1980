@@ -44,10 +44,17 @@ CREATE TABLE IF NOT EXISTS orders (
 
   requested_time TEXT,                      -- "so bald wie möglich" or a chosen slot
 
-  -- ---- personal data, deleted after 90 days -------------------------------
+  -- ---- personal data, scrubbed three years after the year of the order -----
+  -- The period is the one this file's own header states and worker/retention.js
+  -- enforces (§§ 195, 199 BGB): an order from 2026 is scrubbed on 1 January
+  -- 2030. This line said "deleted after 90 days", which was never what the code
+  -- did -- and a comment that contradicts the sweep beside it is worse than no
+  -- comment, because it is the one a reader trusts.
+  --
   -- `notes` is free text the guest writes. It is where an allergy is
   -- mentioned, which can make it health data under Art. 9 DSGVO — a further
-  -- reason it is kept behind the login, never notified, and purged early.
+  -- reason it is kept behind the login, never notified, and never included in
+  -- the orders report even though the fields beside it now are.
   customer_name    TEXT,
   customer_phone   TEXT,
   customer_address TEXT,
