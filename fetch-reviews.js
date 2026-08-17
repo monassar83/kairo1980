@@ -8,8 +8,12 @@
 //     too, so counting only successes would let a broken key retry forever.
 // A manual run can waive the spacing guard, never the monthly ceiling.
 
-const https = require('https');
-const fs = require('fs');
+// `import`, not `require`: this package is ESM ("type": "module"), so `require`
+// is not defined here at all. The script threw on its first line every time the
+// weekly job ran -- failing before it could even read its own budget, and
+// sending a failure notice every week for a call it never made.
+import https from 'node:https';
+import fs from 'node:fs';
 
 const API_KEY = process.env.GOOGLE_PLACES_API_KEY;
 const PLACE_ID = 'ChIJdwpqXHy5l0cRyzEKo1_yYRE'; // KAIRO 1980 Hockenheim
