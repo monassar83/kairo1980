@@ -206,8 +206,8 @@ window.KAIRO_CONFIG = {
       wed: { closed: false, lunch: ['17:00', '23:00'], evening: null },
       thu: { closed: false, lunch: ['11:00', '23:00'], evening: null },
       fri: { closed: false, lunch: ['11:00', '23:00'], evening: null },
-      sat: { closed: false, lunch: ['11:00', '23:00'], evening: null },
-      sun: { closed: false, lunch: ['11:00', '23:00'], evening: null }
+      sat: { closed: false, lunch: ['17:00', '23:00'], evening: null },
+      sun: { closed: false, lunch: ['17:00', '23:00'], evening: null }
     }
   }
 };
