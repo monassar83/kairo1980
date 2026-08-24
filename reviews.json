@@ -1,7 +1,7 @@
 {
-  "lastUpdated": "2026-08-03T11:17:35.952Z",
+  "lastUpdated": "2026-08-24T08:41:37.737Z",
   "rating": 5,
-  "totalRatings": 17,
+  "totalRatings": 21,
   "reviews": [
     {
       "author": "Yasemin",
@@ -13,6 +13,15 @@
       "time": "vor einem Monat"
     },
     {
+      "author": "Wiener Schnitzel",
+      "avatar": "https://lh3.googleusercontent.com/a/ACg8ocJ2aI1424oJoJ5RD8Y96zEoZl1xf07kfySCxKJ9M2emvqYQBJo=s128-c0x00000000-cc-rp-mo",
+      "rating": 5,
+      "text": "Echt leckeres Essen. Hatte das Kushari und die Hähnchenschlegel. Ist wirklich mal eine Abwechslung zu sonst üblichen Lieferessen. Mitarbeiter auch sehr sympathisch und zuvorkommend.",
+      "lang": "de",
+      "publishTime": "2026-07-31T09:44:57.180259704Z",
+      "time": "vor 3 Wochen"
+    },
+    {
       "author": "Ram",
       "avatar": "https://lh3.googleusercontent.com/a-/ALV-UjUcoDRVRaNFzi_YfZznV50JlXPLq3O4yGytxGT3N5WkLYqtTKv2=s128-c0x00000000-cc-rp-mo",
       "rating": 5,
@@ -22,30 +31,21 @@
       "time": "vor einem Monat"
     },
     {
-      "author": "Lukas",
-      "avatar": "https://lh3.googleusercontent.com/a/ACg8ocLsshCG0kkeE9fQH04lO3MEVo1uG5bNwbLWx_2Lk4RD4Of9Sw=s128-c0x00000000-cc-rp-mo",
+      "author": "MC Falke",
+      "avatar": "https://lh3.googleusercontent.com/a-/ALV-UjWhbnR8UpzetiY44tIpsBIACIqwNBpzOduBNLoTYC6SgtRSofUyPQ=s128-c0x00000000-cc-rp-mo-ba4",
       "rating": 5,
-      "text": "Essen war lecker und frisch. Guter Kunderservice und schnelle Antworten.\n\nEmpfehlung von mir !",
+      "text": "Meine halbarabische Ehefrau war den Freudentränen nahe… ich auch 👏🏻👏🏻👏🏻",
       "lang": "de",
-      "publishTime": "2026-08-02T19:48:25.483493367Z",
-      "time": "in der letzten Woche"
+      "publishTime": "2026-06-19T19:22:58.551527545Z",
+      "time": "vor 2 Monaten"
     },
     {
-      "author": "Wiener Schnitzel",
-      "avatar": "https://lh3.googleusercontent.com/a/ACg8ocJ2aI1424oJoJ5RD8Y96zEoZl1xf07kfySCxKJ9M2emvqYQBJo=s128-c0x00000000-cc-rp-mo",
+      "author": "An Hi",
+      "avatar": "https://lh3.googleusercontent.com/a/ACg8ocJfVJK88MZOoOBItF1cJnyl8wU52POhCEXQLueWonZs3ucp9w=s128-c0x00000000-cc-rp-mo-ba2",
       "rating": 5,
-      "text": "Echt leckeres Essen. Hatte das Kushari und die Hähnchenschlegel. Ist wirklich mal eine Abwechslung zu sonst üblichen Lieferessen. Mitarbeiter auch sehr sympathisch und zuvorkommend.",
+      "text": "Tolles Essen, sehr lecker 👍🏼",
       "lang": "de",
-      "publishTime": "2026-07-31T09:44:57.180259704Z",
-      "time": "in der letzten Woche"
-    },
-    {
-      "author": "Pascal Kroll",
-      "avatar": "https://lh3.googleusercontent.com/a/ACg8ocIk7qj7fZTOCiQ5v-9asRZNyfsOQa-GKSW4G95fRNrzE_b0DA=s128-c0x00000000-cc-rp-mo",
-      "rating": 5,
-      "text": "Ich habe vorher noch nie Leber gegessen. Jetzt kann ich es nicht mehr missen. Der Koch steckt enorm viel Leidenschaft in das Essen. Das schmeckt man raus.\nJeder der es gerne würzig mag, ist hier genau richtig. Aber auch für wählerische Esser ist mit dem Hawawshy bestens gesorgt.\nIch empfehle diesen FoodSpot dringend weiter!",
-      "lang": "de",
-      "publishTime": "2026-07-29T21:07:06.242187038Z",
+      "publishTime": "2026-08-23T19:07:22.195217166Z",
       "time": "in der letzten Woche"
     }
   ]
