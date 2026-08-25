@@ -16,6 +16,11 @@ import worker from '../../worker/index.js';
 import {
   workerEnv, fakePayPal, orderResponse, webhookEvent, webhookHeaders
 } from '../helpers/env.js';
+// The week config.js ships with, read rather than retyped: with no settings row
+// saved, that is exactly what /api/status hands back. Spelling it out here made
+// this test fail the day Wednesday's real opening was corrected, which is the
+// bug this file exists to catch, asserted against the wrong thing.
+import { CONFIG } from '../../worker/site-data.js';
 
 const MENU = {
   hummus: { price: 950, name: 'Hummus' },
@@ -684,8 +689,10 @@ test('half-understood hours are refused rather than half-saved', async (t) => {
   assert.match(res.headers.get('location') || '', /failed/);
 
   const { hours, } = await (await worker.fetch(get('/api/status'), env, ctx())).json();
-  assert.deepEqual(hours.days.wed.lunch, ['11:00', '23:00'], 'the old hours still stand');
-  assert.equal(hours.days.wed.evening, null, 'and nothing was half-written');
+  assert.deepEqual(hours.days.wed.lunch, CONFIG.hours.days.wed.lunch,
+    'the old hours still stand');
+  assert.equal(hours.days.wed.evening, CONFIG.hours.days.wed.evening,
+    'and nothing was half-written');
 });
 
 test('the hours page and the switch are behind the login like everything else', async (t) => {
