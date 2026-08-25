@@ -177,8 +177,19 @@ window.KAIRO_CONFIG = {
          ''       -> a driver is out whenever the door is open
 
        Delivery always ends when the day does — there is no separate closing
-       time, because a driver cannot deliver from a shut kitchen. */
-    deliveryFrom: '18:00',
+       time, because a driver cannot deliver from a shut kitchen.
+
+       Empty right now, and deliberately. A driver start is a PROMISE, printed
+       in the business section, the hours rows, the delivery area, the FAQ and
+       the corporate answer at once — so it may only name a time the kitchen can
+       keep every week. While the driver roster is unsettled there is no such
+       time, and '17:00' beside a 17:00 opening was in any case a restriction
+       that never bit: it raised the question of when delivery does not run and
+       then did not answer it. A day that genuinely has no driver is said at
+       /admin, which withholds tonight only and lapses at midnight on its own.
+       Put a time back here when the roster is fixed, and the sentence returns
+       everywhere by itself. */
+    deliveryFrom: '',
 
     /* One entry per weekday. Times are "HH:MM" in 24h format.
 
@@ -204,8 +215,8 @@ window.KAIRO_CONFIG = {
       mon: { closed: true,  lunch: null,               evening: null },
       tue: { closed: true,  lunch: null,               evening: null },
       wed: { closed: false, lunch: ['17:00', '23:00'], evening: null },
-      thu: { closed: false, lunch: ['11:00', '23:00'], evening: null },
-      fri: { closed: false, lunch: ['11:00', '23:00'], evening: null },
+      thu: { closed: false, lunch: ['17:00', '23:00'], evening: null },
+      fri: { closed: false, lunch: ['17:00', '23:00'], evening: null },
       sat: { closed: false, lunch: ['17:00', '23:00'], evening: null },
       sun: { closed: false, lunch: ['17:00', '23:00'], evening: null }
     }

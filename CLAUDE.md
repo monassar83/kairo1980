@@ -292,13 +292,14 @@ are only the no-JavaScript fallback — update both or neither.
   whole opening gets one unlabelled range, because a lone "Abholung" raises the
   question of when delivery runs and then does not answer it.
 - **The delivery shift is a time, not a switch.** `hours.deliveryFrom` ('18:00',
-  or '' for a driver out all day) is the single fact. It dims the delivery
-  button before the shift, corrects `form.type`, and rewrites the business
-  section, the hours rows, the delivery area, the FAQ and the corporate answer
-  from the same sentence (`deliveryNotice()`). Never write the restriction into
-  copy by hand — that is how the site ends up promising delivery in one
-  paragraph and refusing it in the next. The public wording states the fact
-  only; the reason is nobody's business but ours.
+  or '' for a driver out for the whole opening — delivery whenever the door is
+  open, NOT no delivery, which is `/admin`'s "no driver today") is the single
+  fact. It dims the delivery button before the shift, corrects `form.type`,
+  and rewrites the business section, the hours rows, the delivery area, the FAQ
+  and the corporate answer from the same sentence (`deliveryNotice()`). Never
+  write the restriction into copy by hand — that is how the site ends up
+  promising delivery in one paragraph and refusing it in the next. The public
+  wording states the fact only; the reason is nobody's business but ours.
   It replaced `hours.lunch.delivery`, a boolean that could only express the
   restriction by pointing at a named window — which worked while midday and
   evening were separated by a closed afternoon, and could say nothing at all

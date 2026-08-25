@@ -214,8 +214,15 @@ test('when the provider cannot be reached the guest is not stranded', async ({ p
   await page.route('**/sdk/js*', (route) => route.abort());
   await reachPaymentStep(page);
 
-  await expect(page.locator('.cart-pay-step')).toContainText('nicht verfügbar');
-  await expect(page.locator('[data-payact="onsite"]')).toBeVisible();
+  /* Longer than the suite's default on purpose. Reaching 'unavailable' costs two
+     round trips to the dev server -- /api/payments/config, then the aborted SDK
+     load -- and every worker in the run shares one `wrangler dev`. Alone this
+     settles in well under a second; under load it has crossed 7s and failed a
+     test that was right about the site. The wait is for the harness, not for a
+     slowness a guest would ever see. */
+  const settles = { timeout: 20000 };
+  await expect(page.locator('.cart-pay-step')).toContainText('nicht verfügbar', settles);
+  await expect(page.locator('[data-payact="onsite"]')).toBeVisible(settles);
 });
 
 test('online payment is never offered when the server says it is off', async ({ page }) => {
