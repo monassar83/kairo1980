@@ -59,7 +59,15 @@ async function setOrdering(page,
   await goAdmin(page);
 
   if (!closed) {
-    const resume = page.locator('button.go2');
+    /* Scoped to the switch for the same reason the closure below is: the
+       dashboard carries the "stay open later" and "today's driver" controls
+       too, and they reuse these button classes. Unscoped, `button.go2` can
+       match two elements, and a strict-mode locator does not fail on that --
+       it WAITS for the page to resolve to one, which never happens. That is
+       silent until it eats a whole test budget and surfaces as the previous
+       test failing in its afterEach, taking the rest of a serial file with it. */
+    const box = page.locator('.switch');
+    const resume = box.locator('button.go2');
     if (await resume.count()) await resume.click();
     await expect(page.locator('.switch.off')).toHaveCount(0);
     return;
@@ -110,17 +118,31 @@ test.beforeEach(async ({ page }) => {
   });
 });
 
-/* Hooks share the TEST's 30s budget, and this one already spends two page
-   loads. Today's driver is put back with a plain POST on the context's own
-   session instead of a third — teardown is not the thing under test, and
-   driving the UI to undo it cost more time than the test body had left, which
-   surfaces as the PREVIOUS test failing in its hook and takes the rest of the
-   serial file down with it. */
+/* Hooks share the TEST's 30s budget, so teardown here buys nothing and can
+   cost everything. It used to sign in and drive the switch back through the
+   UI — two page loads — and the test above is the one that can least afford
+   them: it forces a click on the disabled send button, and the `/admin` that
+   follows has been measured taking 31 SECONDS to come back, against a
+   `wrangler dev` every worker in the run shares. Nothing was broken; the hook
+   simply ran out of clock, which Playwright reports as the test failing and
+   which takes the rest of a serial file with it.
+
+   So no page loads at all. `page.request` carries the context's own session
+   cookie, the tests having signed in already, and both rows go back the way
+   the driver already did — as the plain POSTs the forms themselves submit.
+
+   Both are given an explicit 5s, because `page.request` otherwise inherits a
+   30s default — the whole test budget — and a dev server that has gone quiet
+   would spend it here and fail a test that had already passed. A put-back that
+   does not happen is worth a beforeEach doing it again; a put-back that can
+   hang is worth nothing at all. Teardown is not the thing under test. */
 test.afterEach(async ({ page }) => {
-  await signIn(page).catch(() => {});
-  await setOrdering(page, { closed: false }).catch(() => {});
-  // A settings row like the switch: a test that leaves one set changes the next.
-  await page.request.post('/admin/delivery-shift', { form: { mode: 'clear' } })
+  // The switch, and then the settings row beside it: a test that leaves
+  // either one set changes the next.
+  const putBack = { timeout: 5000 };
+  await page.request.post('/admin/ordering', { form: { open: '1' }, ...putBack })
+    .catch(() => {});
+  await page.request.post('/admin/delivery-shift', { form: { mode: 'clear' }, ...putBack })
     .catch(() => {});
 });
 
@@ -362,6 +384,19 @@ async function setShift(page, mode, from = null) {
 test('today\'s driver is said in three languages and published in none',
   async ({ page }) => {
     await signIn(page);
+
+    /* The standing arrangement this test contrasts TODAY against, set here
+       rather than assumed. It used to lean on config.js happening to ship
+       '18:00', which made it a second copy of a business fact — and the day the
+       restaurant stopped naming a driver start, because the roster was not
+       dependable enough to promise one, this test failed while describing the
+       site perfectly correctly. A test may assume the facts it sets itself. */
+    const STANDING = '18:00';
+    await page.goto('/admin/hours');
+    await page.fill('input[name="delivery_from"]', STANDING);
+    await page.click('button.save-btn');
+    await expect(page.locator('.msg')).toContainText('Saved');
+
     await setShift(page, 'open');           // a driver out for the whole opening
 
     await page.goto('/');
@@ -372,7 +407,7 @@ test('today\'s driver is said in three languages and published in none',
     /* The standing sentence is still the standing sentence. Two lines that
        disagree would be a bug; one stating the week and one stating today is
        the whole design. */
-    await expect(page.locator('.hours-note.delivery-note')).toContainText('18:00');
+    await expect(page.locator('.hours-note.delivery-note')).toContainText(STANDING);
 
     /* A string added to one dictionary and forgotten in the other two shows up
        as an empty note or a German sentence on the Arabic page. */
@@ -391,7 +426,13 @@ test('today\'s driver is said in three languages and published in none',
       html.match(/<script id="restaurantSchema"[^>]*>([\s\S]*?)<\/script>/)[1]
     ).openingHoursSpecification;
     expect(spec.length, 'the week is still published').toBeGreaterThan(0);
-    expect(html).toMatch(/<!--hours:start-->[\s\S]*18:00[\s\S]*<!--hours:end-->/);
+    expect(html).toMatch(
+      new RegExp('<!--hours:start-->[\\s\\S]*' + STANDING + '[\\s\\S]*<!--hours:end-->'));
+
+    /* The week goes back to what config.js ships, the way the hours test above
+       puts it back: a standing arrangement left set changes every later test. */
+    await page.goto('/admin/hours');
+    await page.locator('button.reset').click();
   });
 
 test('a shift set for later today withholds delivery the basket would have offered',
@@ -479,6 +520,27 @@ test('with no driver today, delivery is withheld and the order still goes',
   async ({ page }) => {
     const whatsapp = await captureWhatsApp(page);
     await signIn(page);
+
+    /* This test is about TODAY, so today has to be a day the restaurant opens —
+       and it is shut on Mondays and Tuesdays. Opened here rather than hoped
+       for: with the door closed, "as soon as possible" resolves to the next
+       open day, which "no driver today" correctly does not touch, so the
+       delivery button stays enabled and the test fails on two days in seven
+       while describing the site perfectly. It used to pass on those days by
+       accident, because the standing shift happened to withhold the following
+       morning too; that accident went the day the restaurant stopped naming a
+       standing shift at all. */
+    const DAY = new Date().toLocaleDateString('en-US',
+      { weekday: 'short', timeZone: 'Europe/Berlin' }).toLowerCase();
+    await page.goto('/admin/hours');
+    await page.locator(`input[name="${DAY}_closed"]`).uncheck();
+    await page.fill(`input[name="${DAY}_lunch_from"]`, '11:00');
+    await page.fill(`input[name="${DAY}_lunch_to"]`, '23:00');
+    await page.fill(`input[name="${DAY}_evening_from"]`, '');
+    await page.fill(`input[name="${DAY}_evening_to"]`, '');
+    await page.click('button.save-btn');
+    await expect(page.locator('.msg')).toContainText('Saved');
+
     await setShift(page, 'off');
 
     await page.goto('/');
@@ -515,6 +577,10 @@ test('with no driver today, delivery is withheld and the order still goes',
     await page.locator('#cartSend').click();
     expect(await whatsapp()).toContain('wa.me');
     await expect(page.locator('.cart-sent')).toBeVisible();
+
+    // The week goes back to what config.js ships, as everywhere else here.
+    await page.goto('/admin/hours');
+    await page.locator('button.reset').click();
   });
 
 test('resuming clears every trace of the closure', async ({ page }) => {

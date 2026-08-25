@@ -95,10 +95,20 @@ test('the collection-only caveat travelled with the offer', async ({ page }) => 
 
   const lead = page.locator('.areas-lead');
   if (!from) {
-    // A driver is out all day: the page must not carry a restriction that has
-    // been lifted. This is the assertion that makes emptying `deliveryFrom` at
-    // /admin enough on its own, with no copy to hunt down.
-    await expect(lead).not.toContainText('Abholung');
+    /* A driver is out for the whole opening: the page must not carry a
+       restriction that has been lifted. This is the assertion that makes
+       emptying `deliveryFrom` at /admin enough on its own, with no copy to
+       hunt down.
+
+       Asserted on the CLOCK TIME the clause always carries, not on the word
+       "Abholung". This paragraph is `{freeDeliveryAll} {minimumClause}
+       {deliveryClause}`, and the minimum clause says "bei Abholung und bei
+       Firmenbestellungen entfällt er" — a different rule, correctly still
+       there. Reading the bare word made a lifted restriction indistinguishable
+       from a minimum that never mentioned one, and failed the page for saying
+       exactly the right thing. A time is what only the shift ever prints, and
+       it is what the branch below asserts too. */
+    await expect(lead).not.toHaveText(/\d{1,2}:\d{2}/);
   } else {
     // It is not: free delivery is qualified where it is promised, with the
     // sentence config writes rather than one typed into this page — and it

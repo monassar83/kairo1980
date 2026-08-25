@@ -79,7 +79,12 @@ test('only the methods that actually work are drawn', async ({ page }) => {
   await reachPaymentStep(page);
 
   const buttons = page.locator('.fake-pay-button');
-  await expect(buttons).toHaveCount(2);
+  /* Room for the same reason the SDK-abort test below gets it: this waits on
+     the checkout config, the SDK, and then FOUR methods asked one at a time --
+     they are drawn sequentially on purpose, so a payment screen does not
+     reshuffle itself as each resolves. Alone that is a few seconds; sharing one
+     `wrangler dev` with every other worker it has crossed the suite's 7s. */
+  await expect(buttons).toHaveCount(2, { timeout: 20000 });
   await expect(page.locator('.pay-method-applepay')).toHaveCount(0);
   await expect(page.locator('.pay-method-googlepay')).toHaveCount(0);
   // Card first: it needs no PayPal account, so it comes before the one that does.
