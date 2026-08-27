@@ -45,7 +45,7 @@ export async function page(request, env, url) {
   };
 
   const { results: rows } = await env.DB.prepare(
-    `SELECT o.*, p.status AS payment_status
+    `SELECT o.*, p.status AS payment_status, p.captured_at AS payment_captured_at
        FROM orders o
        LEFT JOIN payments p ON p.id = o.payment_id
       WHERE substr(o.created_at, 1, 10) BETWEEN date(?1, '-1 day') AND date(?1, '+1 day')
@@ -64,8 +64,36 @@ export async function page(request, env, url) {
       ORDER BY p.captured_at DESC`
   ).bind(day).all();
 
+  /* Started, and never settled — the rows every other read leaves out.
+     ---------------------------------------------------------------------
+     The orphan list above, the `payments_settled` view and the settlement
+     report all filter on `captured_at IS NOT NULL`, and for the books that is
+     right: money that was not taken is not trade. For a telephone it is
+     wrong. A guest who rings to ask "did my payment go through?" is asking
+     about precisely the rows all three of them exclude, and until this
+     existed there was no screen that could answer her — on 27 August 2026 the
+     answer had to be got by running SQL against production, for a 26,10 €
+     delivery left at `created` the evening before.
+
+     So this asks the complement of the same question, in the same words: no
+     `captured_at`, no money. The state it stopped in is carried through and
+     printed rather than interpreted away, because "never approved" and
+     "declined" are two different telephone calls. Whether the order details
+     reached us is carried with it, so a guest whose basket is already listed
+     above is not also reported as a stranger. */
+  const { results: unsettled } = await env.DB.prepare(
+    `SELECT p.reference, p.status, p.amount, p.order_type, p.postcode,
+            p.failure_code, p.lines, p.created_at,
+            EXISTS (SELECT 1 FROM orders o WHERE o.payment_id = p.id) AS has_order
+       FROM payments p
+      WHERE p.captured_at IS NULL
+        AND substr(p.created_at, 1, 10) BETWEEN date(?1, '-1 day') AND date(?1, '+1 day')
+      ORDER BY p.created_at DESC`
+  ).bind(day).all();
+
   const orders = rows.filter((o) => berlinDay(o.created_at) === day);
   const orphans = unmatched.filter((o) => berlinDay(o.captured_at) === day);
+  const unfinished = unsettled.filter((p) => berlinDay(p.created_at) === day);
 
   const totals = orders.reduce((a, o) => ({
     orders: a.orders + 1,
@@ -75,7 +103,7 @@ export async function page(request, env, url) {
 
   const nonce = newNonce();
   return new Response(
-    render({ day, orders, orphans, totals, nonce }),
+    render({ day, orders, orphans, unfinished, totals, nonce }),
     { headers: adminHeaders(nonce) }
   );
 }
@@ -128,7 +156,34 @@ const CSS = `
  .empty{padding:18px;color:#7a6030;background:#fff;border:1px solid #e6dcc9}
  .warn{border:1px solid #e8c9a0;background:#fdf0e0;padding:10px 12px;margin-bottom:14px;
        font-size:13.5px;color:#a04a00}
+ .order.unfin{border-inline-start:4px solid #7a6030}
+ .tag.unfin{background:#f3efe6;border-color:#d8cbb0;color:#5a4020;font-weight:700}
+ .sec{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:#7a6030;
+      font-weight:700;margin:28px 0 6px}
+ .hint{color:#7a6030;font-size:13px;line-height:1.55;margin:0 0 12px}
 `;
+
+/* What a payment that never settled stopped on, in words the person holding
+   the telephone can read out. The status in the ledger is the fact; this is
+   only its reading, and it lives in one table so that no two places can word
+   the same state differently.
+
+   Every line says whether money moved, because that is the only thing the
+   guest on the telephone actually asked. `approved` is the one that cannot
+   promise: the guest agreed, the capture never ran, and the webhook may still
+   complete it — so it is described as unfinished rather than as refused. */
+const STOPPED_ON = {
+  created: ['NEVER APPROVED',
+    'The payment window opened and the guest never approved it. Nothing was charged.'],
+  approved: ['NOT YET TAKEN',
+    'The guest approved it but the money was never captured. This one may still complete on its own.'],
+  pending: ['PAYPAL REVIEWING',
+    'PayPal is holding this for review. It is not money yet — do not treat it as paid.'],
+  failed: ['FAILED',
+    'The payment was refused. Nothing was charged.'],
+  cancelled: ['CANCELLED',
+    'The guest cancelled it. Nothing was charged.']
+};
 
 /** 'YYYY-MM-DD' + n days, in UTC so no local timezone can shift the date. */
 function shiftDay(day, n) {
@@ -137,7 +192,7 @@ function shiftDay(day, n) {
   return date.toISOString().slice(0, 10);
 }
 
-export function render({ day, orders, orphans, totals, nonce }) {
+export function render({ day, orders, orphans, unfinished, totals, nonce }) {
   const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Europe/Berlin' });
   const prev = shiftDay(day, -1);
   const next = shiftDay(day, 1);
@@ -151,6 +206,15 @@ export function render({ day, orders, orphans, totals, nonce }) {
 
   const card = (o) => {
     const cash = o.pay_method === 'onsite';
+    /* `pay_method` records how the guest MEANT to pay; `captured_at` records
+       what the money did. They agree almost always, and must not be confused
+       on the occasions they do not: an order backed by a payment PayPal was
+       still reviewing was being shown to the kitchen as PAID ONLINE, which is
+       the one label on this page that may never be wrong. The join that
+       answers it has been on the query since the page was written and was
+       simply never read. Asked as `captured_at`, like everywhere else, so a
+       refunded order still counts as money that arrived. */
+    const settled = !cash && !!o.payment_captured_at;
     const delivery = o.order_type === 'delivery';
     const purged = !!o.details_purged_at;
 
@@ -187,12 +251,13 @@ export function render({ day, orders, orphans, totals, nonce }) {
            <button type="submit">Did not take it</button>
          </form>`;
 
-    return `<div class="order ${cash ? 'cash' : 'paid'}${cancelled ? ' off' : ''}">
+    return `<div class="order ${cash ? 'cash' : settled ? 'paid' : 'unfin'}${cancelled ? ' off' : ''}">
       <div class="otop">
         <span class="ref">${esc(o.reference)}</span>
         <span class="when">${clock(o.created_at)}</span>
         <span class="tag">${delivery ? 'Delivery' : 'Pickup'}</span>
-        <span class="tag ${cash ? 'cash' : 'paid'}">${cash ? 'PAY ON ARRIVAL' : 'PAID ONLINE'}</span>
+        <span class="tag ${cash ? 'cash' : settled ? 'paid' : 'unfin'}">${
+          cash ? 'PAY ON ARRIVAL' : settled ? 'PAID ONLINE' : 'PAYMENT NOT COMPLETED'}</span>
         ${o.business ? '<span class="tag">Company</span>' : ''}
         ${cancelled ? '<span class="tag no">NOT TAKEN</span>' : ''}
         <span class="amt">${money(o.total)}</span>
@@ -217,6 +282,27 @@ export function render({ day, orders, orphans, totals, nonce }) {
     <div class="items">${itemsOf(o.lines)}</div>
   </div>`;
 
+  /* Reference first and largest, because the guest on the telephone has one
+     and nothing else. The basket is printed even though nobody is owed it: it
+     is how you recognise the order they are describing. */
+  const unfinishedCard = (p) => {
+    const [tag, why] = STOPPED_ON[p.status] || ['UNFINISHED', 'This payment never completed.'];
+    return `<div class="order unfin">
+      <div class="otop">
+        <span class="ref">${esc(p.reference)}</span>
+        <span class="when">${clock(p.created_at)}</span>
+        <span class="tag">${p.order_type === 'pickup' ? 'Pickup' : 'Delivery'}${
+          p.postcode ? ' · ' + esc(p.postcode) : ''}</span>
+        <span class="tag unfin">${tag}</span>
+        <span class="amt">${money(p.amount)}</span>
+      </div>
+      <p class="gone">${why}${p.failure_code ? ` (${esc(p.failure_code)})` : ''}</p>
+      <div class="items">${itemsOf(p.lines)}</div>
+      ${p.has_order ? '' :
+        '<p class="gone">The guest never sent the order either — this basket is all we have.</p>'}
+    </div>`;
+  };
+
   const body = `<h1>Orders</h1>
 <div class="sub">every order placed through the website</div>
 
@@ -235,6 +321,7 @@ export function render({ day, orders, orphans, totals, nonce }) {
   <div class="card"><span>Orders</span><b>${totals.orders}</b></div>
   <div class="card"><span>Value</span><b>${money(totals.net)}</b></div>
   <div class="card"><span>Pay on arrival</span><b>${totals.cash}</b></div>
+  <div class="card"><span>Unfinished</span><b>${unfinished.length}</b></div>
 </div>
 
 ${orphans.length ? `<div class="warn"><b>Paid, but no order details.</b> The money
@@ -244,6 +331,13 @@ ${orphans.length ? `<div class="warn"><b>Paid, but no order details.</b> The mon
 
 ${orders.length ? orders.map(card).join('')
   : `<div class="empty">No orders through the website yet today.</div>`}
+
+${unfinished.length ? `<h2 class="sec">Started, never finished</h2>
+<div class="hint">Payments that were begun and never settled. <b>No money arrived for
+any of these</b>, so nothing here is owed food — they are listed so that a guest who
+rings up can be told what happened to their payment, and so that nothing else on this
+page has to be taken on trust.</div>
+${unfinished.map(unfinishedCard).join('')}` : ''}
 
 <p class="note">Orders reach this page whether or not the guest sent the WhatsApp
 message. Contact details are shown here only, never in a notification, and are

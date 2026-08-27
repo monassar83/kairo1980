@@ -885,6 +885,99 @@ test('order details are behind the login like everything else', async (t) => {
   assert.equal(html.includes('79906621'), false, 'nor a telephone number');
 });
 
+test('a payment that was started and never settled is on the page, not only in the database', async (t) => {
+  /* The call this exists for. On 26 August 2026 a guest reached the PayPal
+     window for a 26,10 € delivery, never approved it, and rang the next day to
+     ask whether she had paid. The row was in D1 the whole time, at `created` —
+     and on no screen, because the orphan list, the payments_settled view and
+     the settlement report all filter on `captured_at IS NOT NULL`. Answering
+     her took SQL against production. */
+  const env = workerEnv(MENU, CREDS);
+  const c = ctx();
+  const paypal = fakePayPal({
+    '/v2/checkout/orders': () => orderResponse({ id: 'PP-ORDER-1' })
+  });
+  t.after(() => paypal.restore());
+
+  // Created, and then nothing: no approval, no capture, no webhook.
+  const payment = await (await worker.fetch(post('/api/payments', BASKET), env, c)).json();
+
+  const { cookie } = await signIn(env);
+  const html = await (await worker.fetch(get('/admin/orders', { cookie }), env, c)).text();
+
+  assert.ok(html.includes('Started, never finished'), 'the section is there');
+  assert.ok(html.includes(payment.reference), 'and the code she will quote on the telephone');
+  assert.ok(html.includes('NEVER APPROVED'), 'said as the state it actually stopped in');
+  assert.ok(html.includes('Nothing was charged'), 'and answering the only question she asked');
+  assert.ok(html.includes('26,10'), 'for the amount she was looking at');
+  assert.ok(html.includes('2× Koshari'), 'with the basket, which is how you recognise her order');
+
+  /* It must not have become an order. Nobody is owed this food, and a payment
+     that never completed appearing in the queue would put it on the hob. */
+  assert.ok(html.includes('No orders through the website yet today.'),
+    'the queue is still empty');
+});
+
+test('a payment that settled is not reported as unfinished', async (t) => {
+  /* The complement, asserted rather than assumed: the section is defined as
+     "no captured_at", so money that arrived must fall out of it entirely. */
+  const env = workerEnv(MENU, CREDS);
+  const c = ctx();
+  let payment;
+  const paypal = fakePayPal({
+    '/v2/checkout/orders': () => orderResponse({ id: 'PP-ORDER-1' }),
+    '/v2/checkout/orders/PP-ORDER-1/capture': () => orderResponse({
+      id: 'PP-ORDER-1', status: 'COMPLETED', captureId: 'CAP-1',
+      captureStatus: 'COMPLETED', amount: TOTAL,
+      paymentId: payment.id, reference: payment.reference
+    })
+  });
+  t.after(() => paypal.restore());
+
+  payment = await (await worker.fetch(post('/api/payments', BASKET), env, c)).json();
+  await worker.fetch(post(`/api/payments/${payment.id}/capture`), env, c);
+
+  const { cookie } = await signIn(env);
+  const html = await (await worker.fetch(get('/admin/orders', { cookie }), env, c)).text();
+
+  assert.equal(html.includes('Started, never finished'), false,
+    'captured money is trade, not an unfinished payment');
+  assert.equal(html.includes('NEVER APPROVED'), false);
+});
+
+test('an order whose payment never completed is not shown to the kitchen as paid', async (t) => {
+  /* PAID ONLINE is the one label on this page that may never be wrong: it is
+     what tells the counter to hand food over without taking money. The order
+     row records how the guest MEANT to pay; only the payment records what the
+     money did, and the join answering that had been on the query, unread,
+     since the page was written. */
+  const env = workerEnv(MENU, CREDS);
+  const c = ctx();
+  const paypal = fakePayPal({
+    '/v2/checkout/orders': () => orderResponse({ id: 'PP-ORDER-1' })
+  });
+  t.after(() => paypal.restore());
+
+  const payment = await (await worker.fetch(post('/api/payments', BASKET), env, c)).json();
+  // The guest sends the order anyway, naming the payment that never completed.
+  await worker.fetch(post('/api/orders/announce', {
+    items: { koshari: 2 }, type: 'pickup', name: 'Sherif Esmat',
+    phone: '+49 176 79906621', paymentId: payment.id
+  }), env, c);
+
+  const { cookie } = await signIn(env);
+  const html = await (await worker.fetch(get('/admin/orders', { cookie }), env, c)).text();
+
+  assert.ok(html.includes('Sherif Esmat'), 'the order is in the queue, because it is real');
+  assert.ok(html.includes('PAYMENT NOT COMPLETED'), 'but the money is not claimed to be in');
+  assert.equal(html.includes('PAID ONLINE'), false, 'and it is never called paid');
+
+  // Listed once as a payment too, and not reported as a guest who vanished.
+  assert.ok(html.includes('Started, never finished'));
+  assert.equal(html.includes('The guest never sent the order either'), false,
+    'she did send it — only the payment is unfinished');
+});
+
 test('the alert channel can be tested from the admin, and says why it failed', async (t) => {
   /* The bug this exists for: a real paid order arrived, the alert was sent,
      Telegram refused it, and the only trace was a console line nobody reads —
