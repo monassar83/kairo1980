@@ -83,6 +83,7 @@ order.
 | A replayed webhook | `payment_events.event_key` is UNIQUE. PayPal retries for days; every retry after the first does nothing. |
 | A forged webhook | Verified with PayPal against the registered webhook id before a single byte is believed. An unverified event is refused with 400. |
 | The guest approves, then the browser dies | `CHECKOUT.ORDER.APPROVED` arrives by webhook and the capture is completed server-side. |
+| The webhook itself never arrives | A sweep every quarter of an hour asks PayPal about every payment still `created`, `approved` or `pending` and older than ten minutes, captures what the guest agreed to pay, and announces it. `reconcileStuckPayments` in `worker/index.js`. |
 | A refresh mid-checkout | The page asks the server; if the server is unsure it asks PayPal before answering. "I don't know" is never shown to a guest. |
 | PayPal captures the wrong amount | Compared against the amount the server computed. A mismatch is recorded as `failed` and logged, never silently accepted. |
 

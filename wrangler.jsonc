@@ -51,8 +51,16 @@
   // The Datenschutzerklärung states this period. That makes this line part of
   // a published promise rather than housekeeping: if it is removed, the policy
   // becomes untrue. See docs/data-retention.md and worker/retention.js.
+  //
+  // The second expression is the reconciliation sweep: it asks PayPal about
+  // any payment left approved or pending, and captures the ones a lost webhook
+  // would otherwise have stranded. Quarter-hourly because a guest who approved
+  // a payment at seven expects their dinner, not an apology at three in the
+  // morning. It costs one indexed query per tick and usually matches nothing.
+  // `scheduled` in worker/index.js runs it on EVERY tick, the nightly one
+  // included, and tells the scrub apart by the expression above.
   "triggers": {
-    "crons": ["17 3 * * *"]
+    "crons": ["17 3 * * *", "*/15 * * * *"]
   },
 
   // Payment provenance. Created once with `npx wrangler d1 create

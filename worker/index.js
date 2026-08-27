@@ -62,16 +62,30 @@ export default {
     }
   },
 
-  /* The retention sweep. A deletion period that is written in the privacy
-     policy and not actually carried out is worse than none at all: it is a
-     statement about our own conduct that is untrue, and it is the kind that
-     gets checked. So it runs on a schedule rather than depending on anyone
-     remembering, and it is idempotent, so a missed night is caught up by the
-     next one with no special case. See worker/retention.js. */
+  /* Two jobs on two clocks.
+
+     Reconciliation runs on EVERY tick, including the nightly one. It is one
+     indexed query that usually matches nothing, it is idempotent, and it is
+     the safe thing to do with a schedule that was added to wrangler.jsonc and
+     never wired up here — better a harmless extra sweep than a trigger that
+     silently does nothing at all.
+
+     The retention scrub runs on its own expression and only there. A deletion
+     period written in the privacy policy and not actually carried out is worse
+     than none at all: it is a statement about our own conduct that is untrue,
+     and it is the kind that gets checked. It is idempotent too, so a missed
+     night is caught up by the next one with no special case.
+     See worker/retention.js and docs/data-retention.md. */
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(runRetention(env));
+    ctx.waitUntil(reconcileStuckPayments(env));
+    if (event && event.cron === RETENTION_CRON) ctx.waitUntil(runRetention(env));
   }
 };
+
+/* The nightly scrub's own expression, as wrangler.jsonc registers it. Named
+   once, here, because it is the only schedule this Worker has to tell apart
+   from the others — everything else is a reconciliation tick. */
+const RETENTION_CRON = '17 3 * * *';
 
 async function route(request, env, ctx, url) {
   const path = url.pathname;
@@ -658,6 +672,112 @@ async function handleEvent(env, provider, event) {
   } catch (err) {
     console.error('webhook handling failed', event && event.id, err && err.stack || err);
   }
+}
+
+
+/* --- chasing the ones nobody came back for --------------------------------
+   The webhook is the backstop for a browser that dies mid-checkout, and it is
+   a good one: PayPal retries a failed delivery for days. But it is still one
+   channel, and everything that silences it silences it completely — a rolled
+   credential that leaves PAYPAL_WEBHOOK_ID verifying against the wrong
+   account, an endpoint refusing events for an hour, a subscription edited in
+   the dashboard. When that happens a guest who approved a payment has agreed
+   to pay, believes they have paid, and the money is never taken. Nothing else
+   in this Worker would ever look again: `showPayment` asks PayPal, but only
+   when somebody opens the page, and the guest whose tab died is exactly the
+   guest who will not.
+
+   So this asks. It is the third caller of `applyCaptureResult` the comment
+   above it has always named, and it interprets nothing of its own — three
+   paths, one reading of one set of facts.
+
+   It is deliberately dull: it changes only what PayPal itself reports, it is
+   idempotent because `store.settle` is, and it announces a recovered payment
+   through the same `changed` gate the webhook uses, so a payment cannot be
+   announced twice however many ticks see it. */
+
+/* How long a payment is left alone before it is chased. The browser captures
+   seconds after approval and PayPal's own webhook retries for minutes; asking
+   inside that window spends a call to be told what is already on its way. */
+const RECONCILE_AFTER_MINUTES = 10;
+
+/* And how far back to look. An order the guest never approved expires at
+   PayPal on its own, and past a few days a read returns 404 — without a floor
+   the sweep would ask the same dead question every quarter of an hour for
+   ever. */
+const RECONCILE_WITHIN_DAYS = 3;
+
+/* Never chase more than this in one tick. A backlog after an outage is caught
+   up over the ticks that follow rather than in one long invocation. */
+const RECONCILE_LIMIT = 20;
+
+/** One payment, read back from the provider and settled on what it says. */
+async function reconcileOne(env, payment) {
+  const provider = providerFor(payment.provider);
+  if (!provider) return null;
+
+  const read = await provider.getOrder(env, payment.provider_order_id);
+
+  /* The case this exists for: the guest approved and the capture never ran.
+     Take the money they agreed to pay, exactly as the webhook would have.
+     `settle` to `approved` first so the ledger records that we saw the
+     approval — it is a no-op if the webhook already did. */
+  if (read.status === 'APPROVED' && !read.captureStatus) {
+    await store.settle(env.DB, payment.id, 'approved', {
+      source: 'reconcile', payload: { read: read.status }
+    });
+    const captured = await provider.captureOrder(env, payment.provider_order_id, payment.id);
+    return applyCaptureResult(env, await store.get(env.DB, payment.id), captured, 'reconcile', null);
+  }
+
+  return applyCaptureResult(env, payment, read, 'reconcile', null);
+}
+
+/** The scheduled entry point. Never throws, and never lets one bad payment
+ *  stop the rest: a provider that 404s an expired order must not hide a
+ *  different guest's captured money behind it. */
+export async function reconcileStuckPayments(env) {
+  const now = Date.now();
+  /* Bounds computed here and bound as parameters, NOT written as
+     `datetime('now', '-10 minutes')` in the SQL. `payments.created_at` is a
+     JavaScript ISO string with its T and its Z; SQLite's `datetime()` returns
+     'YYYY-MM-DD HH:MM:SS' with neither. Compared as text, 'T' sorts after the
+     space, so every row on the same date looks newer than the cutoff and the
+     sweep would quietly match nothing. Two ISO strings compare correctly. */
+  const before = new Date(now - RECONCILE_AFTER_MINUTES * 60000).toISOString();
+  const after = new Date(now - RECONCILE_WITHIN_DAYS * 86400000).toISOString();
+
+  let rows;
+  try {
+    ({ results: rows } = await env.DB.prepare(
+      `SELECT * FROM payments
+        WHERE status IN ('created', 'approved', 'pending')
+          AND provider_order_id IS NOT NULL
+          AND created_at < ?1 AND created_at > ?2
+        ORDER BY created_at ASC
+        LIMIT ${RECONCILE_LIMIT}`
+    ).bind(before, after).all());
+  } catch (err) {
+    console.error('reconcile: could not read the ledger', err && err.message);
+    return { checked: 0, settled: 0, failed: true };
+  }
+
+  let settled = 0;
+  for (const payment of rows) {
+    try {
+      const after_ = await reconcileOne(env, payment);
+      if (after_ && after_.status !== payment.status) {
+        settled += 1;
+        console.log('reconcile:', payment.reference, payment.status, '->', after_.status);
+      }
+    } catch (err) {
+      // One dead order must never cost the others their turn.
+      console.error('reconcile failed for', payment.reference, err && err.message);
+    }
+  }
+
+  if (settled) console.log('reconcile: settled', settled, 'of', rows.length, 'checked');
+  return { checked: rows.length, settled };
 }
 
 /* --- the books -----------------------------------------------------------

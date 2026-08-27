@@ -723,6 +723,159 @@ const TELEGRAM = { TELEGRAM_BOT_TOKEN: 'bot-token', TELEGRAM_CHAT_ID: '4242' };
 const SEND = '/botbot-token/sendMessage';
 const sent = (paypal) => paypal.calls.filter((c) => c.path === SEND);
 
+/* --- the sweep that chases what nobody came back for ---------------------
+   The webhook covers a browser that dies mid-checkout, and it is one channel.
+   Everything that silences it silences it completely — a rolled credential,
+   a refusing endpoint, a subscription edited in the dashboard — and the guest
+   who approved a payment then has agreed to pay, believes they have paid, and
+   is never charged. These hold the quarter-hourly sweep to finding them. */
+
+const SWEEP = { cron: '*/15 * * * *' };
+
+/** Push a payment back in time, so the sweep's grace window is past. */
+const age = (env, id, minutes) => env.DB.prepare(
+  'UPDATE payments SET created_at = ?2 WHERE id = ?1'
+).bind(id, new Date(Date.now() - minutes * 60000).toISOString()).run();
+
+const statusOf = (env, id) => env.DB.prepare(
+  'SELECT status FROM payments WHERE id = ?1'
+).bind(id).first();
+
+test('a guest who approved and never came back is captured by the sweep', async (t) => {
+  const env = workerEnv(MENU, TELEGRAM);
+  const c = ctx();
+  const paypal = fakePayPal({
+    '/v2/checkout/orders': () => orderResponse({ id: 'PP-ORDER-1' }),
+    // The guest approved at PayPal. No webhook ever arrived, so we never knew.
+    '/v2/checkout/orders/PP-ORDER-1': () =>
+      orderResponse({ id: 'PP-ORDER-1', status: 'APPROVED' }),
+    '/v2/checkout/orders/PP-ORDER-1/capture': () => captureOk(payment.id, payment.reference),
+    [SEND]: () => ({ ok: true })
+  });
+  t.after(() => paypal.restore());
+
+  var payment = await createPayment(env, c);
+  await age(env, payment.id, 20);
+
+  await worker.scheduled(SWEEP, env, c);
+  await c.settled();
+
+  assert.equal((await statusOf(env, payment.id)).status, 'captured',
+    'the money the guest agreed to pay is taken');
+  assert.equal(sent(paypal).length, 1, 'and the kitchen is told the order exists');
+  assert.ok(sent(paypal)[0].body.text.includes(payment.reference));
+});
+
+test('the sweep leaves a payment that is still in flight alone', async (t) => {
+  /* A guest is at the PayPal window right now. Reading their order back and
+     acting on it would race the capture their own browser is about to make. */
+  const env = workerEnv(MENU, TELEGRAM);
+  const c = ctx();
+  const paypal = fakePayPal({
+    '/v2/checkout/orders': () => orderResponse({ id: 'PP-ORDER-1' }),
+    '/v2/checkout/orders/PP-ORDER-1': () =>
+      orderResponse({ id: 'PP-ORDER-1', status: 'APPROVED' }),
+    [SEND]: () => ({ ok: true })
+  });
+  t.after(() => paypal.restore());
+
+  const payment = await createPayment(env, c);      // seconds old, not aged
+
+  await worker.scheduled(SWEEP, env, c);
+  await c.settled();
+
+  assert.equal(paypal.calls.some((k) => k.method === 'GET' && k.path.endsWith('PP-ORDER-1')),
+    false, 'PayPal was not asked about it at all');
+  assert.equal((await statusOf(env, payment.id)).status, 'created');
+});
+
+test('a payment the sweep has already settled is never announced twice', async (t) => {
+  /* The sweep runs every quarter of an hour and will see the same captured row
+     for three days. The guard is `changed` from store.settle — the ledger's
+     own replay guard — and not a second one that could disagree with it. */
+  const env = workerEnv(MENU, TELEGRAM);
+  const c = ctx();
+  const paypal = fakePayPal({
+    '/v2/checkout/orders': () => orderResponse({ id: 'PP-ORDER-1' }),
+    '/v2/checkout/orders/PP-ORDER-1': () =>
+      orderResponse({ id: 'PP-ORDER-1', status: 'APPROVED' }),
+    '/v2/checkout/orders/PP-ORDER-1/capture': () => captureOk(payment.id, payment.reference),
+    [SEND]: () => ({ ok: true })
+  });
+  t.after(() => paypal.restore());
+
+  var payment = await createPayment(env, c);
+  await age(env, payment.id, 20);
+
+  await worker.scheduled(SWEEP, env, c);
+  await worker.scheduled(SWEEP, env, c);
+  await c.settled();
+
+  assert.equal(sent(paypal).length, 1, 'one dinner, one message');
+});
+
+test('one dead order does not stop the sweep reaching the next', async (t) => {
+  /* An order the guest abandoned expires at PayPal and reads 404 for ever.
+     If that threw out of the loop it would hide every payment behind it —
+     which is the one thing a backstop must never do. */
+  const env = workerEnv(MENU, TELEGRAM);
+  const c = ctx();
+  let n = 0;
+  const paypal = fakePayPal({
+    '/v2/checkout/orders': () => orderResponse({ id: 'PP-ORDER-' + (++n) }),
+    '/v2/checkout/orders/PP-ORDER-1': () =>
+      ({ status: 404, body: { name: 'RESOURCE_NOT_FOUND' } }),
+    '/v2/checkout/orders/PP-ORDER-2': () =>
+      orderResponse({ id: 'PP-ORDER-2', status: 'APPROVED' }),
+    '/v2/checkout/orders/PP-ORDER-2/capture': () =>
+      captureOk(second.id, second.reference, BASKET_TOTAL, 'PP-ORDER-2'),
+    [SEND]: () => ({ ok: true })
+  });
+  t.after(() => paypal.restore());
+
+  const first = await createPayment(env, c);
+  var second = await createPayment(env, c);
+  await age(env, first.id, 30);
+  await age(env, second.id, 20);
+
+  // Must not reject, however badly the first one goes.
+  await worker.scheduled(SWEEP, env, c);
+  await c.settled();
+
+  assert.equal((await statusOf(env, first.id)).status, 'created', 'the dead one is left as it was');
+  assert.equal((await statusOf(env, second.id)).status, 'captured', 'and the live one is settled');
+  assert.equal(sent(paypal).length, 1);
+});
+
+test('the nightly tick scrubs as well as sweeping; the others only sweep', async (t) => {
+  /* The dispatch itself, because it is the kind of thing that is written once
+     and never looked at again. Retention answers to its own expression; every
+     other tick is a reconciliation and nothing else. */
+  const env = workerEnv(MENU, TELEGRAM);
+  const c = ctx();
+  const paypal = fakePayPal({ [SEND]: () => ({ ok: true }) });
+  t.after(() => paypal.restore());
+
+  // A payer whose identity is long past the 180-day window.
+  await env.DB.prepare(
+    `INSERT INTO payments (id, reference, provider, status, amount, currency,
+       subtotal, discount, fee, order_type, business, lines, payer_email,
+       created_at, updated_at)
+     VALUES ('old','OLD123','paypal','captured',1000,'EUR',1000,0,0,'pickup',0,'[]',
+             'someone@example.com', ?1, ?1)`
+  ).bind(new Date(Date.now() - 300 * 86400000).toISOString()).run();
+
+  await worker.scheduled(SWEEP, env, c);
+  await c.settled();
+  assert.equal((await env.DB.prepare("SELECT payer_email AS e FROM payments WHERE id='old'").first()).e,
+    'someone@example.com', 'a sweep tick does not scrub');
+
+  await worker.scheduled({ cron: '17 3 * * *' }, env, c);
+  await c.settled();
+  assert.equal((await env.DB.prepare("SELECT payer_email AS e FROM payments WHERE id='old'").first()).e,
+    null, 'the nightly one does');
+});
+
 test('a paid order is announced to the restaurant, with what it needs to cook it', async (t) => {
   const env = workerEnv(MENU, TELEGRAM);
   const c = ctx();

@@ -365,6 +365,19 @@ are only the no-JavaScript fallback — update both or neither.
 - **The webhook is the source of truth, and is verified with PayPal before it
   is believed.** A browser redirect only says the guest came back; it does not
   say the money arrived.
+- **And a sweep asks, because the webhook is one channel.** Everything that
+  silences it silences it completely — a rolled credential verifying against
+  the wrong account, an endpoint refusing for an hour, a subscription edited in
+  the dashboard — and a guest who approved has agreed to pay, believes they
+  have paid, and is never charged. So every cron tick reads back any payment
+  left `created`, `approved` or `pending` for more than ten minutes and settles
+  it on what PayPal says. It interprets NOTHING of its own: it is the third
+  caller of `applyCaptureResult`, alongside the browser and the webhook, so
+  three paths cannot reach three verdicts on one fact. It announces through the
+  same `changed` gate, so a payment it recovers is announced once however many
+  ticks see it. Ten minutes is a floor because the browser captures in seconds
+  and PayPal retries for minutes; three days is a ceiling because past that an
+  abandoned order 404s for ever. `reconcileStuckPayments` in `worker/index.js`.
 - **The server tells the restaurant an order exists; it does not wait for the
   guest to.** The money is taken server-side, but the order is composed in the
   guest's browser and handed to WhatsApp by the guest — so a guest who pays and
