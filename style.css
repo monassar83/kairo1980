@@ -866,6 +866,20 @@ summary:focus-visible {
 .announce-text { font-size: 13.5px; letter-spacing: 0.02em; color: #5a4020; }
 .announce-arrow { color: #b8914a; font-size: 15px; }
 
+/* The festival band — the same bar as above, inverted. Dark where that one is
+   cream, because while it runs it is the more urgent of the two and two cream
+   bars stacked read as one bar with a fold in it. This sets COLOURS ONLY: the
+   layout, the wrapping, the mobile padding and the mirrored arrow are all
+   inherited from `.announce`, so the two cannot drift apart. Arabic already
+   drops the tag's letter-spacing and uppercasing through the `:root[lang="ar"]`
+   list further down, which names `.announce-tag` — this variant needs no rule
+   of its own there, and must not grow one. */
+.announce-event { background: #1c1409; border-bottom-color: rgba(184,165,90,0.45); }
+.announce-event:hover { background: #241a0c; }
+.announce-event .announce-text { color: #f0e0bd; }
+.announce-event .announce-tag { background: #c8a55a; color: #1c1409; }
+.announce-event .announce-arrow { color: #c8a55a; }
+
 /* ===========================================================================
    BUSINESS / FIRMENBESTELLUNGEN
    =========================================================================== */

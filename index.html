@@ -302,6 +302,24 @@
   </div>
 </div>
 
+<!-- The festival band. `hidden` in the markup and revealed by JS, which is the
+     opposite default to the corporate announcement below it — deliberately.
+     That one advertises a standing service and is safe to show to a reader
+     whose JavaScript never ran; this one advertises four specific days, and a
+     festival that finished last weekend is worse than no band at all. So it
+     fails closed: no clock, no band. `{ringDistanceKm}` is filled from
+     config.js, and the literal below is only the no-JavaScript fallback.
+     "Glücksgefühle" is the event's own name and is therefore spelled the same
+     in all three languages, exactly as Lieferando and PayPal are. -->
+<a href="#speisekarte" class="announce announce-event" data-requires="event" hidden>
+  <span class="announce-tag t" data-de="Festival" data-en="Festival" data-ar="مهرجان">Festival</span>
+  <span class="announce-text t"
+        data-de="Glücksgefühle: keine {ringDistanceKm} km vom Ring — vorbestellen, abholen, kein Anstehen."
+        data-en="Glücksgefühle: less than {ringDistanceKm} km from the Ring — order ahead, collect, skip the queue."
+        data-ar="Glücksgefühle: أقل من {ringDistanceKm} كم من الحلبة — اطلب بدري واستلم من غير طوابير.">Glücksgefühle: keine 2 km vom Ring — vorbestellen, abholen, kein Anstehen.</span>
+  <span class="announce-arrow" aria-hidden="true">→</span>
+</a>
+
 <!-- Announcement rather than a modal: an interstitial costs mobile conversions
      and cannot be linked to, while this scrolls to a section with its own URL. -->
 <a href="/firmencatering" class="announce" data-requires="business">

@@ -3096,6 +3096,10 @@
       // How far we deliver, counted from the zone list rather than written
       // into the copy as "over 30" and left to rot when a postcode is added.
       deliveryPostcodes: ((CFG.delivery && CFG.delivery.zones) || []).length,
+      // Printed by the festival band. A bound, not a measurement — see the
+      // note in config.js — and written once there so all three languages
+      // change together.
+      ringDistanceKm: (CFG.event || {}).ringDistanceKm,
       // The two delivery rules as sentences, written from the same config the
       // basket applies. Wherever a page shows a minimum or a threshold it can
       // print the rule with it, and neither can be edited into disagreeing
@@ -3148,9 +3152,49 @@
       el.hidden = !canPayOnline;
     });
 
+    renderEventBand();
+
     if (!CFG.order.cartEnabled) {
       document.body.classList.add('no-cart');
     }
+  }
+
+  /* --- the band for an event next door -------------------------------------
+     Shown only while the dates in config.js contain today, compared as Berlin
+     calendar dates. `berlinNow().iso` is already 'YYYY-MM-DD' and so are both
+     bounds, so this is a string comparison: no Date parsing, no timezone of
+     its own, and no way for the band to be a day out for a reader in Cairo.
+     `until` is EXCLUSIVE, which is what lets config.js name the morning after
+     rather than an end-of-day time nobody would get right.
+
+     Read against the clock on every tick, exactly as the closure and the
+     extension are: a phone left on the homepage over the weekend drops the
+     band by itself when the festival ends. Nothing has to run, and nobody has
+     to remember to take it down.
+
+     While it is up the corporate bar stands down. Two announcement bars
+     stacked read as one bar with a fold in it, and for these few days the
+     festival is the more urgent of the two — the office-lunch offer is still
+     in the nav and still has its own page. Both conditions are re-applied on
+     every call rather than latched, so the corporate bar comes back on the
+     tick after the festival ends without a reload.
+  ------------------------------------------------------------------------- */
+  function eventRunning(now) {
+    var e = CFG.event || {};
+    if (!e.enabled || !e.from || !e.until) return false;
+    var today = (now || berlinNow() || {}).iso;
+    return !!today && today >= e.from && today < e.until;
+  }
+
+  function renderEventBand(now) {
+    var live = eventRunning(now);
+    var businessOn = !!(CFG.business || {}).enabled;
+    [].forEach.call(document.querySelectorAll('[data-requires="event"]'), function (el) {
+      el.hidden = !live;
+    });
+    [].forEach.call(document.querySelectorAll('.announce[data-requires="business"]'), function (el) {
+      el.hidden = !businessOn || live;
+    });
   }
 
   /* --- what the page says about delivery times ----------------------------
@@ -3458,6 +3502,7 @@
          while the basket had already gone back to the standing shift — a note
          contradicting the button, which is the one thing it must not do. */
       renderExtensionNote();
+      renderEventBand();
     }, 60000);
   }
 

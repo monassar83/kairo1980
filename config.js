@@ -72,6 +72,31 @@ window.KAIRO_CONFIG = {
     locale: 'de-DE'
   },
 
+  /* --- A one-off event next door -----------------------------------------
+     Not a feature: a date. Something enormous happens beside this restaurant
+     a few days a year — the Glücksgefühle festival puts roughly a quarter of
+     a million people about two kilometres away — and for those days the
+     homepage should say so. The rest of the year this block is switched off
+     and the site is exactly what it was.
+
+     It carries its own end, like the closure and the extension do, and it
+     expires by being READ AGAINST THE CLOCK: nothing has to run, nobody has
+     to remember, and a tab left open past the last day drops the band by
+     itself. `until` is EXCLUSIVE — the band is gone the moment that date
+     starts, so the value below is the morning after the festival ends.
+
+     `ringDistanceKm` is deliberately a conservative bound rather than a
+     measured walking route: it is printed to the public, and "less than 2 km"
+     is true from every corner of the site whereas a precise figure invites
+     being wrong. Change the number here and every language changes with it. */
+  event: {
+    enabled: true,
+    label: 'gluecksgefuehle',   // for us, not printed anywhere
+    from:  '2026-09-03',        // festival opens (campsite, Thursday noon)
+    until: '2026-09-07',        // EXCLUSIVE: gone at 00:00 on the 7th
+    ringDistanceKm: 2
+  },
+
   /* --- Business / corporate catering ------------------------------------ */
   business: {
     // Shows or hides the whole "Firmenbestellungen" section, its nav link
